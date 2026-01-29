@@ -1,1 +1,36 @@
 @import 'tailwindcss';
+
+@font-face {
+  font-family: OlympicSans;
+  src: url(/assets/fonts/OlympicSans-Regular-400.woff2) format("woff2");
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal
+}
+
+@font-face {
+  font-family: OlympicSans;
+  src: url(/assets/fonts/OlympicSans-Regular-500.woff2) format("woff2");
+  font-display: swap;
+  font-weight: 500;
+  font-style: normal
+}
+
+.font-olympic-sans {
+  font-family: OlympicSans, Arial, sans-serif;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.15s ease-out;
+}
