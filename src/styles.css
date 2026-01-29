@@ -16,8 +16,20 @@
   font-style: normal
 }
 
-.font-olympic-sans {
+@font-face {
+  font-display: swap;
+  font-family: OlympicHeadline;
+  font-style: normal;
+  font-weight: 400;
+  src: url(/assets/fonts/OlympicHeadline-Condensed.woff2) format("woff2");
+}
+
+.font-olympic-sans, p, span, li, a {
   font-family: OlympicSans, Arial, sans-serif;
+}
+
+.font-olympic-headline, h1, h2, h3, h4, h5, h6 {
+  font-family: OlympicHeadline, Arial, sans-serif;
 }
 
 @keyframes fadeIn {

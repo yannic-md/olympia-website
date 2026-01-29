@@ -1,1 +1,33 @@
-<p>breadcrumb works!</p>
+<section class="flex flex-col sm:flex-row justify-center items-center lg:items-start lg:flex-nowrap pt-8 lg:pt-14 mb-6
+                lg:mb-10 gap-6 lg:gap-x-12 pb-12 lg:pb-24 border-b border-neutral-200 px-4 lg:px-0">
+  <!-- Left side of the section -->
+  <div class="flex justify-center items-start flex-col w-full lg:w-118 2xl:min-h-180 sm:border-r-[0.01rem]
+              sm:border-gray-200 lg:pr-6 -me-6 lg:me-0">
+    <h2 class="font-olympic-sans text-2xl md:text-3xl lg:text-[2rem] leading-8 md:leading-10 lg:leading-14 font-bold
+               mb-4 lg:mb-6 lg:mr-4 lg:mt-6 pl-8 lg:pl-0">Die Olympischen Spiele</h2>
+
+    <ul class="flex flex-col m-0 w-full">
+      @for (item of nav_items; track $index) {
+        <li class="relative text-lg md:text-xl lg:text-2xl leading-8 md:leading-9 lg:leading-10 mb-2 lg:mb-3
+                   hover:text-[rgb(215,195,120)] transition-colors duration-100">
+          @if (item.path) {
+            <a class="pl-8 lg:pl-10" [routerLink]="item.path" [routerLinkActiveOptions]="{ exact: true }"
+               routerLinkActive="text-[rgb(215,195,120)] before:content-['—'] before:absolute before:left-0" >
+              {{ item.label }}
+            </a>
+          }
+
+          @if (item.externalUrl) {
+            <a class="pl-8 lg:pl-10" [href]="item.externalUrl">{{ item.label }}</a>
+          }
+        </li>
+      }
+    </ul>
+  </div>
+
+  <!-- Right side of the section -->
+  <h1 class="font-olympic-headline w-full lg:w-fit uppercase text-5xl md:text-6xl lg:text-[5rem] 2xl:text-[10rem]
+             leading-tight 2xl:leading-[10.4rem] my-0 lg:pl-[1.9rem] xl:max-w-216 text-center lg:text-left lg:self-center">
+    <span class="font-olympic-headline text-[rgb(215,195,120)] block">Winterspiele 2026</span> Die Ergebnisse
+  </h1>
+</section>
