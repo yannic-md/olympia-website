@@ -1,0 +1,25 @@
+# Dependencies
+node_modules
+npm-debug.log*
+package-lock.json
+
+# Angular build artifacts
+dist
+.angular
+.cache
+
+# Environment / secrets
+.env
+.env.*
+
+# Version control
+.git
+.gitignore
+
+# Logs
+*.log
+
+# OS / editor files
+.DS_Store
+.idea
+.vscode
