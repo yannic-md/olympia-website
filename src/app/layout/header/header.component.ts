@@ -3,6 +3,7 @@ import {RouterLink, Routes} from "@angular/router";
 import {NgClass, NgOptimizedImage} from "@angular/common";
 import {routes} from "../../app.routes";
 import {animate, style, transition, trigger} from "@angular/animations";
+import {MiscService} from "../../services/misc.service";
 
 @Component({
   selector: 'app-header',
@@ -37,23 +38,14 @@ export class HeaderComponent implements OnInit {
   protected scrollThreshold: number = 50;
   protected isHoveringHeader: boolean = false;
 
+  constructor(protected miscService: MiscService) {}
+
   /**
    * Initializes the component and stores the current scroll position.
    * This is used as a baseline for detecting scroll direction changes.
    */
   public ngOnInit(): void {
     this.lastScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-  }
-
-  /**
-   * Returns the display name for a given route path.
-   *
-   * @param path_url - The route path identifier
-   * @returns The localized display name for the route
-   */
-  protected getRouteName(path_url: string | undefined): string {
-    if (!path_url) { return ''; }
-    if (path_url === 'detailed') { return 'Detaillierte Ergebnisse' } else { return 'Startseite'; }
   }
 
   /**

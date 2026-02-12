@@ -4,6 +4,7 @@ import {BreadcrumbComponent} from "../../layout/breadcrumb/breadcrumb.component"
 import {NgOptimizedImage} from "@angular/common";
 import {FooterComponent} from "../../layout/footer/footer.component";
 import {RouterLink} from "@angular/router";
+import {MiscService} from "../../services/misc.service";
 
 interface MedalWinner {
   type: 'Gold' | 'Silber' | 'Bronze';
@@ -50,21 +51,6 @@ export class HomeComponent {
     }
   ];
 
-  /**
-   * Returns the TailwindCSS background color class for a given medal type.
-   *
-   * @param type Medal type to map to a color class.
-   * @returns TailwindCSS background color class for the specified medal type.
-   */
-  getWinnerColor(type: string): string {
-    switch (type) {
-      case 'Gold':
-        return 'bg-[#FCD34D]';
-      case 'Silber':
-        return 'bg-[#E5E7EB]';
-    }
-
-    return 'bg-[#D6A472]'; // bronze
-  }
+  constructor(protected miscService: MiscService) {}
 
 }

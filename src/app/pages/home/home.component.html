@@ -30,13 +30,13 @@
         <div class="bg-white p-4 md:p-6 rounded shadow-sm flex flex-col items-center col-span-2 xl:col-span-1">
 
           <div class="w-full flex items-center gap-2 mb-6 md:mb-8">
-            <span class="w-3 h-3 rounded-full {{ getWinnerColor(winner.type) }}"></span>
+            <span class="w-3 h-3 rounded-full {{ miscService.getWinnerColor(winner.type) }}"></span>
             <span class="text-gray-600 text-lg md:text-xl font-normal">{{ winner.type }}</span>
           </div>
 
           <div class="w-43 h-43 rounded-full overflow-hidden border border-gray-100 shadow-sm mb-8 shrink-0">
             <img [ngSrc]="'https://flagcdn.com/' + winner.flagCode + '.svg'" width="172" height="172"
-                 [alt]="winner.countryName" class="w-full h-full object-cover" />
+                 [alt]="winner.countryName" class="w-full h-full object-cover" priority />
           </div>
 
           <span class="text-gray-900 text-xl font-normal tracking-tight">

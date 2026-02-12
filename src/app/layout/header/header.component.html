@@ -75,7 +75,7 @@
             <a [routerLink]="item.path?.replaceAll('*', '')"
                class="relative after:content-[''] after:absolute after:-bottom-4.75 after:left-0
                        after:w-0 after:h-0.5 after:bg-black after:transition-all after:duration-200
-                       hover:after:w-full">{{ getRouteName(item.path) }}</a>
+                       hover:after:w-full">{{ miscService.getRouteName(item.path) }}</a>
           }
         }
       </nav>
@@ -103,7 +103,7 @@
             @if (item.path != 'login') {
               <a [routerLink]="item.path?.replaceAll('*', '')" (click)="isMobileMenuOpen = false"
                  class="py-3 text-xl text-black border-b border-neutral-100 last:border-b-0 hover:bg-gray-50
-                        transition-colors duration-200">{{ getRouteName(item.path) }}</a>
+                        transition-colors duration-200">{{ miscService.getRouteName(item.path) }}</a>
             }
           }
         </nav>
