@@ -20,7 +20,6 @@ export class BreadcrumbComponent {
   protected nav_items: NavigationItem[] = [
     { label: 'Übersicht', path: '/' },
     { label: 'Detaillierte Ergebnisse', path: '/detailed' },
-    { label: 'Excel-Daten hochladen', path: '/excel' },
     { label: 'Mehr über die Spiele erfahren', externalUrl: 'https://www.olympics.com/de/olympic-games/paris-2024' }
   ];
 
