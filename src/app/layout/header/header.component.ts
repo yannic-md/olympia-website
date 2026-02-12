@@ -1,22 +1,49 @@
-import {Component, HostListener} from '@angular/core';
+import {Component, HostListener, OnInit} from '@angular/core';
 import {RouterLink, Routes} from "@angular/router";
-import {NgOptimizedImage} from "@angular/common";
+import {NgClass, NgOptimizedImage} from "@angular/common";
 import {routes} from "../../app.routes";
+import {animate, style, transition, trigger} from "@angular/animations";
 
 @Component({
   selector: 'app-header',
   imports: [
     RouterLink,
-    NgOptimizedImage
+    NgOptimizedImage,
+    NgClass,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
+  animations: [
+    trigger('fadeInOut', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('150ms ease-in', style({ opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('150ms ease-out', style({ opacity: 0 }))
+      ])
+    ])
+  ]
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit {
   protected readonly routes: Routes = [...routes].reverse();
   protected isLanguageMenuOpen: boolean = false;
   protected isMobileMenuOpen: boolean = false;
   protected currentLanguage: string = 'Deutsch';
+
+  // header-scroll related
+  protected showUpperPart: boolean = true;
+  protected lastScrollPosition: number = 0;
+  protected scrollThreshold: number = 50;
+  protected isHoveringHeader: boolean = false;
+
+  /**
+   * Initializes the component and stores the current scroll position.
+   * This is used as a baseline for detecting scroll direction changes.
+   */
+  public ngOnInit(): void {
+    this.lastScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+  }
 
   /**
    * Returns the display name for a given route path.
@@ -71,5 +98,24 @@ export class HeaderComponent {
     if (!mobileMenu && this.isMobileMenuOpen) {
       this.isMobileMenuOpen = false;
     }
+  }
+
+  /**
+   * Handles the window scroll event and toggles the visibility of the upper
+   * header section based on scroll direction and a configured threshold.
+   */
+  @HostListener('window:scroll', [])
+  protected onWindowScroll(): void {
+    const currentScrollPosition: number = window.pageYOffset || document.documentElement.scrollTop;
+    const isScrollingUp: boolean = currentScrollPosition < this.lastScrollPosition;
+
+    // show "Upper part" if user scrolls up OR we moved more than scrollThreshold pixels
+    if (isScrollingUp || currentScrollPosition <= this.scrollThreshold) {
+      this.showUpperPart = true;
+    } else if (currentScrollPosition > this.scrollThreshold) {
+      this.showUpperPart = false;
+    }
+
+    this.lastScrollPosition = currentScrollPosition;
   }
 }
