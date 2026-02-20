@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import {HeaderComponent} from "../../layout/header/header.component";
-import {BreadcrumbComponent} from "../../layout/breadcrumb/breadcrumb.component";
+import {HeaderComponent} from "../../layout/sections/header/header.component";
+import {BreadcrumbComponent} from "../../layout/sections/breadcrumb/breadcrumb.component";
 import {NgOptimizedImage} from "@angular/common";
-import {FooterComponent} from "../../layout/footer/footer.component";
+import {FooterComponent} from "../../layout/sections/footer/footer.component";
 import {RouterLink} from "@angular/router";
 import {MiscService} from "../../services/misc.service";
 

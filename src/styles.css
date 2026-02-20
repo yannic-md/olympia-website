@@ -24,6 +24,10 @@
   src: url(/assets/fonts/OlympicHeadline-Condensed.woff2) format("woff2");
 }
 
+* {
+  scrollbar-width: thin;
+}
+
 .font-olympic-sans, p, span, li, a {
   font-family: OlympicSans, Arial, sans-serif;
 }

@@ -1,0 +1,8 @@
+<div class="flex items-center gap-2">
+  @for (m of displayMedals(); track m.type) {
+    <div [class]="m.css" class="flex items-center justify-center text-xs w-6 text-gray-600 px-0 py-0.5
+                                font-medium rounded-full">
+      {{ m.count }}
+    </div>
+  }
+</div>

@@ -1,9 +1,8 @@
-import {Component, HostListener, OnInit} from '@angular/core';
-import {RouterLink, Routes} from "@angular/router";
-import {NgClass, NgOptimizedImage} from "@angular/common";
-import {routes} from "../../app.routes";
+import {Component, HostListener, Inject, OnInit, PLATFORM_ID} from '@angular/core';
+import {RouterLink} from "@angular/router";
+import {isPlatformBrowser, NgClass, NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
-import {MiscService} from "../../services/misc.service";
+import {MiscService} from "../../../services/misc.service";
 
 @Component({
   selector: 'app-header',
@@ -27,7 +26,6 @@ import {MiscService} from "../../services/misc.service";
   ]
 })
 export class HeaderComponent implements OnInit {
-  protected readonly routes: Routes = [...routes].reverse();
   protected isLanguageMenuOpen: boolean = false;
   protected isMobileMenuOpen: boolean = false;
   protected currentLanguage: string = 'Deutsch';
@@ -38,14 +36,17 @@ export class HeaderComponent implements OnInit {
   protected scrollThreshold: number = 50;
   protected isHoveringHeader: boolean = false;
 
-  constructor(protected miscService: MiscService) {}
+  constructor(@Inject(PLATFORM_ID) private platformId: Object, protected miscService: MiscService) {}
 
   /**
    * Initializes the component and stores the current scroll position.
    * This is used as a baseline for detecting scroll direction changes.
    */
   public ngOnInit(): void {
-    this.lastScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    if (isPlatformBrowser(this.platformId)) {
+      this.lastScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    }
+
   }
 
   /**

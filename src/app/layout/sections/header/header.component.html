@@ -16,17 +16,21 @@
       <!-- Action Buttons -->
       <div class="flex items-center gap-2 sm:gap-3 md:gap-3">
         <!-- Login Button - Hidden on small screens -->
-        <button class="hidden sm:flex bg-[#cfe2f3] hover:bg-[#bed7ee] text-zinc-950 px-2 md:px-3.5 py-1 md:py-0 rounded-full
+        <a routerLink="/login">
+          <button class="hidden sm:flex bg-[#cfe2f3] hover:bg-[#bed7ee] text-zinc-950 px-2 md:px-3.5 py-1 md:py-0 rounded-full
                        items-center gap-0 transition-all cursor-pointer group duration-200 hover:drop-shadow-md">
-          <img ngSrc="/assets/images/icons/user-alt.svg" width="40" height="40" alt="User Icon" class="w-7 h-7 md:w-8 md:h-8" />
-          <span class="font-medium text-sm">Anmelden</span>
-        </button>
+            <img ngSrc="/assets/images/icons/user-alt.svg" width="40" height="40" alt="User Icon" class="w-7 h-7 md:w-8 md:h-8" />
+            <span class="font-medium text-sm">Anmelden</span>
+          </button>
+        </a>
 
         <!-- Login Icon for mobile -->
-        <button class="sm:hidden bg-[#cfe2f3] hover:bg-[#bed7ee] text-zinc-950 rounded-full transition-all
+        <a routerLink="/login">
+          <button class="sm:hidden bg-[#cfe2f3] hover:bg-[#bed7ee] text-zinc-950 rounded-full transition-all
                        cursor-pointer duration-200">
-          <img ngSrc="/assets/images/icons/user-alt.svg" width="32" height="32" alt="User Icon" />
-        </button>
+            <img ngSrc="/assets/images/icons/user-alt.svg" width="32" height="32" alt="User Icon" />
+          </button>
+        </a>
 
         <!-- Language Switcher -->
         <div class="relative language-menu-container">
@@ -70,12 +74,12 @@
       <!-- Desktop Navigation -->
       <nav class="hidden lg:flex gap-12 xl:gap-24 absolute left-1/2 -translate-x-1/2 text-xl
                   text-black tracking-tight">
-        @for (item of routes; track item.path) {
-          @if (item.path != 'login') {
-            <a [routerLink]="item.path?.replaceAll('*', '')"
+        @for (item of miscService.nav_items; track $index) {
+          @if (!item.externalUrl) {
+            <a [routerLink]="item.path"
                class="relative after:content-[''] after:absolute after:-bottom-4.75 after:left-0
                        after:w-0 after:h-0.5 after:bg-black after:transition-all after:duration-200
-                       hover:after:w-full">{{ miscService.getRouteName(item.path) }}</a>
+                       hover:after:w-full">{{ item.label }}</a>
           }
         }
       </nav>
@@ -99,11 +103,11 @@
       <div [@fadeInOut] class="lg:hidden absolute top-full left-0 w-full bg-white border-t
                                border-neutral-200 shadow-lg z-50 mobile-menu-container">
         <nav class="flex flex-col py-4 px-4 sm:px-10">
-          @for (item of routes; track item.path) {
-            @if (item.path != 'login') {
-              <a [routerLink]="item.path?.replaceAll('*', '')" (click)="isMobileMenuOpen = false"
+          @for (item of miscService.nav_items; track $index) {
+            @if (!item.externalUrl) {
+              <a [routerLink]="item.path" (click)="isMobileMenuOpen = false"
                  class="py-3 text-xl text-black border-b border-neutral-100 last:border-b-0 hover:bg-gray-50
-                        transition-colors duration-200">{{ miscService.getRouteName(item.path) }}</a>
+                        transition-colors duration-200">{{ item.label }}</a>
             }
           }
         </nav>

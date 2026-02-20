@@ -8,7 +8,7 @@
     </h2>
 
     <ul class="flex flex-col m-0">
-      @for (item of nav_items; track $index) {
+      @for (item of miscService.nav_items; track $index) {
         <li class="relative text-base leading-6 mb-2 lg:mb-3 hover:text-[rgb(215,195,120)] transition-colors
                    duration-100">
           @if (item.path) {
@@ -29,6 +29,12 @@
   <!-- Right side of the section -->
   <h1 class="font-olympic-headline w-full lg:w-fit uppercase text-5xl md:text-6xl lg:text-[5rem] 2xl:text-[100px]
              leading-tight 2xl:leading-26 my-0 lg:pl-[1.9rem] xl:max-w-216 text-center lg:text-left lg:self-center">
-    <span class="font-olympic-headline text-[rgb(215,195,120)] block">Winterspiele 2026</span> Die Ergebnisse
+
+    <span class="font-olympic-headline text-[rgb(215,195,120)] block">Winterspiele 2026</span>
+    @if (router.url === '/detailed') {
+      Detailierte Ansicht
+    } @else {
+      Die Ergebnisse
+    }
   </h1>
 </section>
