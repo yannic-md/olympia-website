@@ -1,0 +1,88 @@
+@if (isOpen()) {
+  <div @backdropFade class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+       (click)="miscService.onBackdropClick($event, this.close.bind(this))">
+    <div @modalSlideIn class="bg-[#1e2d58] rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+         (click)="$event.stopPropagation()">
+
+      <!-- Header of Modal -->
+      <div class="sticky top-0 bg-[#1e2d58] border-b border-white/20 px-6 py-4 flex items-center justify-between">
+        <h3 class="text-3xl tracking-wide font-bold text-white">
+          Registrierung
+        </h3>
+        <button (click)="close()" type="button" class="cursor-pointer hover:bg-white/10 p-2 rounded-full transition-colors">
+          <img ngSrc="/assets/images/icons/cross-close.svg" alt="Close Icon" height="16" width="16" class="w-4 h-4 invert" />
+        </button>
+      </div>
+
+      <div class="px-6 py-6">
+        <form (ngSubmit)="onSubmit()" class="space-y-5">
+
+          <!-- Username Input -->
+          <div>
+            <label for="username" class="block text-sm font-medium text-white/90 mb-2">
+              Benutzername <span class="text-red-400">*</span>
+            </label>
+            <input [(ngModel)]="formData().username" name="username" id="username"
+                   type="text" required placeholder="Mindestens 3 Zeichen"
+                   (ngModelChange)="miscService.updateField(this.formData, 'username', $event)"
+                   class="w-full px-4 py-3 bg-transparent border border-white/40 rounded-lg
+                          text-white placeholder-white/50 focus:outline-none focus:border-white transition-colors">
+            @if (formData().username.length > 0 && formData().username.length < 3) {
+              <p class="text-red-400 text-sm mt-1">Benutzername muss mindestens 3 Zeichen lang sein</p>
+            }
+          </div>
+
+          <!-- Password Input -->
+          <div>
+            <label for="password" class="block text-sm font-medium text-white/90 mb-2">
+              Passwort <span class="text-red-400">*</span>
+            </label>
+            <input [(ngModel)]="formData().password" name="password" id="password"
+                   type="password" required placeholder="Mindestens 6 Zeichen"
+                   (ngModelChange)="miscService.updateField(this.formData, 'password', $event)"
+                   class="w-full px-4 py-3 bg-transparent border border-white/40 rounded-lg
+                          text-white placeholder-white/50 focus:outline-none focus:border-white transition-colors">
+            @if (formData().password.length > 0 && formData().password.length < 6) {
+              <p class="text-red-400 text-sm mt-1">Passwort muss mindestens 6 Zeichen lang sein</p>
+            }
+          </div>
+
+          <!-- Confirm Password Input -->
+          <div>
+            <label for="confirmPassword" class="block text-sm font-medium text-white/90 mb-2">
+              Passwort bestätigen <span class="text-red-400">*</span>
+            </label>
+            <input [(ngModel)]="formData().confirmPassword" name="confirmPassword" id="confirmPassword"
+                   type="password" required placeholder="Passwort wiederholen"
+                   (ngModelChange)="miscService.updateField(this.formData, 'confirmPassword', $event)"
+                   class="w-full px-4 py-3 bg-transparent border border-white/40 rounded-lg
+                          text-white placeholder-white/50 focus:outline-none focus:border-white transition-colors">
+            @if (!passwordsMatch() && formData().confirmPassword.length > 0) {
+              <p class="text-red-400 text-sm mt-1">Passwörter stimmen nicht überein</p>
+            }
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="border-t border-white/20 w-full">
+            <div class="flex flex-col-reverse sm:flex-row gap-3 pt-5">
+              <button type="button" (click)="close()"
+                      class="w-full sm:w-auto px-6 py-3 border border-white/40 rounded-lg text-white
+                             hover:bg-white/10 transition-colors cursor-pointer font-medium">
+                Abbrechen
+              </button>
+              <button type="submit" [disabled]="!isFormValid()"
+                      [class.opacity-50]="!isFormValid()"
+                      [class.cursor-not-allowed]="!isFormValid()"
+                      class="w-full sm:w-auto px-6 py-3 bg-white text-[#1e2d58] rounded-lg
+                             hover:bg-white/90 disabled:bg-white/50 transition-all font-bold cursor-pointer">
+                Registrieren
+              </button>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+}

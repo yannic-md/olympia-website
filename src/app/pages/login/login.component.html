@@ -1,0 +1,96 @@
+<div class="min-h-screen w-full flex bg-[#1e2d58] font-sans text-white">
+
+  <!-- Left Side (Content Image) -->
+  <div class="hidden lg:block w-1/2 relative overflow-hidden">
+    <img ngSrc="/assets/images/bg-athlete.jpg" alt="Login Screen Image"
+         class="object-cover w-full h-full" height="917" width="960" />
+
+    <div class="absolute bottom-0 left-0 w-full h-1/3 bg-linear-to-t from-purple-500/40 to-transparent
+                mix-blend-overlay"></div>
+  </div>
+
+  <!-- Right Side (Login Content) -->
+  <div class="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-16 lg:px-24 py-12">
+
+    <!-- Logo -->
+    <div class="mb-8">
+      <a routerLink="/" class="shrink-0 block pt-1">
+        <img ngSrc="/assets/images/logo_color.svg" width="100" height="46" alt="Logo Icon" class="md:w-21.75 md:h-10" />
+      </a>
+    </div>
+
+    <!-- Title -->
+    <h1 class="text-4xl md:text-6xl font-extrabold mb-8 tracking-wide">
+      ANMELDUNG ALS JURY-MITGLIED
+    </h1>
+
+    <!-- Reasons to log-in -->
+    <div class="space-y-8 mb-12">
+      <div class="flex items-center gap-4">
+        <div class="shrink-0 w-12 h-12 rounded-full border border-white/50 flex items-center justify-center">
+          <img ngSrc="/assets/images/icons/plus.svg" width="25" height="25" alt="Chevron Down" class="invert" />
+        </div>
+        <p class="text-lg leading-snug">
+          Verwalte alle Athleten & teilnehmenden Länder des Turniers
+        </p>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div class="shrink-0 w-12 h-12 rounded-full border border-white/50 flex items-center justify-center">
+          <img ngSrc="/assets/images/icons/plus.svg" width="25" height="25" alt="Chevron Down" class="invert" />
+        </div>
+        <p class="text-lg leading-snug">
+          Importiere alle Turnierdaten direkt als Excel-Datei
+        </p>
+      </div>
+    </div>
+
+    <!-- Form Section -->
+    <div class="w-full max-w-md">
+      <h2 class="text-3xl font-bold mb-4 uppercase tracking-wider text-white/90">
+        MELDE DICH JETZT AN!
+      </h2>
+
+      @if (loginError()) {
+        <div class="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
+          {{ loginError() }}
+        </div>
+      }
+
+      <form (ngSubmit)="onLogin()" class="space-y-6">
+        <!-- Email Input Group -->
+        <div class="flex h-14">
+          <input type="email" placeholder="meineemail@email.de" [(ngModel)]="loginData().email" name="email"
+                 (ngModelChange)="miscService.updateField(this.loginData, 'email', $event)"
+                 class="flex-1 bg-transparent border border-white/40 px-4 text-white
+                        placeholder-white/70 focus:outline-none focus:border-white transition-colors" />
+        </div>
+
+        <!-- Password Input Group -->
+        <div class="flex h-14">
+          <input type="password" placeholder="Mein Passwort.." [(ngModel)]="loginData().password" name="password"
+                 (ngModelChange)="miscService.updateField(this.loginData, 'password', $event)"
+                 class="flex-1 bg-transparent border border-r-0 border-white/40 px-4 text-white placeholder-white/70
+                        focus:outline-none focus:border-white transition-colors" />
+          <button type="submit" class="bg-white/90 hover:bg-white text-[#1e2d58] px-6 font-medium transition-colors">
+            Anmelden
+          </button>
+        </div>
+      </form>
+
+      <!-- Footer Link -->
+      <div class="mt-8">
+        <button (click)="this.isRegisterModalOpen.set(true);"
+                class="text-white underline decoration-1 underline-offset-4 hover:text-gray-200
+                       transition-colors cursor-pointer bg-transparent border-0 p-0">
+          Noch kein Mitglied? Hier registrieren!
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Registration Modal -->
+<app-modal-register [isOpen]="isRegisterModalOpen()" (closeModal)="this.isRegisterModalOpen.set(false);"
+                    (registerUser)="onRegister($event)" />

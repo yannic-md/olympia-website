@@ -1,0 +1,25 @@
+<footer class="w-full bg-[rgb(13,13,16)] text-[rgb(180,180,180)] py-8 px-6 border-t border-neutral-400">
+  <div class="max-w-350 mx-auto flex flex-col-reverse md:flex-row justify-between items-center gap-6">
+
+    <div class="text-base font-olympic-sans font-normal">
+      &copy; {{ currentYear }}. Alle Rechte vorbehalten
+    </div>
+
+    <nav>
+      <ul class="flex flex-wrap justify-center md:justify-end items-center gap-x-6 gap-y-3">
+        @for (item of miscService.nav_items; track $index) {
+          @if (!item.externalUrl) {
+            <li>
+              <a [href]="item.path"
+                 class="text-base font-medium hover:text-white transition-colors duration-200 ease-in-out
+                        whitespace-nowrap font-olympic-sans">
+                {{ item.label }}
+              </a>
+            </li>
+          }
+        }
+      </ul>
+    </nav>
+
+  </div>
+</footer>
