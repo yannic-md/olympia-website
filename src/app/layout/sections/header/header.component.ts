@@ -5,6 +5,7 @@ import {animate, style, transition, trigger} from "@angular/animations";
 import {MiscService} from "../../../services/misc/misc.service";
 import {AuthService} from "../../../services/api/auth/auth.service";
 import {AlertService} from "../../../services/api/alert/alert.service";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 
 @Component({
   selector: 'app-header',
@@ -13,6 +14,7 @@ import {AlertService} from "../../../services/api/alert/alert.service";
     NgOptimizedImage,
     NgClass,
     RouterLinkActive,
+    TranslatePipe,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
@@ -40,7 +42,12 @@ export class HeaderComponent implements OnInit {
   protected isHoveringHeader: boolean = false;
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object, protected miscService: MiscService,
-              protected authService: AuthService, private alertService: AlertService, private router: Router) {}
+              protected authService: AuthService, private alertService: AlertService, private router: Router,
+              private translateService: TranslateService) {
+    if (isPlatformBrowser(this.platformId) && localStorage.getItem('lang') != null) {
+      this.currentLanguage = localStorage.getItem('lang') as string;
+    }
+  }
 
   /**
    * Initializes the component and stores the current scroll position.
@@ -74,6 +81,20 @@ export class HeaderComponent implements OnInit {
    */
   protected changeLanguage(language: string): void {
     this.currentLanguage = language;
+
+    switch (language) {
+      case 'French':
+        this.translateService.use('fr');
+        break;
+      case 'English':
+        this.translateService.use('en');
+        break;
+      default: // german
+        this.translateService.use('de');
+        break;
+    }
+
+    localStorage.setItem('lang', this.currentLanguage);
     this.isLanguageMenuOpen = false;
   }
 
@@ -86,7 +107,7 @@ export class HeaderComponent implements OnInit {
     localStorage.clear(); // delete saved user
     this.authService.currentUser.set(null);
 
-    this.alertService.success("Du wurdest erfolgreich abgemeldet.");
+    this.alertService.success(this.translateService.instant('ALERT.LOGOUT'));
   }
 
   /**

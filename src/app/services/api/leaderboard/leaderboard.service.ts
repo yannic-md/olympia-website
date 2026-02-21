@@ -3,11 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import {Athlete} from "../../../types/Athlete";
 import {API_URL} from "../../../types/API";
+import {TranslateService} from "@ngx-translate/core";
 
 interface LeaderboardEntry {
   resultId: number;
   rank: number;
+  athleteId: number;
   athleteName: string;
+  countryId: number;
   countryCode: string;
   countryName: string;
   timeOrPoints: string | null;
@@ -20,7 +23,7 @@ interface LeaderboardEntry {
 })
 export class LeaderboardService {
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private translateService: TranslateService) {}
 
   /**
    * Fetches leaderboard data from the backend and transforms it into athletes with aggregated medal counts.
@@ -28,7 +31,8 @@ export class LeaderboardService {
    * @returns {Observable<Athlete[]>} Observable containing the list of athletes with their medals aggregated.
    */
   getLeaderboard(): Observable<Athlete[]> {
-    return this.http.get<LeaderboardEntry[]>(API_URL + "/public/leaderboard?lang=de").pipe(
+    const currLang: string = this.translateService.getCurrentLang();
+    return this.http.get<LeaderboardEntry[]>(API_URL + `/public/leaderboard?lang=${currLang}`).pipe(
       map(entries => this.transformToAthletes(entries))
     );
   }
@@ -43,16 +47,17 @@ export class LeaderboardService {
   private transformToAthletes(entries: LeaderboardEntry[]): Athlete[] {
     const athleteMap = new Map<string, Athlete>();
 
-    entries.forEach((entry, index): void => {
+    entries.forEach((entry, _index): void => {
       const key = `${entry.athleteName}-${entry.countryCode}`;
       if (entry.timeOrPoints !== null) {
-        entry.timeOrPoints = entry.timeOrPoints.replace("wins", "Siege")
-          .replace("pts", "Punkte")
+        entry.timeOrPoints = entry.timeOrPoints
+          .replace("wins", this.translateService.instant('PAGE.DETAILED.TABLE.WINS'))
+          .replace("pts", this.translateService.instant('PAGE.DETAILED.TABLE.POINTS'))
       }
 
       if (!athleteMap.has(key)) {
-        athleteMap.set(key, { id: index + 1, name: entry.athleteName, countryCode: entry.countryCode,
-                              countryName: entry.countryName, sport: entry.sportName,
+        athleteMap.set(key, { id: entry.athleteId, name: entry.athleteName, countryId: entry.countryId,
+                              countryCode: entry.countryCode, countryName: entry.countryName, sport: entry.sportName,
                               medals: { gold: 0, silver: 0, bronze: 0 }, bestTime: entry.timeOrPoints });
       }
 

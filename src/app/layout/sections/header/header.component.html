@@ -9,7 +9,7 @@
       <!-- Tournament Title -->
       <a routerLink="/" class="tracking-normal font-normal text-sm hover:brightness-50
                                transition-all duration-200">
-        <span class="hidden sm:inline">Winterspiele 2026</span>
+        <span class="hidden sm:inline">{{ 'BREADCRUMB.CONTENT.TITLE' | translate }}</span>
         <span class="sm:hidden">WS 2026</span>
       </a>
 
@@ -22,7 +22,8 @@
             <img [ngSrc]="authService.isLoggedIn() ? '/assets/images/icons/exit.svg' : '/assets/images/icons/user-alt.svg'"
                  width="30" height="30" alt="User Icon" class="w-7 h-7 md:w-8 md:h-8"
                  [ngClass]="authService.isLoggedIn() ? 'py-1' : ''" />
-            <span class="font-medium text-sm">{{ authService.isLoggedIn() ? 'Abmelden' : 'Anmelden' }}</span>
+            <span class="font-medium text-sm">{{ authService.isLoggedIn() ? ('HEADER.LOGOUT' | translate)
+                                                                          : ('HEADER.LOGIN' | translate) }}</span>
           </button>
         </a>
 
@@ -86,7 +87,7 @@
             <a [routerLink]="item.path" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="after:w-full"
                class="relative after:content-[''] after:absolute after:-bottom-4.75 after:left-0
                        after:w-0 after:h-0.5 after:bg-black after:transition-all after:duration-200
-                       hover:after:w-full">{{ item.label }}</a>
+                       hover:after:w-full">{{ item.label | translate }}</a>
           }
         }
       </nav>
@@ -114,7 +115,7 @@
             @if (!item.externalUrl) {
               <a [routerLink]="item.path" (click)="isMobileMenuOpen = false"
                  class="py-3 text-xl text-black border-b border-neutral-100 last:border-b-0 hover:bg-gray-50
-                        transition-colors duration-200">{{ item.label }}</a>
+                        transition-colors duration-200">{{ item.label | translate }}</a>
             }
           }
         </nav>

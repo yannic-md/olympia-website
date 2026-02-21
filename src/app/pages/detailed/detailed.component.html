@@ -8,21 +8,21 @@
   <!-- Filter Actions - Result Container -->
   <div class="bg-neutral-100 mb-8 md:mb-12 p-4 md:p-10 md:px-23 md:pb-6 border-neutral-200 border-t">
     <h2 class="text-4xl text-center lg:text-start tracking-wide font-normal text-gray-900 mb-8">
-      Filter & Suche
+      {{ 'PAGE.DETAILED.FILTER.TITLE' | translate }}
     </h2>
 
     <!-- First Row (Filter Selects) -->
     <div class="flex flex-wrap gap-6">
 
       <div class="w-full sm:w-[calc(50%-12px)] md:flex-1 min-w-50">
-        <app-filter-select label="Ansicht" id="view-picker" [(value)]="selectedView" [bold]="true">
-          <option value="athletes">Athleten</option>
-          <option value="countries">Länder</option>
+        <app-filter-select [label]="'PAGE.DETAILED.FILTER.VIEW' | translate" id="view-picker" [(value)]="selectedView" [bold]="true">
+          <option value="athletes">{{ 'PAGE.DETAILED.FILTER.VIEW.ATHLETES' | translate }}</option>
+          <option value="countries">{{ 'PAGE.DETAILED.FILTER.VIEW.COUNTRIES' | translate }}</option>
         </app-filter-select>
       </div>
       <div class="w-full sm:w-[calc(50%-12px)] md:flex-1 min-w-50">
-        <app-filter-select label="Land" id="filter-country" [(value)]="filterCountry">
-          <option value="all">Alle Länder</option>
+        <app-filter-select [label]="'PAGE.DETAILED.FILTER.COUNTRY' | translate" id="filter-country" [(value)]="filterCountry">
+          <option value="all">{{ 'PAGE.DETAILED.FILTER.COUNTRY.PLACEHOLDER' | translate }}</option>
           @for (country of countries(); track country) {
             <option [value]="country">{{ country }}</option>
           }
@@ -30,8 +30,8 @@
       </div>
       @if (selectedView() != 'countries') {
         <div class="w-full sm:w-[calc(50%-12px)] md:flex-1 min-w-50">
-          <app-filter-select label="Sportart" id="filter-sports" [(value)]="filterSport">
-            <option value="all">Alle Sportarten</option>
+          <app-filter-select [label]="'PAGE.DETAILED.FILTER.SPORTS' | translate" id="filter-sports" [(value)]="filterSport">
+            <option value="all">{{ 'PAGE.DETAILED.FILTER.SPORTS.PLACEHOLDER' | translate }}</option>
             @for (sport of sports(); track sport) {
               <option [value]="sport">{{ sport }}</option>
             }
@@ -39,11 +39,11 @@
         </div>
       }
       <div class="w-full sm:w-[calc(50%-12px)] md:flex-1 min-w-50">
-        <app-filter-select label="Medaille" id="filter-medal" [(value)]="filterMedal">
-          <option value="all">Alle Medaillen</option>
-          <option value="gold">🥇 Gold</option>
-          <option value="silver">🥈 Silber</option>
-          <option value="bronze">🥉 Bronze</option>
+        <app-filter-select [label]="'PAGE.DETAILED.FILTER.MEDAL' | translate" id="filter-medal" [(value)]="filterMedal">
+          <option value="all">{{ 'PAGE.DETAILED.FILTER.MEDAL.PLACEHOLDER' | translate }}</option>
+          <option value="gold">🥇 {{ 'MODAL.GOLD' | translate }}</option>
+          <option value="silver">🥈 {{ 'MODAL.SILVER' | translate }}</option>
+          <option value="bronze">🥉 {{ 'MODAL.BRONZE' | translate }}</option>
         </app-filter-select>
       </div>
 
@@ -51,13 +51,15 @@
 
     <!-- Second Row (Search by Athlet/Country) -->
     <div class="mt-10">
-      <label for="filter-search" class="mb-1 block text-xs font-medium text-gray-500">Suchen</label>
+      <label for="filter-search" class="mb-1 block text-xs font-medium text-gray-500">
+        {{ 'PAGE.DETAILED.FILTER.SEARCH' | translate }}
+      </label>
       <div class="relative flex items-center border-b border-gray-300">
 
         <img ngSrc="/assets/images/icons/search.svg" width="20" height="20" alt="Search Icon"
              class="absolute left-0 top-2.5 h-5 w-5 opacity-50"/>
         <input [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" id="filter-search"
-               type="text" placeholder="Athlet oder Land.."
+               type="text" [placeholder]="'PAGE.DETAILED.FILTER.SEARCH.PLACEHOLDER' | translate"
                class="w-full bg-transparent py-2 pl-8 text-gray-700 placeholder-gray-400 focus:outline-none">
 
       </div>
@@ -69,8 +71,8 @@
     <!-- Header stuff -->
     <div class="mb-8 flex flex-col items-start justify-between lg:flex-row md:items-center">
       <h2 class="text-4xl tracking-wide font-normal text-gray-900 mx-auto lg:mx-0 mb-4 lg:mb-0">
-        @if (selectedView() === 'athletes') { Athleten Ergebnisse }
-        @else { Länder Ergebnisse }
+        @if (selectedView() === 'athletes') { {{ 'PAGE.DETAILED.ATHLETES.TITLE' | translate }} }
+        @else { {{ 'PAGE.DETAILED.COUNTRIES.TITLE' | translate }} }
       </h2>
 
       @if (authService.isLoggedIn()) {
@@ -78,14 +80,15 @@
           <button class="flex items-center gap-2 rounded bg-purple-500 px-4 py-2 text-sm font-semibold text-white
                      transition hover:bg-purple-600 shadow-sm cursor-pointer">
             <img ngSrc="/assets/images/icons/upload.svg" width="16" height="16" alt="Chevron Down" class="invert" />
-            Daten Importieren
+            {{ 'BUTTON.IMPORT' | translate }}
           </button>
           <button class="flex items-center gap-2 rounded bg-green-500 px-4 py-2 text-sm font-semibold text-white
                      transition hover:bg-green-600 shadow-sm cursor-pointer"
                   (click)="selectedView() === 'athletes' ? this.isAthleteModalOpen.set(true)
-                                                       : this.isCountryModalOpen.set(true)">
+                                                         : this.isCountryModalOpen.set(true)">
             <img ngSrc="/assets/images/icons/plus.svg" width="16" height="16" alt="Chevron Down" class="invert" />
-            {{ selectedView() === 'athletes' ? 'Athlet hinzufügen' : 'Land hinzufügen' }}
+            {{ selectedView() === 'athletes' ? ('MODAL.ATHLETE.ADD.TITLE' | translate)
+                                             : ('MODAL.COUNTRY.ADD.TITLE' | translate) }}
           </button>
         </div>
       }
@@ -97,19 +100,23 @@
         <thead class="sticky top-0 z-10 bg-neutral-100 shadow-sm">
           <tr class="text-left text-xs text-gray-500 border-b border-gray-300">
             @if (selectedView() === 'athletes') {
-              <th class="pl-2 text-sm leading-8 font-medium">Athlet</th>
-            } <th class="pl-2 text-sm leading-8 font-medium" [class.pl-2]="selectedView() === 'countries'">Land</th>
+              <th class="pl-2 text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.ATHLETE' | translate }}</th>
+            }
+
+            <th class="pl-2 text-sm leading-8 font-medium" [class.pl-2]="selectedView() === 'countries'">
+              {{ 'PAGE.DETAILED.TABLE.COUNTRY' | translate }}
+            </th>
 
             @if (selectedView() === 'athletes') {
-              <th class="text-sm leading-8 font-medium">Letzte Sportart</th>
-            }<th class="text-sm leading-8 font-medium">Medaillen</th>
+              <th class="text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.SPORTS' | translate }}</th>
+            }<th class="text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.MEDAL' | translate }}</th>
 
             @if (selectedView() === 'athletes') {
-              <th class="text-sm leading-8 font-medium">Bestzeit/Punkte</th>
+              <th class="text-sm leading-8 font-medium">{{ 'MODAL.ATHLETE.BESTTIME' | translate }}</th>
             }
 
             @if (authService.isLoggedIn()) {
-              <th class="text-sm leading-8 font-medium">Aktionen</th>
+              <th class="text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.ACTIONS' | translate }}</th>
             }
           </tr>
         </thead>
@@ -142,7 +149,9 @@
             }
 
             @if (filteredAthletes().length === 0) {
-              <td colspan="6" class="pl-2 text-start lg:text-center lg:pl-0 py-4">Keine Ergebnisse gefunden.</td>
+              <td colspan="6" class="pl-2 text-start lg:text-center lg:pl-0 py-4">
+                {{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}
+              </td>
             }
           }
 
@@ -159,14 +168,16 @@
 
                 @if (authService.isLoggedIn()) {
                   <td class="py-4">
-                    <app-table-actions (edit)="onEditCountry(country)" (delete)="onDeleteCountry(country.countryCode)" />
+                    <app-table-actions (edit)="onEditCountry(country)" (delete)="onDeleteCountry(country.countryId)" />
                   </td>
                 }
               </tr>
             }
 
             @if (filteredCountries().length === 0) {
-              <td colspan="4" class="pl-2 text-start lg:text-center lg:pl-0 py-4">Keine Ergebnisse gefunden.</td>
+              <td colspan="4" class="pl-2 text-start lg:text-center lg:pl-0 py-4">
+                {{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}
+              </td>
             }
           }
         </tbody>

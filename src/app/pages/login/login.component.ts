@@ -8,6 +8,7 @@ import {AuthService} from "../../services/api/auth/auth.service";
 import {HttpErrorResponse} from "@angular/common/http";
 import {AlertService} from "../../services/api/alert/alert.service";
 import {AlertBoxComponent} from "../../layout/sections/alert-box/alert-box.component";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 
 interface LoginForm {
   username: string;
@@ -27,7 +28,8 @@ interface RegisterForm {
     RouterLink,
     ModalRegisterComponent,
     FormsModule,
-    AlertBoxComponent
+    AlertBoxComponent,
+    TranslatePipe
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
@@ -39,7 +41,7 @@ export class LoginComponent {
   protected isLoading: WritableSignal<boolean> = signal(false);
 
   constructor(private router: Router, protected miscService: MiscService, private authService: AuthService,
-              private alertService: AlertService) {}
+              private alertService: AlertService, private translateService: TranslateService) {}
 
   /**
    * Handles the user login process and navigates to the home page on success.
@@ -52,7 +54,7 @@ export class LoginComponent {
     this.loginError.set('');
 
     if (!username.trim() || !password) {
-      this.loginError.set('Bitte fülle alle Felder aus.');
+      this.loginError.set(this.translateService.instant('PAGE.LOGIN.ERROR.INCOMPLETE'));
       return;
     }
 
@@ -60,12 +62,13 @@ export class LoginComponent {
     this.authService.login(username, password).subscribe({
       next: (): void => {
         this.router.navigate(['/']).then(_r => {
-          this.alertService.success(`Du bist nun angemeldet als ${this.authService.currentUser()?.username}.`)
+          this.alertService.success(
+            (this.translateService.instant('ALERT.LOGIN')).replace('[name]', this.authService.currentUser()?.username));
         });
       },
       error: (_err: HttpErrorResponse): void => {
         this.isLoading.set(false);
-        this.loginError.set('Ungültige Anmeldedaten. Bitte versuche es erneut.');
+        this.loginError.set(this.translateService.instant('ALERT.LOGIN.ERROR'));
       }
     });
   }
@@ -85,14 +88,15 @@ export class LoginComponent {
     this.authService.register(data.username, data.password).subscribe({
       next: (): void => {
         this.router.navigate(['/']).then(_r => {
-          this.alertService.success(`Du bist nun angemeldet als ${this.authService.currentUser()?.username}.`)
+          this.alertService.success(
+            (this.translateService.instant('ALERT.LOGIN')).replace('[name]', this.authService.currentUser()?.username));
         });
       },
       error: (err: HttpErrorResponse): void => {
         this.isLoading.set(false);
         const isConflict: boolean = err.status === 409 || err.error?.message?.includes('exists');
-        this.alertService.error(isConflict ? 'Dieser Benutzername ist bereits vergeben.'
-                                           : 'Registrierung fehlgeschlagen. Bitte versuche es erneut.'
+        this.alertService.error(isConflict ? (this.translateService.instant('ALERT.REGISTER.ERROR.CONFLICT'))
+                                           : (this.translateService.instant('ALERT.REGISTER.ERROR'))
         );
       }
     });

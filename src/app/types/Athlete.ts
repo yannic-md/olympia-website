@@ -15,6 +15,7 @@ export interface AthleteForm {
 export interface Athlete {
   id: number;
   name: string;
+  countryId: number;
   countryCode: string;
   countryName: string;
   sport: string;

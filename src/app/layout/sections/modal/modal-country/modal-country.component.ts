@@ -14,12 +14,14 @@ import {NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
 import {MiscService} from "../../../../services/misc/misc.service";
 import {CountryForm} from "../../../../types/Country";
+import {TranslatePipe} from "@ngx-translate/core";
 
 @Component({
   selector: 'app-modal-country',
   imports: [
     FormsModule,
-    NgOptimizedImage
+    NgOptimizedImage,
+    TranslatePipe
   ],
   templateUrl: './modal-country.component.html',
   styleUrl: './modal-country.component.css',

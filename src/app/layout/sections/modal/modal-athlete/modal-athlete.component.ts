@@ -14,10 +14,11 @@ import {NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
 import {MiscService} from "../../../../services/misc/misc.service";
 import {AthleteForm} from "../../../../types/Athlete";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 
 @Component({
   selector: 'app-modal-athlete',
-  imports: [FormsModule, NgOptimizedImage],
+  imports: [FormsModule, NgOptimizedImage, TranslatePipe],
   templateUrl: './modal-athlete.component.html',
   styleUrl: './modal-athlete.component.css',
   animations: [
@@ -55,7 +56,7 @@ export class ModalAthleteComponent {
   protected bestTimeError: WritableSignal<string> = signal('');
   protected isEditMode: Signal<boolean> = computed(() => this.editData() !== null);
 
-  constructor(protected miscService: MiscService) {
+  constructor(protected miscService: MiscService, private translateService: TranslateService) {
     // set data if user wants to edit instead of add
     effect((): void => {
       const data: AthleteForm | null = this.editData();
@@ -132,10 +133,10 @@ export class ModalAthleteComponent {
     if (!value.trim()) { return; }
 
     const timePattern = /^(?:(\d{1,2}):)?(\d{1,2})(?:\.(\d{1,2}))?$/;
-    const match = value.match(timePattern);
+    const match: RegExpMatchArray | null = value.match(timePattern);
 
     if (!match) {
-      this.bestTimeError.set('Ungültiges Format. Beispiel: 3:24.56 oder 3:24');
+      this.bestTimeError.set(this.translateService.instant('MODAL.ATHLETE.ERROR.BESTTIME'));
     } else {
       this.bestTimeError.set('');
     }
@@ -172,6 +173,8 @@ export class ModalAthleteComponent {
 
   /**
    * Maps country names to their ISO 3166-1 alpha-2 country codes.
+   *
+   * @deprecated probaly TODO
    */
   private readonly countryCodeMap: Record<string, string> = {
     'Österreich': 'AT',

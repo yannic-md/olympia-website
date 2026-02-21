@@ -21,7 +21,7 @@
 
     <!-- Title -->
     <h1 class="text-4xl md:text-6xl font-extrabold mb-8 tracking-wide">
-      ANMELDUNG ALS JURY-MITGLIED
+      {{ 'PAGE.LOGIN.TITLE' | translate }}
     </h1>
 
     <!-- Reasons to log-in -->
@@ -31,7 +31,7 @@
           <img ngSrc="/assets/images/icons/plus.svg" width="25" height="25" alt="Chevron Down" class="invert" />
         </div>
         <p class="text-lg leading-snug">
-          Verwalte alle Athleten & teilnehmenden Länder des Turniers
+          {{ 'PAGE.LOGIN.FEATURE1' | translate }}
         </p>
       </div>
 
@@ -40,7 +40,7 @@
           <img ngSrc="/assets/images/icons/plus.svg" width="25" height="25" alt="Chevron Down" class="invert" />
         </div>
         <p class="text-lg leading-snug">
-          Importiere alle Turnierdaten direkt als Excel-Datei
+          {{ 'PAGE.LOGIN.FEATURE2' | translate }}
         </p>
       </div>
     </div>
@@ -48,7 +48,7 @@
     <!-- Form Section -->
     <div class="w-full max-w-md">
       <h2 class="text-3xl font-bold mb-4 uppercase tracking-wider text-white/90">
-        MELDE DICH JETZT AN!
+        {{ 'PAGE.LOGIN.SUBTITLE' | translate }}
       </h2>
 
       @if (loginError()) {
@@ -60,22 +60,22 @@
       <form (ngSubmit)="onLogin()" class="space-y-6">
         <!-- Email Input Group -->
         <div class="flex h-14">
-          <input type="text" placeholder="Mein Name.." [(ngModel)]="loginData().username" name="email"
-                 (ngModelChange)="miscService.updateField(this.loginData, 'username', $event)"
+          <input type="text" [placeholder]="'PAGE.LOGIN.INPUT.NAME' | translate" [(ngModel)]="loginData().username"
+                 (ngModelChange)="miscService.updateField(this.loginData, 'username', $event)" name="email"
                  class="flex-1 bg-transparent border border-white/40 px-4 text-white
                         placeholder-white/70 focus:outline-none focus:border-white transition-colors" />
         </div>
 
         <!-- Password Input Group -->
         <div class="flex h-14">
-          <input type="password" placeholder="Mein Passwort.." [(ngModel)]="loginData().password" name="password"
-                 (ngModelChange)="miscService.updateField(this.loginData, 'password', $event)"
+          <input type="password" [placeholder]="'PAGE.LOGIN.INPUT.PASSWORD' | translate" [(ngModel)]="loginData().password"
+                 (ngModelChange)="miscService.updateField(this.loginData, 'password', $event)" name="password"
                  class="flex-1 bg-transparent border border-r-0 border-white/40 px-4 text-white placeholder-white/70
                         focus:outline-none focus:border-white transition-colors" />
           <button type="submit" [disabled]="isLoading()"
                   class="bg-white hover:bg-neutral-300 text-[#1e2d58] px-6 font-medium transition-all duration-200
                          cursor-pointer disabled:bg-gray-600 disabled:cursor-not-allowed">
-            {{ isLoading() ? '...' : 'Anmelden' }}
+            {{ isLoading() ? '...' : ('HEADER.LOGIN' | translate) }}
           </button>
         </div>
       </form>
@@ -85,7 +85,7 @@
         <button (click)="this.isRegisterModalOpen.set(true);"
                 class="text-white underline decoration-1 underline-offset-4 hover:text-gray-200
                        transition-colors cursor-pointer bg-transparent border-0 p-0">
-          Noch kein Mitglied? Hier registrieren!
+          {{ 'BUTTON.REGISTER.LONG' | translate }}
         </button>
       </div>
     </div>

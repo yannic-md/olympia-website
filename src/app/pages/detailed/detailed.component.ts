@@ -1,4 +1,4 @@
-import {Component, computed, Signal, signal, WritableSignal} from '@angular/core';
+import {Component, computed, OnDestroy, Signal, signal, WritableSignal} from '@angular/core';
 import {HeaderComponent} from "../../layout/sections/header/header.component";
 import {BreadcrumbComponent} from "../../layout/sections/breadcrumb/breadcrumb.component";
 import {FormsModule} from "@angular/forms";
@@ -18,6 +18,10 @@ import {LeaderboardService} from "../../services/api/leaderboard/leaderboard.ser
 import {HttpErrorResponse} from "@angular/common/http";
 import {AlertService} from "../../services/api/alert/alert.service";
 import {AuthService} from "../../services/api/auth/auth.service";
+import {AthleteService} from "../../services/api/athlete/athlete.service";
+import {CountryService} from "../../services/api/country/country.service";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
+import {Subscription} from "rxjs";
 
 @Component({
   selector: 'app-detailed',
@@ -33,12 +37,13 @@ import {AuthService} from "../../services/api/auth/auth.service";
     TableActionsComponent,
     ModalAthleteComponent,
     AlertBoxComponent,
-    ModalCountryComponent
+    ModalCountryComponent,
+    TranslatePipe
   ],
   templateUrl: './detailed.component.html',
   styleUrl: './detailed.component.css',
 })
-export class DetailedComponent {
+export class DetailedComponent implements OnDestroy {
   protected selectedView: WritableSignal<'athletes' | 'countries'> = signal<'athletes' | 'countries'>('athletes');
   protected filterCountry: WritableSignal<string> = signal<string>('all');
   protected filterSport: WritableSignal<string> = signal<string>('all');
@@ -49,6 +54,7 @@ export class DetailedComponent {
   protected editingCountry: WritableSignal<CountryStats | null> = signal(null);
   protected isAthleteModalOpen: WritableSignal<boolean> = signal(false);
   protected isCountryModalOpen: WritableSignal<boolean> = signal(false);
+  private readonly translateSub: Subscription;
 
   protected athletes: WritableSignal<Athlete[]> = signal<Athlete[]>([]);
   protected countriesData: WritableSignal<CountryStats[]> = signal<CountryStats[]>([]);
@@ -56,8 +62,21 @@ export class DetailedComponent {
   protected sports: WritableSignal<string[]> = signal<string[]>(Array.from(new Set(this.athletes().map(a => a.sport))).sort());
 
   constructor(protected miscService: MiscService, protected leaderboardService: LeaderboardService,
-              private alertService: AlertService, protected authService: AuthService) {
+              private alertService: AlertService, protected authService: AuthService,
+              private athleteService: AthleteService, private countryService: CountryService,
+              private translateService: TranslateService) {
     this.loadLeaderboardData();
+
+    this.translateSub = this.translateService.onLangChange.subscribe((): void => {
+      this.loadLeaderboardData();
+    });
+  }
+
+  /**
+   * Unsubscribes from the translation language change observable to prevent memory leaks on component destruction.
+   * */
+  ngOnDestroy(): void {
+    if (this.translateSub) { this.translateSub.unsubscribe(); }
   }
 
   /**
@@ -73,7 +92,7 @@ export class DetailedComponent {
       },
       error: (error: HttpErrorResponse): void => {
         console.error('Error loading leaderboard data:', error);
-        this.alertService.error('Fehler beim Laden der Daten!');
+        this.alertService.error(this.translateService.instant('ALERT.ERROR'));
       }
     });
   }
@@ -125,8 +144,18 @@ export class DetailedComponent {
     const athlete: Athlete | undefined = this.athletes().find(a => a.id === athleteId);
     if (!athlete) return;
 
-    this.athletes.update(current => current.filter(a => a.id !== athleteId));
-    this.alertService.success(`Athlet "${athlete.name}" wurde erfolgreich gelöscht.`);
+    this.athleteService.deleteAthlete(athleteId).subscribe({
+      next: (): void => {
+        this.athletes.update(current => current.filter(a => a.id !== athleteId));
+        this.alertService.success(
+          (this.translateService.instant('ALERT.ATHLETE.DELETE')).replace('[name]', athlete.name));
+      },
+      error: (error: HttpErrorResponse): void => {
+        console.error('Error deleting athlete:', error);
+        this.alertService.error(
+          (this.translateService.instant('ALERT.ATHLETE.DELETE.ERROR')).replace('[name]', athlete.name));
+      }
+    });
   }
 
   /**
@@ -158,23 +187,34 @@ export class DetailedComponent {
 
     this.editingAthlete.set(null);
     this.isAthleteModalOpen.set(false);
-    this.alertService.success(`Athlet "${form.name}" wurde erfolgreich aktualisiert.`);
+    this.alertService.success(
+      (this.translateService.instant('ALERT.ATHLETE.EDIT')).replace('[name]', form.name));
   }
 
   /**
-   * Deletes a country from the statistics list by its country code.
+   * Deletes a country from the statistics list by its country id.
    *
    * Finds the country in the current statistics, removes it if present, and displays a success alert.
    * This method ensures that only existing countries are deleted and provides user feedback.
    *
-   * @param {string} countryCode - The ISO code of the country to delete.
+   * @param {number} countryId - The unique ID of the country.
    */
-  protected onDeleteCountry(countryCode: string): void {
-    const country: CountryStats | undefined = this.countriesData().find(c => c.countryCode === countryCode);
+  protected onDeleteCountry(countryId: number): void {
+    const country: CountryStats | undefined = this.countriesData().find(c => c.countryId === countryId);
     if (!country) return;
 
-    this.countriesData.update(current => current.filter(c => c.countryCode !== countryCode));
-    this.alertService.success(`Das Land "${country.countryName}" wurde erfolgreich gelöscht.`);
+    this.countryService.deleteCountry(countryId).subscribe({
+      next: (): void => {
+        this.countriesData.update(current => current.filter(c => c.countryId !== countryId));
+        this.alertService.success(
+          (this.translateService.instant('ALERT.COUNTRY.DELETE')).replace('[name]', country.countryName));
+      },
+      error: (error: HttpErrorResponse): void => {
+        console.error('Error deleting athlete:', error);
+        this.alertService.error(
+          (this.translateService.instant('ALERT.COUNTRY.DELETE.ERROR')).replace('[name]', country.countryName));
+      }
+    });
   }
 
   /**
@@ -206,7 +246,8 @@ export class DetailedComponent {
 
     this.editingCountry.set(null);
     this.isCountryModalOpen.set(false);
-    this.alertService.success(`Das Land "${form.countryName}" wurde erfolgreich aktualisiert.`);
+    this.alertService.success(
+      (this.translateService.instant('ALERT.COUNTRY.EDIT')).replace('[name]', form.countryName));
   }
 
   /**
@@ -270,7 +311,7 @@ export class DetailedComponent {
     this.athletes().forEach(athlete => {
       if (!countryMap.has(athlete.countryCode)) {
         countryMap.set(athlete.countryCode, { countryCode: athlete.countryCode, countryName: athlete.countryName,
-                                              medals: { gold: 0, silver: 0, bronze: 0 } });
+                                              medals: { gold: 0, silver: 0, bronze: 0 }, countryId: athlete.countryId });
       }
 
       const stat: CountryStats = countryMap.get(athlete.countryCode)!;
@@ -331,14 +372,15 @@ export class DetailedComponent {
   protected onAddAthlete(form: { name: string; countryCode: string; countryName: string; sport: string;
                                  goldMedals: number; silverMedals: number; bronzeMedals: number; bestTime: string }): void {
     const newAthlete: Athlete = { id: Math.max(...this.athletes().map(a => a.id), 0) + 1,
-                                  name: form.name, countryCode: form.countryCode.toUpperCase(),
+                                  name: form.name, countryCode: form.countryCode.toUpperCase(), countryId: 0,
                                   countryName: form.countryName, sport: form.sport, bestTime: form.bestTime || null,
                                   medals: { gold: form.goldMedals, silver: form.silverMedals,  bronze: form.bronzeMedals }};
 
     this.athletes.update(current => [...current, newAthlete]);
     this.isAthleteModalOpen.set(false);
 
-    this.alertService.success(`Athlet "${form.name}" wurde erfolgreich hinzugefügt.`);
+    this.alertService.success(
+      (this.translateService.instant('ALERT.ATHLETE.ADD')).replace('[name]', form.name));
   }
 
   /**
@@ -361,14 +403,16 @@ export class DetailedComponent {
     const countryExists: boolean = this.countriesData().some(c => c.countryCode === form.countryCode);
     if (!countryExists) {
       const newCountry: CountryStats = { countryCode: form.countryCode.toUpperCase(), countryName: form.countryName,
-                                         medals: { gold: form.goldMedals,  silver: form.silverMedals,  bronze: form.bronzeMedals }
+                                         medals: { gold: form.goldMedals,  silver: form.silverMedals,  bronze: form.bronzeMedals },
+                                         countryId: 0
       };
 
       this.countriesData.update(current => [...current, newCountry]);
     }
 
     this.isCountryModalOpen.set(false);
-    this.alertService.success(`Land "${form.countryName}" wurde erfolgreich hinzugefügt.`);
+    this.alertService.success(
+      (this.translateService.instant('ALERT.COUNTRY.ADD')).replace('[name]', form.countryName));
   }
 
 }

@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {HeaderComponent} from "../../layout/sections/header/header.component";
 import {BreadcrumbComponent} from "../../layout/sections/breadcrumb/breadcrumb.component";
 import {NgClass, NgOptimizedImage} from "@angular/common";
@@ -11,6 +11,8 @@ import {HttpErrorResponse} from "@angular/common/http";
 import {AlertService} from "../../services/api/alert/alert.service";
 import {LeaderboardService} from "../../services/api/leaderboard/leaderboard.service";
 import {TableMedalPillsComponent} from "../../layout/elements/table-medal-pills/table-medal-pills.component";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
+import {Subscription} from "rxjs";
 
 interface MedalWinner {
   rank: number;
@@ -32,16 +34,29 @@ interface MedalWinner {
     RouterLink,
     AlertBoxComponent,
     TableMedalPillsComponent,
-    NgClass
+    NgClass,
+    TranslatePipe
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   protected topCountries: MedalWinner[] = [];
+  private readonly translateSub: Subscription;
 
   constructor(protected miscService: MiscService, private leaderboardService: LeaderboardService,
-              private alertService: AlertService) {}
+              private alertService: AlertService, private translateService: TranslateService) {
+    this.translateSub = this.translateService.onLangChange.subscribe((): void => {
+      this.loadTopCountries();
+    });
+  }
+
+  /**
+   * Unsubscribes from the translation language change observable to prevent memory leaks on component destruction.
+   * */
+  ngOnDestroy(): void {
+    if (this.translateSub) { this.translateSub.unsubscribe(); }
+  }
 
   /**
    * Initializes the home component by loading the top countries leaderboard data on startup.
@@ -61,7 +76,7 @@ export class HomeComponent implements OnInit {
       },
       error: (error: HttpErrorResponse): void => {
         console.error('Error loading leaderboard data:', error);
-        this.alertService.error('Fehler beim Laden der Daten!');
+        this.alertService.error(this.translateService.instant('ALERT.ERROR'));
       }
     });
   }

@@ -11,27 +11,10 @@ interface NavigationItem {
 })
 export class MiscService {
   nav_items: NavigationItem[] = [
-    { label: 'Übersicht', path: '/' },
-    { label: 'Detaillierte Ergebnisse', path: '/detailed' },
-    { label: 'Mehr über die Spiele erfahren', externalUrl: 'https://www.olympics.com/de/olympic-games/paris-2024' }
+    { label: 'BREADCRUMB.NAVIGATION.START', path: '/' },
+    { label: 'BREADCRUMB.NAVIGATION.DETAILED', path: '/detailed' },
+    { label: 'BREADCRUMB.NAVIGATION.LEARNMORE', externalUrl: 'https://www.olympics.com/de/olympic-games/paris-2024' }
   ];
-
-  /**
-   * Returns the TailwindCSS background color class for a given medal type.
-   *
-   * @param type Medal type to map to a color class.
-   * @returns TailwindCSS background color class for the specified medal type.
-   */
-  getWinnerColor(type: string): string {
-    switch (type) {
-      case 'Gold':
-        return 'bg-[#FCD34D]';
-      case 'Silber':
-        return 'bg-[#E5E7EB]';
-    }
-
-    return 'bg-[#D6A472]'; // bronze
-  }
 
   /**
    * Handles backdrop clicks to close the modal when clicking outside the modal content.
