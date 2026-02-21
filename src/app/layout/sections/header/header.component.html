@@ -29,7 +29,7 @@
         <!-- Login Icon for mobile -->
         <a (click)="this.logout();">
           <button class="sm:hidden bg-[#cfe2f3] hover:bg-[#bed7ee] text-zinc-950 rounded-full transition-all
-                       cursor-pointer duration-200" [ngClass]="authService.isLoggedIn() ? 'mt-1' : ''">
+                       cursor-pointer duration-200 h-7.5 mt-1">
             <img [ngSrc]="authService.isLoggedIn() ? '/assets/images/icons/exit.svg' : '/assets/images/icons/user-alt.svg'"
                  width="30" height="30" alt="User Icon" [ngClass]="authService.isLoggedIn() ? 'p-1' : ''" />
           </button>
