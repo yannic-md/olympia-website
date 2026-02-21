@@ -3,10 +3,14 @@ import {NgOptimizedImage} from "@angular/common";
 import {Router, RouterLink} from "@angular/router";
 import {ModalRegisterComponent} from "../../layout/sections/modal/modal-register/modal-register.component";
 import {FormsModule} from "@angular/forms";
-import {MiscService} from "../../services/misc.service";
+import {MiscService} from "../../services/misc/misc.service";
+import {AuthService} from "../../services/api/auth/auth.service";
+import {HttpErrorResponse} from "@angular/common/http";
+import {AlertService} from "../../services/api/alert/alert.service";
+import {AlertBoxComponent} from "../../layout/sections/alert-box/alert-box.component";
 
 interface LoginForm {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -22,58 +26,75 @@ interface RegisterForm {
     NgOptimizedImage,
     RouterLink,
     ModalRegisterComponent,
-    FormsModule
+    FormsModule,
+    AlertBoxComponent
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
 export class LoginComponent {
-  protected loginData: WritableSignal<LoginForm> = signal({ email: '', password: '' });
+  protected loginData: WritableSignal<LoginForm> = signal({ username: '', password: '' });
   protected isRegisterModalOpen: WritableSignal<boolean> = signal(false);
   protected loginError: WritableSignal<string> = signal('');
+  protected isLoading: WritableSignal<boolean> = signal(false);
 
-  constructor(private router: Router, protected miscService: MiscService) {}
+  constructor(private router: Router, protected miscService: MiscService, private authService: AuthService,
+              private alertService: AlertService) {}
 
   /**
-   * Validates if the provided string is a valid email address format.
+   * Handles the user login process and navigates to the home page on success.
    *
-   * @param {string} email - The email address to validate.
-   * @returns {boolean} True if the email format is valid, false otherwise.
-   */
-  private isValidEmail(email: string): boolean {
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailPattern.test(email);
-  }
-
-  /**
-   * Submits the login form and redirects to the home page if login was a success.
-   * TODO: real functionality
+   * Validates the input, triggers the authentication request, shows a loading state, and displays a
+   * translated error message if the credentials are invalid or the login fails.
    */
   protected onLogin(): void {
-    const { email, password } = this.loginData();
+    const {username, password} = this.loginData();
     this.loginError.set('');
 
-    if (!email || !password) {
+    if (!username.trim() || !password) {
       this.loginError.set('Bitte fülle alle Felder aus.');
       return;
     }
 
-    if (!this.isValidEmail(email)) {
-      this.loginError.set('Bitte gib eine gültige E-Mail-Adresse ein.');
-      return;
-    }
-
-    console.log('Login attempt:', { email, password });
-    this.router.navigate(['/']);
+    this.isLoading.set(true);
+    this.authService.login(username, password).subscribe({
+      next: (): void => {
+        this.router.navigate(['/']).then(_r => {
+          this.alertService.success(`Du bist nun angemeldet als ${this.authService.currentUser()?.username}.`)
+        });
+      },
+      error: (_err: HttpErrorResponse): void => {
+        this.isLoading.set(false);
+        this.loginError.set('Ungültige Anmeldedaten. Bitte versuche es erneut.');
+      }
+    });
   }
 
   /**
-   * Submits the register form and redirects to the home page if login was a success.
-   * TODO: real functionality
+   * Handles user registration and redirects to the home page on success.
+   *
+   * Clears previous errors, shows a loading state, calls the registration API and, on success, navigates to the
+   * root route while on failure setting a user-friendly, conflict-aware error message.
+   *
+   * @param {RegisterForm} data The registration form data containing username, password and confirmation.
    */
   protected onRegister(data: RegisterForm): void {
-    console.log('Registration data:', data);
     this.loginError.set('');
-    this.router.navigate(['/']).then();
+    this.isLoading.set(true);
+
+    this.authService.register(data.username, data.password).subscribe({
+      next: (): void => {
+        this.router.navigate(['/']).then(_r => {
+          this.alertService.success(`Du bist nun angemeldet als ${this.authService.currentUser()?.username}.`)
+        });
+      },
+      error: (err: HttpErrorResponse): void => {
+        this.isLoading.set(false);
+        const isConflict: boolean = err.status === 409 || err.error?.message?.includes('exists');
+        this.alertService.error(isConflict ? 'Dieser Benutzername ist bereits vergeben.'
+                                           : 'Registrierung fehlgeschlagen. Bitte versuche es erneut.'
+        );
+      }
+    });
   }
 }
