@@ -16,19 +16,22 @@
       <!-- Action Buttons -->
       <div class="flex items-center gap-2 sm:gap-3 md:gap-3">
         <!-- Login Button - Hidden on small screens -->
-        <a routerLink="/login">
+        <a (click)="this.logout();">
           <button class="hidden sm:flex bg-[#cfe2f3] hover:bg-[#bed7ee] text-zinc-950 px-2 md:px-3.5 py-1 md:py-0 rounded-full
                        items-center gap-0 transition-all cursor-pointer group duration-200 hover:drop-shadow-md">
-            <img ngSrc="/assets/images/icons/user-alt.svg" width="40" height="40" alt="User Icon" class="w-7 h-7 md:w-8 md:h-8" />
-            <span class="font-medium text-sm">Anmelden</span>
+            <img [ngSrc]="authService.isLoggedIn() ? '/assets/images/icons/exit.svg' : '/assets/images/icons/user-alt.svg'"
+                 width="30" height="30" alt="User Icon" class="w-7 h-7 md:w-8 md:h-8"
+                 [ngClass]="authService.isLoggedIn() ? 'py-1' : ''" />
+            <span class="font-medium text-sm">{{ authService.isLoggedIn() ? 'Abmelden' : 'Anmelden' }}</span>
           </button>
         </a>
 
         <!-- Login Icon for mobile -->
-        <a routerLink="/login">
+        <a (click)="this.logout();">
           <button class="sm:hidden bg-[#cfe2f3] hover:bg-[#bed7ee] text-zinc-950 rounded-full transition-all
-                       cursor-pointer duration-200">
-            <img ngSrc="/assets/images/icons/user-alt.svg" width="32" height="32" alt="User Icon" />
+                       cursor-pointer duration-200" [ngClass]="authService.isLoggedIn() ? 'mt-1' : ''">
+            <img [ngSrc]="authService.isLoggedIn() ? '/assets/images/icons/exit.svg' : '/assets/images/icons/user-alt.svg'"
+                 width="30" height="30" alt="User Icon" [ngClass]="authService.isLoggedIn() ? 'p-1' : ''" />
           </button>
         </a>
 
@@ -80,7 +83,7 @@
                   text-black tracking-tight">
         @for (item of miscService.nav_items; track $index) {
           @if (!item.externalUrl) {
-            <a [routerLink]="item.path"
+            <a [routerLink]="item.path" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="after:w-full"
                class="relative after:content-[''] after:absolute after:-bottom-4.75 after:left-0
                        after:w-0 after:h-0.5 after:bg-black after:transition-all after:duration-200
                        hover:after:w-full">{{ item.label }}</a>

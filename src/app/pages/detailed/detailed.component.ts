@@ -17,6 +17,7 @@ import {Athlete, AthleteForm} from "../../types/Athlete";
 import {LeaderboardService} from "../../services/api/leaderboard/leaderboard.service";
 import {HttpErrorResponse} from "@angular/common/http";
 import {AlertService} from "../../services/api/alert/alert.service";
+import {AuthService} from "../../services/api/auth/auth.service";
 
 @Component({
   selector: 'app-detailed',
@@ -55,7 +56,7 @@ export class DetailedComponent {
   protected sports: WritableSignal<string[]> = signal<string[]>(Array.from(new Set(this.athletes().map(a => a.sport))).sort());
 
   constructor(protected miscService: MiscService, protected leaderboardService: LeaderboardService,
-              private alertService: AlertService) {
+              private alertService: AlertService, protected authService: AuthService) {
     this.loadLeaderboardData();
   }
 

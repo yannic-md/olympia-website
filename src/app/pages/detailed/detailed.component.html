@@ -64,7 +64,7 @@
     </div>
   </div>
 
-  <!-- Result Table TODO: Button visibility based on Role (ADMIN / JURY) -->
+  <!-- Result Table -->
   <div class="bg-neutral-100 mb-8 md:mb-12 p-4 md:p-10 md:px-23 md:pb-6 border-neutral-200 border-t">
     <!-- Header stuff -->
     <div class="mb-8 flex flex-col items-start justify-between lg:flex-row md:items-center">
@@ -73,21 +73,22 @@
         @else { Länder Ergebnisse }
       </h2>
 
-      <div class="flex justify-center gap-x-4 mx-auto lg:mx-0">
-        <button class="flex items-center gap-2 rounded bg-purple-500 px-4 py-2 text-sm font-semibold text-white
+      @if (authService.isLoggedIn()) {
+        <div class="flex justify-center gap-x-4 mx-auto lg:mx-0">
+          <button class="flex items-center gap-2 rounded bg-purple-500 px-4 py-2 text-sm font-semibold text-white
                      transition hover:bg-purple-600 shadow-sm cursor-pointer">
-          <img ngSrc="/assets/images/icons/upload.svg" width="16" height="16" alt="Chevron Down" class="invert" />
-          Daten Importieren <!-- TODO: Only JURY/ADMIN AND FUNCTIONALITY -->
-        </button>
-        <button class="flex items-center gap-2 rounded bg-green-500 px-4 py-2 text-sm font-semibold text-white
+            <img ngSrc="/assets/images/icons/upload.svg" width="16" height="16" alt="Chevron Down" class="invert" />
+            Daten Importieren
+          </button>
+          <button class="flex items-center gap-2 rounded bg-green-500 px-4 py-2 text-sm font-semibold text-white
                      transition hover:bg-green-600 shadow-sm cursor-pointer"
-                (click)="selectedView() === 'athletes' ? this.isAthleteModalOpen.set(true)
+                  (click)="selectedView() === 'athletes' ? this.isAthleteModalOpen.set(true)
                                                        : this.isCountryModalOpen.set(true)">
-          <img ngSrc="/assets/images/icons/plus.svg" width="16" height="16" alt="Chevron Down" class="invert" />
-          {{ selectedView() === 'athletes' ? 'Athlet hinzufügen' : 'Land hinzufügen' }}
-          <!-- TODO: Only JURY/ADMIN -->
-        </button>
-      </div>
+            <img ngSrc="/assets/images/icons/plus.svg" width="16" height="16" alt="Chevron Down" class="invert" />
+            {{ selectedView() === 'athletes' ? 'Athlet hinzufügen' : 'Land hinzufügen' }}
+          </button>
+        </div>
+      }
     </div>
 
     <!-- Actual Table -->
@@ -105,7 +106,11 @@
 
             @if (selectedView() === 'athletes') {
               <th class="text-sm leading-8 font-medium">Bestzeit/Punkte</th>
-            }<th class="text-sm leading-8 font-medium">Aktionen</th>
+            }
+
+            @if (authService.isLoggedIn()) {
+              <th class="text-sm leading-8 font-medium">Aktionen</th>
+            }
           </tr>
         </thead>
 
@@ -128,9 +133,11 @@
                   @if (athlete.bestTime) { {{ athlete.bestTime }} }
                   @else { <span class="text-gray-400">-</span> }
                 </td>
-                <td class="py-4 pr-4 lg:pr-0">
-                  <app-table-actions (edit)="onEditAthlete(athlete)" (delete)="onDeleteAthlete(athlete.id)" />
-                </td>
+                @if (authService.isLoggedIn()) {
+                  <td class="py-4 pr-4 lg:pr-0">
+                    <app-table-actions (edit)="onEditAthlete(athlete)" (delete)="onDeleteAthlete(athlete.id)" />
+                  </td>
+                }
               </tr>
             }
 
@@ -149,9 +156,12 @@
                 <td class="py-4">
                   <app-table-medal-pills [medals]="country.medals" [activeFilter]="filterMedal()" />
                 </td>
-                <td class="py-4">
-                  <app-table-actions (edit)="onEditCountry(country)" (delete)="onDeleteCountry(country.countryCode)" />
-                </td>
+
+                @if (authService.isLoggedIn()) {
+                  <td class="py-4">
+                    <app-table-actions (edit)="onEditCountry(country)" (delete)="onDeleteCountry(country.countryCode)" />
+                  </td>
+                }
               </tr>
             }
 

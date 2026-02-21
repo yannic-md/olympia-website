@@ -1,8 +1,10 @@
 import {Component, HostListener, Inject, OnInit, PLATFORM_ID} from '@angular/core';
-import {RouterLink} from "@angular/router";
+import {Router, RouterLink, RouterLinkActive} from "@angular/router";
 import {isPlatformBrowser, NgClass, NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
 import {MiscService} from "../../../services/misc/misc.service";
+import {AuthService} from "../../../services/api/auth/auth.service";
+import {AlertService} from "../../../services/api/alert/alert.service";
 
 @Component({
   selector: 'app-header',
@@ -10,6 +12,7 @@ import {MiscService} from "../../../services/misc/misc.service";
     RouterLink,
     NgOptimizedImage,
     NgClass,
+    RouterLinkActive,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
@@ -36,7 +39,8 @@ export class HeaderComponent implements OnInit {
   protected scrollThreshold: number = 50;
   protected isHoveringHeader: boolean = false;
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object, protected miscService: MiscService) {}
+  constructor(@Inject(PLATFORM_ID) private platformId: Object, protected miscService: MiscService,
+              protected authService: AuthService, private alertService: AlertService, private router: Router) {}
 
   /**
    * Initializes the component and stores the current scroll position.
@@ -71,6 +75,18 @@ export class HeaderComponent implements OnInit {
   protected changeLanguage(language: string): void {
     this.currentLanguage = language;
     this.isLanguageMenuOpen = false;
+  }
+
+  /**
+   * Log out the currently logged in user.
+   */
+  protected logout(): void {
+    if (!this.authService.isLoggedIn()) { this.router.navigate(["/login"]).then(); return; }
+
+    localStorage.clear(); // delete saved user
+    this.authService.currentUser.set(null);
+
+    this.alertService.success("Du wurdest erfolgreich abgemeldet.");
   }
 
   /**
