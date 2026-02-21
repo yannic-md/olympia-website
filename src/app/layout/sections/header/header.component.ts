@@ -2,7 +2,7 @@ import {Component, HostListener, Inject, OnInit, PLATFORM_ID} from '@angular/cor
 import {RouterLink} from "@angular/router";
 import {isPlatformBrowser, NgClass, NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
-import {MiscService} from "../../../services/misc.service";
+import {MiscService} from "../../../services/misc/misc.service";
 
 @Component({
   selector: 'app-header',

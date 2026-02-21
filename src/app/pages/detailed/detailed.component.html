@@ -100,11 +100,11 @@
             } <th class="pl-2 text-sm leading-8 font-medium" [class.pl-2]="selectedView() === 'countries'">Land</th>
 
             @if (selectedView() === 'athletes') {
-              <th class="text-sm leading-8 font-medium">Sportart</th>
+              <th class="text-sm leading-8 font-medium">Letzte Sportart</th>
             }<th class="text-sm leading-8 font-medium">Medaillen</th>
 
             @if (selectedView() === 'athletes') {
-              <th class="text-sm leading-8 font-medium">Bestzeit</th>
+              <th class="text-sm leading-8 font-medium">Bestzeit/Punkte</th>
             }<th class="text-sm leading-8 font-medium">Aktionen</th>
           </tr>
         </thead>
@@ -125,7 +125,7 @@
                   <app-table-medal-pills [medals]="athlete.medals" [activeFilter]="filterMedal()" />
                 </td>
                 <td class="py-4 pr-4 lg:pr-0 font-mono">
-                  @if (miscService.isRaceSport(athlete.sport) && athlete.bestTime) { {{ athlete.bestTime }} }
+                  @if (athlete.bestTime) { {{ athlete.bestTime }} }
                   @else { <span class="text-gray-400">-</span> }
                 </td>
                 <td class="py-4 pr-4 lg:pr-0">
@@ -177,10 +177,6 @@
                    (closeModal)="isCountryModalOpen.set(false); editingCountry.set(null)"
                    (addCountry)="onAddCountry($event)" (updateCountry)="onUpdateCountry($event)" />
 
-@if (showSuccessAlert()) {
-  <div class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full px-4">
-    <app-alert-box type="success" title="Erfolg!" [message]="successMessage()" [duration]="3000"
-                   (dismissed)="showSuccessAlert.set(false)" />
-  </div>
-}
+<!-- Show confirmation popups -->
+<app-alert-box />
 

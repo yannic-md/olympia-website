@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import {Router, RouterLink, RouterLinkActive} from "@angular/router";
-import {MiscService} from "../../../services/misc.service";
+import {MiscService} from "../../../services/misc/misc.service";
 
 @Component({
   selector: 'app-breadcrumb',

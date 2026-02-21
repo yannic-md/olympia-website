@@ -4,7 +4,8 @@ import {BreadcrumbComponent} from "../../layout/sections/breadcrumb/breadcrumb.c
 import {NgOptimizedImage} from "@angular/common";
 import {FooterComponent} from "../../layout/sections/footer/footer.component";
 import {RouterLink} from "@angular/router";
-import {MiscService} from "../../services/misc.service";
+import {MiscService} from "../../services/misc/misc.service";
+import {AlertBoxComponent} from "../../layout/sections/alert-box/alert-box.component";
 
 interface MedalWinner {
   type: 'Gold' | 'Silber' | 'Bronze';
@@ -25,7 +26,8 @@ interface Category {
     BreadcrumbComponent,
     NgOptimizedImage,
     FooterComponent,
-    RouterLink
+    RouterLink,
+    AlertBoxComponent
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',

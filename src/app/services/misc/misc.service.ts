@@ -34,18 +34,6 @@ export class MiscService {
   }
 
   /**
-   * Checks if the given sport is a race sport that tracks time-based results.
-   *
-   * @param {string} sportName - The name of the sport to check.
-   * @returns {boolean} True if the sport is a race sport with time tracking, false otherwise.
-   */
-  isRaceSport(sportName: string): boolean {
-    const raceSports: string[] = ['Bobsport', 'Biathlon', 'Ski Alpin', 'Eisschnelllauf', 'Ski Langlauf', 'Shorttrack',
-                                  'Rennrodeln', 'Skeleton'];
-    return raceSports.includes(sportName);
-  }
-
-  /**
    * Handles backdrop clicks to close the modal when clicking outside the modal content.
    */
   onBackdropClick(event: MouseEvent, close: () => void): void {

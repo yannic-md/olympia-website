@@ -1,5 +1,5 @@
 import {Component} from '@angular/core';
-import {MiscService} from "../../../services/misc.service";
+import {MiscService} from "../../../services/misc/misc.service";
 
 @Component({
   selector: 'app-footer',

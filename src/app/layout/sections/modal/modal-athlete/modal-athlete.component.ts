@@ -10,14 +10,14 @@ import {
   WritableSignal
 } from '@angular/core';
 import {FormsModule} from "@angular/forms";
-import {NgClass, NgOptimizedImage} from "@angular/common";
+import {NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
-import {MiscService} from "../../../../services/misc.service";
+import {MiscService} from "../../../../services/misc/misc.service";
 import {AthleteForm} from "../../../../types/Athlete";
 
 @Component({
   selector: 'app-modal-athlete',
-  imports: [FormsModule, NgOptimizedImage, NgClass],
+  imports: [FormsModule, NgOptimizedImage],
   templateUrl: './modal-athlete.component.html',
   styleUrl: './modal-athlete.component.css',
   animations: [
@@ -94,13 +94,9 @@ export class ModalAthleteComponent {
     const hasRequiredFields: boolean = data.name.trim() !== '' &&
       data.countryName !== '' && data.sport !== '';
 
-    if (this.miscService.isRaceSport(data.sport)) {
-      return hasRequiredFields &&
-        data.bestTime.trim() !== '' &&
-        this.bestTimeError() === '';
-    }
-
-    return hasRequiredFields;
+    return hasRequiredFields &&
+      data.bestTime.trim() !== '' &&
+      this.bestTimeError() === '';
   });
 
   /**
@@ -161,7 +157,7 @@ export class ModalAthleteComponent {
     const submissionData = { ...this.formData() };
 
     // Format best time only on submit
-    if (this.miscService.isRaceSport(submissionData.sport) && submissionData.bestTime) {
+    if (submissionData.bestTime) {
       submissionData.bestTime = this.formatBestTime(submissionData.bestTime);
     }
 

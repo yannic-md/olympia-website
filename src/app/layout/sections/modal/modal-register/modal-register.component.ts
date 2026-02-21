@@ -12,7 +12,7 @@ import {
 import {FormsModule} from "@angular/forms";
 import {NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
-import {MiscService} from "../../../../services/misc.service";
+import {MiscService} from "../../../../services/misc/misc.service";
 
 interface RegisterForm {
   username: string;

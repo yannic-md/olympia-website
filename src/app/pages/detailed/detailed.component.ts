@@ -9,11 +9,14 @@ import {TableCountryBadgeComponent} from "../../layout/elements/table-country-ba
 import {TableMedalPillsComponent} from "../../layout/elements/table-medal-pills/table-medal-pills.component";
 import {TableActionsComponent} from "../../layout/elements/table-actions/table-actions.component";
 import {ModalAthleteComponent} from "../../layout/sections/modal/modal-athlete/modal-athlete.component";
-import {MiscService} from "../../services/misc.service";
+import {MiscService} from "../../services/misc/misc.service";
 import {AlertBoxComponent} from "../../layout/sections/alert-box/alert-box.component";
 import {ModalCountryComponent} from "../../layout/sections/modal/modal-country/modal-country.component";
 import {CountryForm, CountryStats} from "../../types/Country";
 import {Athlete, AthleteForm} from "../../types/Athlete";
+import {LeaderboardService} from "../../services/api/leaderboard/leaderboard.service";
+import {HttpErrorResponse} from "@angular/common/http";
+import {AlertService} from "../../services/api/alert/alert.service";
 
 @Component({
   selector: 'app-detailed',
@@ -45,58 +48,43 @@ export class DetailedComponent {
   protected editingCountry: WritableSignal<CountryStats | null> = signal(null);
   protected isAthleteModalOpen: WritableSignal<boolean> = signal(false);
   protected isCountryModalOpen: WritableSignal<boolean> = signal(false);
-  protected showSuccessAlert: WritableSignal<boolean> = signal(false);
-  protected successMessage: WritableSignal<string> = signal('');
 
-  // TODO: Get from backend
-  protected athletes: WritableSignal<Athlete[]> = signal<Athlete[]>([
-    { id: 1, name: 'Max Mustermann', countryCode: 'AT', countryName: 'Österreich', sport: 'Bobsport',
-      medals: { gold: 1, silver: 1, bronze: 2 }, bestTime: '3:24.56' },
-    { id: 2, name: 'Maria Müller', countryCode: 'CH', countryName: 'Schweiz', sport: 'Curling',
-      medals: { gold: 1, silver: 1, bronze: 2 }, bestTime: null },
-    { id: 3, name: 'Lars Nordström', countryCode: 'NO', countryName: 'Norwegen', sport: 'Biathlon',
-      medals: { gold: 2, silver: 0, bronze: 1 }, bestTime: '24:15.8' },
-    { id: 4, name: 'Sophie Schmidt', countryCode: 'DE', countryName: 'Deutschland', sport: 'Ski Alpin',
-      medals: { gold: 1, silver: 2, bronze: 0 }, bestTime: '1:45.23' },
-    { id: 5, name: 'John Anderson', countryCode: 'US', countryName: 'USA', sport: 'Eisschnelllauf',
-      medals: { gold: 0, silver: 1, bronze: 1 }, bestTime: '1:07.95' },
-    { id: 6, name: 'Anna Kowalska', countryCode: 'PL', countryName: 'Polen', sport: 'Skispringen',
-      medals: { gold: 1, silver: 0, bronze: 1 }, bestTime: null },
-    { id: 7, name: 'Yuki Tanaka', countryCode: 'JP', countryName: 'Japan', sport: 'Eiskunstlauf',
-      medals: { gold: 2, silver: 1, bronze: 0 }, bestTime: null },
-    { id: 8, name: 'Pierre Dubois', countryCode: 'FR', countryName: 'Frankreich', sport: 'Freestyle-Skiing',
-      medals: { gold: 0, silver: 2, bronze: 1 }, bestTime: null },
-    { id: 9, name: 'Emma Johansson', countryCode: 'SE', countryName: 'Schweden', sport: 'Ski Langlauf',
-      medals: { gold: 3, silver: 1, bronze: 1 }, bestTime: '38:42.5' },
-    { id: 10, name: 'Mikhail Petrov', countryCode: 'RU', countryName: 'Russland', sport: 'Eishockey',
-      medals: { gold: 1, silver: 0, bronze: 0 }, bestTime: null },
-    { id: 11, name: 'Isabella Rossi', countryCode: 'IT', countryName: 'Italien', sport: 'Shorttrack',
-      medals: { gold: 0, silver: 1, bronze: 2 }, bestTime: '42.893' },
-    { id: 12, name: 'Kim Min-ji', countryCode: 'KR', countryName: 'Südkorea', sport: 'Snowboard',
-      medals: { gold: 2, silver: 0, bronze: 1 }, bestTime: null },
-    { id: 13, name: 'Hans Bergmann', countryCode: 'DE', countryName: 'Deutschland', sport: 'Rennrodeln',
-      medals: { gold: 1, silver: 1, bronze: 0 }, bestTime: '3:15.782' },
-    { id: 14, name: 'Emily Clark', countryCode: 'CA', countryName: 'Kanada', sport: 'Skeleton',
-      medals: { gold: 0, silver: 0, bronze: 2 }, bestTime: '3:42.91' },
-    { id: 15, name: 'Viktor Novak', countryCode: 'CZ', countryName: 'Tschechien', sport: 'Eishockey',
-      medals: { gold: 0, silver: 1, bronze: 1 }, bestTime: null },
-    { id: 16, name: 'Olga Ivanova', countryCode: 'RU', countryName: 'Russland', sport: 'Biathlon',
-      medals: { gold: 1, silver: 2, bronze: 1 }, bestTime: '28:34.2' },
-    { id: 17, name: 'Thomas Hansen', countryCode: 'DK', countryName: 'Dänemark', sport: 'Curling',
-      medals: { gold: 0, silver: 1, bronze: 0 }, bestTime: null },
-    { id: 18, name: 'Sarah Williams', countryCode: 'GB', countryName: 'Großbritannien', sport: 'Skeleton',
-      medals: { gold: 1, silver: 0, bronze: 0 }, bestTime: '3:38.45' },
-    { id: 19, name: 'Chen Wei', countryCode: 'CN', countryName: 'China', sport: 'Shorttrack',
-      medals: { gold: 2, silver: 1, bronze: 0 }, bestTime: '41.236' },
-    { id: 20, name: 'Isabella van der Berg', countryCode: 'NL', countryName: 'Niederlande', sport: 'Eisschnelllauf',
-      medals: { gold: 3, silver: 2, bronze: 1 }, bestTime: '1:12.58' }]);
-
-  // TODO: Get from Backend
+  protected athletes: WritableSignal<Athlete[]> = signal<Athlete[]>([]);
   protected countriesData: WritableSignal<CountryStats[]> = signal<CountryStats[]>([]);
   protected countries: Signal<string[]> = computed((): string[] => this.countriesData().map(c => c.countryName).sort());
   protected sports: WritableSignal<string[]> = signal<string[]>(Array.from(new Set(this.athletes().map(a => a.sport))).sort());
 
-  constructor(protected miscService: MiscService) { this.initializeCountriesFromAthletes(); }
+  constructor(protected miscService: MiscService, protected leaderboardService: LeaderboardService,
+              private alertService: AlertService) {
+    this.loadLeaderboardData();
+  }
+
+  /**
+   * Loads leaderboard data from the backend API and initializes athletes and countries.
+   * Subscribes to the leaderboard service and updates the component signals with the received data.
+   */
+  private loadLeaderboardData(): void {
+    this.leaderboardService.getLeaderboard().subscribe({
+      next: (athletes: Athlete[]): void => {
+        this.athletes.set(athletes);
+        this.initializeCountriesFromAthletes();
+        this.updateSportsList();
+      },
+      error: (error: HttpErrorResponse): void => {
+        console.error('Error loading leaderboard data:', error);
+        this.alertService.error('Fehler beim Laden der Daten!');
+      }
+    });
+  }
+
+  /**
+   * Updates the sports list based on the current athletes.
+   * Extracts unique sports from all athletes and sorts them alphabetically.
+   */
+  private updateSportsList(): void {
+    const uniqueSports = Array.from(new Set(this.athletes().map(a => a.sport))).sort();
+    this.sports.set(uniqueSports);
+  }
 
   /**
    * Computed signal that transforms the currently selected athlete into an `AthleteForm` model.
@@ -137,8 +125,7 @@ export class DetailedComponent {
     if (!athlete) return;
 
     this.athletes.update(current => current.filter(a => a.id !== athleteId));
-    this.successMessage.set(`Athlet "${athlete.name}" wurde erfolgreich gelöscht.`);
-    this.showSuccessAlert.set(true);
+    this.alertService.success(`Athlet "${athlete.name}" wurde erfolgreich gelöscht.`);
   }
 
   /**
@@ -170,8 +157,7 @@ export class DetailedComponent {
 
     this.editingAthlete.set(null);
     this.isAthleteModalOpen.set(false);
-    this.successMessage.set(`Athlet "${form.name}" wurde erfolgreich aktualisiert.`);
-    this.showSuccessAlert.set(true);
+    this.alertService.success(`Athlet "${form.name}" wurde erfolgreich aktualisiert.`);
   }
 
   /**
@@ -187,8 +173,7 @@ export class DetailedComponent {
     if (!country) return;
 
     this.countriesData.update(current => current.filter(c => c.countryCode !== countryCode));
-    this.successMessage.set(`Das Land "${country.countryName}" wurde erfolgreich gelöscht.`);
-    this.showSuccessAlert.set(true);
+    this.alertService.success(`Das Land "${country.countryName}" wurde erfolgreich gelöscht.`);
   }
 
   /**
@@ -220,8 +205,7 @@ export class DetailedComponent {
 
     this.editingCountry.set(null);
     this.isCountryModalOpen.set(false);
-    this.successMessage.set(`Das Land "${form.countryName}" wurde erfolgreich aktualisiert.`);
-    this.showSuccessAlert.set(true);
+    this.alertService.success(`Das Land "${form.countryName}" wurde erfolgreich aktualisiert.`);
   }
 
   /**
@@ -257,7 +241,6 @@ export class DetailedComponent {
    * from that country. The resulting list is sorted by medal counts (prioritizing the selected medal filter) and
    * alphabetically by country name.
    *
-   * @deprecated probaly not needed anymore if we get the real api data. TODO
    * @returns {Signal<CountryStats[]>} A signal containing the aggregated and sorted array of country statistics.
    */
   protected filteredCountries: Signal<CountryStats[]> = computed((): CountryStats[] => {
@@ -289,7 +272,7 @@ export class DetailedComponent {
                                               medals: { gold: 0, silver: 0, bronze: 0 } });
       }
 
-      const stat = countryMap.get(athlete.countryCode)!;
+      const stat: CountryStats = countryMap.get(athlete.countryCode)!;
       stat.medals.gold += athlete.medals.gold;
       stat.medals.silver += athlete.medals.silver;
       stat.medals.bronze += athlete.medals.bronze;
@@ -354,8 +337,7 @@ export class DetailedComponent {
     this.athletes.update(current => [...current, newAthlete]);
     this.isAthleteModalOpen.set(false);
 
-    this.successMessage.set(`Athlet "${form.name}" wurde erfolgreich hinzugefügt.`);
-    this.showSuccessAlert.set(true);
+    this.alertService.success(`Athlet "${form.name}" wurde erfolgreich hinzugefügt.`);
   }
 
   /**
@@ -385,8 +367,7 @@ export class DetailedComponent {
     }
 
     this.isCountryModalOpen.set(false);
-    this.successMessage.set(`Land "${form.countryName}" wurde erfolgreich hinzugefügt.`);
-    this.showSuccessAlert.set(true);
+    this.alertService.success(`Land "${form.countryName}" wurde erfolgreich hinzugefügt.`);
   }
 
 }

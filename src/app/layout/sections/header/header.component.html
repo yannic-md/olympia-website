@@ -39,7 +39,7 @@
                          rounded-full flex items-center justify-between gap-2 sm:gap-3 md:gap-3 cursor-pointer
                          hover:drop-shadow-md transition-all duration-200">
             <span class="font-normal text-sm md:text-sm leading-[0.9px]">
-              {{ currentLanguage === 'Deutsch' ? 'Deutsch' : 'English' }}</span>
+              {{ currentLanguage === 'Deutsch' ? 'Deutsch' : currentLanguage === 'French' ? 'French' : 'English' }}</span>
             <img ngSrc="/assets/images/icons/chevron-down.svg" width="10" height="10" alt="Chevron Down Icon"
                  [class.rotate-180]="isLanguageMenuOpen" class="mb-0.5 transition-transform duration-200 md:w-2.5 md:h-2.5" />
           </button>
@@ -55,6 +55,10 @@
                       class="w-full px-4 sm:px-6 py-2 sm:py-3 text-left text-neutral-600 hover:bg-gray-50
                              transition-colors duration-200 font-normal text-base sm:text-xl cursor-pointer"
                       [class.bg-gray-100]="currentLanguage === 'English'">English</button>
+              <button (click)="changeLanguage('French')"
+                      class="w-full px-4 sm:px-6 py-2 sm:py-3 text-left text-neutral-600 hover:bg-gray-50
+                             transition-colors duration-200 font-normal text-base sm:text-xl cursor-pointer"
+                      [class.bg-gray-100]="currentLanguage === 'French'">French</button>
             </div>
           }
         </div>
