@@ -13,5 +13,6 @@ export class TableCountryBadgeComponent {
   code: InputSignal<string> = input.required<string>();
   name: InputSignal<string> = input.required<string>();
 
+  protected isError: boolean = false;
   protected flagUrl: () => string = (): string => `https://flagcdn.com/h20/${this.code().toLowerCase()}.png`;
 }

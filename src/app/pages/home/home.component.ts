@@ -19,6 +19,7 @@ interface MedalWinner {
   gold: number;
   silver: number;
   bronze: number;
+  errorFlag: boolean;
 }
 
 @Component({
@@ -76,9 +77,9 @@ export class HomeComponent implements OnInit {
 
     athletes.forEach((athlete: Athlete): void => {
       if (!countryMap.has(athlete.countryCode)) {
-        countryMap.set(athlete.countryCode, { rank: 0, countryName: athlete.countryName,
-          countryCode: athlete.countryCode.toLowerCase(),
-          gold: 0, silver: 0, bronze: 0 });
+        countryMap.set(athlete.countryCode, { rank: 0, countryName: athlete.countryName, errorFlag: false,
+                                              countryCode: athlete.countryCode.toLowerCase(),
+                                              gold: 0, silver: 0, bronze: 0 });
       }
 
       const entry: MedalWinner = countryMap.get(athlete.countryCode)!;

@@ -40,8 +40,13 @@
         </div>
 
         <div class="w-46 h-43 rounded-full overflow-hidden border border-gray-100 shadow-sm mb-8 shrink-0">
-          <img [ngSrc]="'https://flagcdn.com/' + country.countryCode + '.svg'" width="172" height="172"
-               [alt]="country.countryName" class="w-full h-full object-cover" priority />
+          @if (!country.errorFlag) {
+            <img [ngSrc]="'https://flagcdn.com/' + country.countryCode + '.svg'" width="172" height="172"
+                 [alt]="country.countryName" (error)="country.errorFlag = true;" class="w-full h-full object-cover" />
+          } @else {
+            <div class="w-full h-full bg-gray-200 text-7xl text-black items-center flex justify-center
+                        font-olympic-headline pt-2">?</div>
+          }
         </div>
 
         <span class="text-gray-900 text-xl font-normal tracking-tight mb-4">{{ country.countryName }}</span>

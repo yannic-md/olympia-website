@@ -1,5 +1,11 @@
 <div class="flex items-center gap-2">
-  <img [ngSrc]="flagUrl()" width="14" height="14" [alt]="name()"
-       class="w-5 h-3.5 object-cover rounded-sm shadow-sm shrink-0 -mt-0.5" />
+  @if (!this.isError) {
+    <img [ngSrc]="flagUrl()" width="14" height="14" [alt]="name()" (error)="this.isError = true;"
+         class="w-5 h-3.5 object-cover rounded-sm shadow-sm shrink-0 -mt-0.5" />
+  } @else {
+    <div class="w-5 h-5 bg-gray-300 text-base text-black items-center flex justify-center
+                font-olympic-headline text-center pt-0.5 rounded-sm tracking-wide">?</div>
+  }
+
   <span class="truncate text-gray-700">{{ name() }}</span>
 </div>
