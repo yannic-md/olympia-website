@@ -183,8 +183,8 @@ export class DetailedComponent implements OnDestroy {
     const nameParts = form.name.trim().split(/\s+/);
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || '';
-    const athlete = this.editingAthlete();
-    const countryId = athlete ? athlete.countryId : 0;
+    const country = this.countriesData().find(c => c.countryName === form.countryName);
+    const countryId = country ? country.countryId : 0;
 
     this.athleteService.updateAthlete(form.id, { firstName, lastName, countryId }).subscribe({
       next: (): void => {
