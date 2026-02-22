@@ -11,13 +11,36 @@ export class AthleteService {
   constructor(private http: HttpClient) {}
 
   /**
+   * Fetches all athletes from the backend.
+   *
+   * @returns {Observable<any[]>} Observable with the list of all athletes.
+   */
+  getAllAthletes(): Observable<any[]> {
+    return this.http.get<any[]>(`${API_URL}/athletes`);
+  }
+
+  /**
+   * Creates a new athlete.
+   *
+   * @param {Object} data - The creation payload.
+   * @returns {Observable<any>} Observable with the created athlete.
+   */
+  createAthlete(data: { firstName: string; lastName: string; countryId: number;
+                         goldMedals: number; silverMedals: number; bronzeMedals: number;
+                         bestTime: string | null; sport: string }): Observable<any> {
+    return this.http.post(`${API_URL}/athletes`, data);
+  }
+
+  /**
    * Updates an existing athlete by their ID.
    *
    * @param {number} id - The unique ID of the athlete to update.
-   * @param {Object} data - The update payload with firstName, lastName, and countryId.
+   * @param {Object} data - The update payload with firstName, lastName, countryId, medals and bestTime.
    * @returns {Observable<any>} Observable with the updated athlete.
    */
-  updateAthlete(id: number, data: { firstName: string; lastName: string; countryId: number }): Observable<any> {
+  updateAthlete(id: number, data: { firstName: string; lastName: string; countryId: number;
+                                     goldMedals: number; silverMedals: number; bronzeMedals: number;
+                                     bestTime: string | null }): Observable<any> {
     return this.http.put(`${API_URL}/athletes/${id}`, data);
   }
 

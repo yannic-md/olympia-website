@@ -11,6 +11,25 @@ export class CountryService {
   constructor(private http: HttpClient) {}
 
   /**
+   * Fetches all countries from the backend.
+   *
+   * @returns {Observable<any[]>} Observable with the list of all countries.
+   */
+  getAllCountries(): Observable<any[]> {
+    return this.http.get<any[]>(`${API_URL}/countries`);
+  }
+
+  /**
+   * Creates a new country.
+   *
+   * @param {Object} data - The creation payload with code and name.
+   * @returns {Observable<any>} Observable with the created country.
+   */
+  createCountry(data: { code: string; name: string }): Observable<any> {
+    return this.http.post(`${API_URL}/countries`, data);
+  }
+
+  /**
    * Updates an existing country by their ID.
    *
    * @param {number} id - The unique ID of the country to update.
