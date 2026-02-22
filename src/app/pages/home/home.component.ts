@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, OnDestroy, signal, WritableSignal} from '@angular/core';
 import {HeaderComponent} from "../../layout/sections/header/header.component";
 import {BreadcrumbComponent} from "../../layout/sections/breadcrumb/breadcrumb.component";
 import {NgClass, NgOptimizedImage} from "@angular/common";
@@ -40,9 +40,10 @@ interface MedalWinner {
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
-export class HomeComponent implements OnInit, OnDestroy {
+export class HomeComponent implements OnDestroy {
   protected topCountries: MedalWinner[] = [];
   private readonly translateSub: Subscription;
+  private isLoading: WritableSignal<boolean> = signal(false);
 
   constructor(protected miscService: MiscService, private leaderboardService: LeaderboardService,
               private alertService: AlertService, private translateService: TranslateService) {
@@ -59,24 +60,22 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Initializes the home component by loading the top countries leaderboard data on startup.
-   */
-  ngOnInit(): void {
-    this.loadTopCountries();
-  }
-
-  /**
    * Fetches leaderboard data and computes the top 6 countries by total medal count.
    * Countries are sorted by gold, silver, then bronze medals descending.
    */
   private loadTopCountries(): void {
+    if (this.isLoading()) { return; } // avoid duplicate requests
+    this.isLoading.set(true);
+
     this.leaderboardService.getLeaderboard().subscribe({
       next: (athletes: Athlete[]): void => {
         this.topCountries = this.buildTopCountries(athletes);
+        this.isLoading.set(false);
       },
       error: (error: HttpErrorResponse): void => {
         console.error('Error loading leaderboard data:', error);
         this.alertService.error(this.translateService.instant('ALERT.ERROR'));
+        this.isLoading.set(false);
       }
     });
   }

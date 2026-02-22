@@ -24,6 +24,7 @@
 
   "PAGE.DETAILED.TABLE.ATHLETE": "Athlet",
   "PAGE.DETAILED.TABLE.COUNTRY": "Land",
+  "PAGE.DETAILED.TABLE.RANK": "Platz",
   "PAGE.DETAILED.TABLE.SPORTS": "Letzte Sportart",
   "PAGE.DETAILED.TABLE.MEDAL": "Medaillen",
   "PAGE.DETAILED.TABLE.ACTIONS": "Aktionen",
@@ -53,6 +54,7 @@
   "ALERT.LOGOUT": "Du wurdest erfolgreich abgemeldet.",
   "ALERT.ERROR": "Fehler beim Laden der Daten!",
   "ALERT.ATHLETE.ADD": "Athlet \"[name]\" wurde erfolgreich hinzugefügt.",
+  "ALERT.ATHLETE.ADD.ERROR": "Etwas ist schiefgelaufen - probiere es erneut.",
   "ALERT.ATHLETE.DELETE": "Athlet \"[name]\" wurde erfolgreich gelöscht.",
   "ALERT.ATHLETE.DELETE.ERROR": "Fehler beim Löschen von \"[name]\"!",
   "ALERT.ATHLETE.EDIT": "Athlet \"[name]\" wurde erfolgreich aktualisiert.",
@@ -69,6 +71,7 @@
   "MODAL.ATHLETE.ADD.TITLE": "Athlet hinzufügen",
   "MODAL.ATHLETE.EDIT.TITLE": "Athlet bearbeiten",
   "MODAL.ATHLETE.NAME": "Wie heißt der Athlet?",
+  "MODAL.ATHLETE.NAME.ERROR": "Du musst einen Vor-und Nachnamen angeben.",
   "MODAL.ATHLETE.COUNTRY": "Herkunftsland wählen..",
   "MODAL.ATHLETE.COUNTRY.PLACEHOLDER": "Land auswählen",
   "MODAL.ATHLETE.SPORTS": "Sportart wählen..",

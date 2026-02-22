@@ -99,6 +99,8 @@
       <table class="w-full min-w-150 table-auto text-left">
         <thead class="sticky top-0 z-10 bg-neutral-100 shadow-sm">
           <tr class="text-left text-xs text-gray-500 border-b border-gray-300">
+            <th class="pl-2 w-12 text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.RANK' | translate }}</th>
+
             @if (selectedView() === 'athletes') {
               <th class="pl-2 text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.ATHLETE' | translate }}</th>
             }
@@ -107,9 +109,11 @@
               {{ 'PAGE.DETAILED.TABLE.COUNTRY' | translate }}
             </th>
 
+            <th class="text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.MEDAL' | translate }}</th>
+
             @if (selectedView() === 'athletes') {
               <th class="text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.SPORTS' | translate }}</th>
-            }<th class="text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.MEDAL' | translate }}</th>
+            }
 
             @if (selectedView() === 'athletes') {
               <th class="text-sm leading-8 font-medium">{{ 'MODAL.ATHLETE.BESTTIME' | translate }}</th>
@@ -126,16 +130,22 @@
           @if (selectedView() === 'athletes') {
 
             <!-- For Athlete View -->
-            @for (athlete of filteredAthletes(); track athlete.id) {
+            @for (athlete of filteredAthletes(); track athlete.id; let i = $index) {
               <tr class="group border-b border-gray-200/50 hover:bg-black/5 odd:bg-neutral-200/50 transition-colors">
+                <td class="py-4 pl-2 pr-2 text-center">
+                  @if (i === 0) { <span class="text-2xl" title="1">🏆</span> }
+                  @else if (i === 1) { <span class="text-2xl" title="2">🥈</span> }
+                  @else if (i === 2) { <span class="text-2xl" title="3">🥉</span> }
+                  @else { <span class="text-sm font-medium text-gray-500">{{ '#' + (i + 1) }}</span> }
+                </td>
                 <td class="py-4 pl-2 pr-4 lg:pr-0 font-semibold text-gray-800 font-olympic-sans tracking-wide">{{ athlete.name }}</td>
                 <td class="py-4 pr-4 lg:pr-0">
                   <app-table-country-badge [code]="athlete.countryCode" [name]="athlete.countryName" />
                 </td>
-                <td class="py-4 pr-4 lg:pr-0 text-gray-600">{{ athlete.sport }}</td>
                 <td class="py-4 pr-4 lg:pr-0">
                   <app-table-medal-pills [medals]="athlete.medals" [activeFilter]="filterMedal()" />
                 </td>
+                <td class="py-4 pr-4 lg:pr-0 text-gray-600">{{ athlete.sport }}</td>
                 <td class="py-4 pr-4 lg:pr-0 font-mono">
                   @if (athlete.bestTime) { {{ athlete.bestTime }} }
                   @else { <span class="text-gray-400">-</span> }
@@ -149,16 +159,33 @@
             }
 
             @if (filteredAthletes().length === 0) {
-              <td colspan="6" class="pl-2 text-start lg:text-center lg:pl-0 py-4">
-                {{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}
-              </td>
+              <tr>
+                <td colspan="7" class="py-8 text-center">
+                  @if (isLoading()) {
+                    <div class="flex pl-36 justify-start sm:justify-center sm:pl-0 items-center gap-2 text-gray-400">
+                      <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                      </svg>
+                    </div>
+                  } @else {
+                    <span class="text-sm text-gray-400">{{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}</span>
+                  }
+                </td>
+              </tr>
             }
           }
 
         <!-- For Country View -->
           @if (selectedView() === 'countries') {
-            @for (country of filteredCountries(); track country.countryCode) {
+            @for (country of filteredCountries(); track country.countryCode; let i = $index) {
               <tr class="group border-b border-gray-200/50 hover:bg-black/5 odd:bg-neutral-200/50 transition-colors">
+                <td class="py-4 pl-2 pr-2 text-center">
+                  @if (i === 0) { <span class="text-2xl" title="1">🏆</span> }
+                  @else if (i === 1) { <span class="text-2xl" title="2">🥈</span> }
+                  @else if (i === 2) { <span class="text-2xl" title="3">🥉</span> }
+                  @else { <span class="text-sm font-medium text-gray-500">{{ '#' + (i + 1) }}</span> }
+                </td>
                 <td class="py-4 pl-2 font-semibold text-gray-800 tracking-wide">
                   <app-table-country-badge [code]="country.countryCode" [name]="country.countryName" />
                 </td>
@@ -175,9 +202,20 @@
             }
 
             @if (filteredCountries().length === 0) {
-              <td colspan="4" class="pl-2 text-start lg:text-center lg:pl-0 py-4">
-                {{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}
-              </td>
+              <tr>
+                <td colspan="5" class="py-8 text-center">
+                  @if (isLoading()) {
+                    <div class="flex pl-36 justify-start sm:justify-center sm:pl-0 items-center gap-2 text-gray-400">
+                      <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                      </svg>
+                    </div>
+                  } @else {
+                    <span class="text-sm text-gray-400">{{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}</span>
+                  }
+                </td>
+              </tr>
             }
           }
         </tbody>
