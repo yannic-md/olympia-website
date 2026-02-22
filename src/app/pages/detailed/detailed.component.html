@@ -159,9 +159,20 @@
             }
 
             @if (filteredAthletes().length === 0) {
-              <td colspan="7" class="pl-2 text-start lg:text-center lg:pl-0 py-4">
-                {{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}
-              </td>
+              <tr>
+                <td colspan="7" class="py-8 text-center">
+                  @if (isLoading()) {
+                    <div class="flex pl-36 justify-start sm:justify-center sm:pl-0 items-center gap-2 text-gray-400">
+                      <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                      </svg>
+                    </div>
+                  } @else {
+                    <span class="text-sm text-gray-400">{{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}</span>
+                  }
+                </td>
+              </tr>
             }
           }
 
@@ -191,9 +202,20 @@
             }
 
             @if (filteredCountries().length === 0) {
-              <td colspan="5" class="pl-2 text-start lg:text-center lg:pl-0 py-4">
-                {{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}
-              </td>
+              <tr>
+                <td colspan="5" class="py-8 text-center">
+                  @if (isLoading()) {
+                    <div class="flex pl-36 justify-start sm:justify-center sm:pl-0 items-center gap-2 text-gray-400">
+                      <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                      </svg>
+                    </div>
+                  } @else {
+                    <span class="text-sm text-gray-400">{{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}</span>
+                  }
+                </td>
+              </tr>
             }
           }
         </tbody>

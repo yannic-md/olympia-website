@@ -21,7 +21,7 @@ import {AuthService} from "../../services/api/auth/auth.service";
 import {AthleteService} from "../../services/api/athlete/athlete.service";
 import {CountryService} from "../../services/api/country/country.service";
 import {TranslatePipe, TranslateService} from "@ngx-translate/core";
-import {Subscription, forkJoin} from "rxjs";
+import {Subscription, forkJoin, skip} from "rxjs";
 import {SportsService, SportEntry} from "../../services/api/sports/sports.service";
 
 @Component({
@@ -59,8 +59,11 @@ export class DetailedComponent implements OnDestroy {
 
   protected athletes: WritableSignal<Athlete[]> = signal<Athlete[]>([]);
   protected countriesData: WritableSignal<CountryStats[]> = signal<CountryStats[]>([]);
-  protected countries: Signal<string[]> = computed((): string[] => this.countriesData().map(c => c.countryName).sort((a, b) => a.localeCompare(b)));
+  protected countries: Signal<string[]> = computed((): string[] => this.countriesData()
+    .map(c => c.countryName).sort((a, b): number => a.localeCompare(b)));
   protected sports: WritableSignal<SportEntry[]> = signal([]);
+
+  protected isLoading: WritableSignal<boolean> = signal(false);
 
   constructor(protected miscService: MiscService, protected leaderboardService: LeaderboardService,
               private alertService: AlertService, protected authService: AuthService,
@@ -88,6 +91,8 @@ export class DetailedComponent implements OnDestroy {
    */
   private loadLeaderboardData(): void {
     const lang: string = this.translateService.getCurrentLang() || 'en';
+    if (this.isLoading()) { return; } // avoid duplicate requests
+    this.isLoading.set(true);
 
     if (this.authService.isLoggedIn()) {
       forkJoin({leaderboard: this.leaderboardService.getLeaderboard(), allAthletes: this.athleteService.getAllAthletes(),
@@ -96,10 +101,12 @@ export class DetailedComponent implements OnDestroy {
         next: ({ leaderboard, allAthletes, allCountries, allSports }): void => {
           this.sports.set(allSports);
           this.mergeData(leaderboard, allAthletes, allCountries);
+          this.isLoading.set(false);
         },
         error: (error: HttpErrorResponse): void => {
           console.error('Error loading data:', error);
           this.alertService.error(this.translateService.instant('ALERT.ERROR'));
+          this.isLoading.set(false);
         }
       });
     } else {
@@ -109,10 +116,12 @@ export class DetailedComponent implements OnDestroy {
           this.sports.set(allSports);
           this.athletes.set(leaderboard);
           this.initializeCountriesFromAthletes([]);
+          this.isLoading.set(false);
         },
         error: (error: HttpErrorResponse): void => {
           console.error('Error loading leaderboard data:', error);
           this.alertService.error(this.translateService.instant('ALERT.ERROR'));
+          this.isLoading.set(false);
         }
       });
     }
