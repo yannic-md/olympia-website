@@ -12,7 +12,8 @@ import {
 import {FormsModule} from "@angular/forms";
 import {NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
-import {MiscService} from "../../../../services/misc.service";
+import {MiscService} from "../../../../services/misc/misc.service";
+import {TranslatePipe} from "@ngx-translate/core";
 
 interface RegisterForm {
   username: string;
@@ -24,7 +25,8 @@ interface RegisterForm {
   selector: 'app-modal-register',
   imports: [
     FormsModule,
-    NgOptimizedImage
+    NgOptimizedImage,
+    TranslatePipe
   ],
   templateUrl: './modal-register.component.html',
   styleUrl: './modal-register.component.css',

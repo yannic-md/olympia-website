@@ -2,7 +2,7 @@
   <div class="max-w-350 mx-auto flex flex-col-reverse md:flex-row justify-between items-center gap-6">
 
     <div class="text-base font-olympic-sans font-normal">
-      &copy; {{ currentYear }}. Alle Rechte vorbehalten
+      &copy; {{ currentYear }}. {{ 'FOOTER.COPYRIGHT' | translate }}
     </div>
 
     <nav>
@@ -13,7 +13,7 @@
               <a [href]="item.path"
                  class="text-base font-medium hover:text-white transition-colors duration-200 ease-in-out
                         whitespace-nowrap font-olympic-sans">
-                {{ item.label }}
+                {{ item.label | translate }}
               </a>
             </li>
           }

@@ -9,6 +9,7 @@ export interface CountryForm {
 
 // used to show all countries in a table
 export interface CountryStats {
+  countryId: number;
   countryCode: string;
   countryName: string;
   medals: { gold: number; silver: number; bronze: number };

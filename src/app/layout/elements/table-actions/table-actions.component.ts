@@ -1,8 +1,11 @@
 import {Component, output, OutputEmitterRef} from '@angular/core';
+import {TranslatePipe} from "@ngx-translate/core";
 
 @Component({
   selector: 'app-table-actions',
-  imports: [],
+  imports: [
+    TranslatePipe
+  ],
   templateUrl: './table-actions.component.html',
   styleUrl: './table-actions.component.css',
 })

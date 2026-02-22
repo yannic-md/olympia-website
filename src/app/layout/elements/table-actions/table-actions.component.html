@@ -1,11 +1,10 @@
 <div class="flex gap-2">
-  <!-- TODO: Functionality (only visible to JURY/ADMIN) -->
   <button (click)="edit.emit()"
           class="rounded bg-blue-500 px-2 py-1 text-xs text-white hover:bg-blue-600 cursor-pointer transition">
-    Bearbeiten
+    {{ 'BUTTON.EDIT' | translate }}
   </button>
   <button (click)="delete.emit()"
           class="rounded bg-red-500 px-2 py-1 text-xs text-white hover:bg-red-600 cursor-pointer transition">
-    Löschen
+    {{ 'BUTTON.DELETE' | translate }}
   </button>
 </div>

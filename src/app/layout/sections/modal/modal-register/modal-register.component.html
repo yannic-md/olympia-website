@@ -7,7 +7,7 @@
       <!-- Header of Modal -->
       <div class="sticky top-0 bg-[#1e2d58] border-b border-white/20 px-6 py-4 flex items-center justify-between">
         <h3 class="text-3xl tracking-wide font-bold text-white">
-          Registrierung
+          {{ 'MODAL.REGISTER.TITLE' | translate }}
         </h3>
         <button (click)="close()" type="button" class="cursor-pointer hover:bg-white/10 p-2 rounded-full transition-colors">
           <img ngSrc="/assets/images/icons/cross-close.svg" alt="Close Icon" height="16" width="16" class="w-4 h-4 invert" />
@@ -20,37 +20,37 @@
           <!-- Username Input -->
           <div>
             <label for="username" class="block text-sm font-medium text-white/90 mb-2">
-              Benutzername <span class="text-red-400">*</span>
+              {{ 'MODAL.REGISTER.NAME' | translate }} <span class="text-red-400">*</span>
             </label>
             <input [(ngModel)]="formData().username" name="username" id="username"
-                   type="text" required placeholder="Mindestens 3 Zeichen"
+                   type="text" required [placeholder]="'MODAL.REGISTER.NAME.PLACEHOLDER' | translate"
                    (ngModelChange)="miscService.updateField(this.formData, 'username', $event)"
                    class="w-full px-4 py-3 bg-transparent border border-white/40 rounded-lg
                           text-white placeholder-white/50 focus:outline-none focus:border-white transition-colors">
             @if (formData().username.length > 0 && formData().username.length < 3) {
-              <p class="text-red-400 text-sm mt-1">Benutzername muss mindestens 3 Zeichen lang sein</p>
+              <p class="text-red-400 text-sm mt-1">{{ 'MODAL.REGISTER.NAME.ERROR' | translate }}</p>
             }
           </div>
 
           <!-- Password Input -->
           <div>
             <label for="password" class="block text-sm font-medium text-white/90 mb-2">
-              Passwort <span class="text-red-400">*</span>
+              {{ 'MODAL.REGISTER.PASSWORD' | translate }} <span class="text-red-400">*</span>
             </label>
             <input [(ngModel)]="formData().password" name="password" id="password"
-                   type="password" required placeholder="Mindestens 6 Zeichen"
+                   type="password" required [placeholder]="'MODAL.REGISTER.PASSWORD.PLACEHOLDER' | translate"
                    (ngModelChange)="miscService.updateField(this.formData, 'password', $event)"
                    class="w-full px-4 py-3 bg-transparent border border-white/40 rounded-lg
                           text-white placeholder-white/50 focus:outline-none focus:border-white transition-colors">
             @if (formData().password.length > 0 && formData().password.length < 6) {
-              <p class="text-red-400 text-sm mt-1">Passwort muss mindestens 6 Zeichen lang sein</p>
+              <p class="text-red-400 text-sm mt-1">{{ 'MODAL.REGISTER.PASSWORD.ERROR' | translate }}</p>
             }
           </div>
 
           <!-- Confirm Password Input -->
           <div>
             <label for="confirmPassword" class="block text-sm font-medium text-white/90 mb-2">
-              Passwort bestätigen <span class="text-red-400">*</span>
+              {{ 'MODAL.REGISTER.PASSWORD.CONFIRM' | translate }} <span class="text-red-400">*</span>
             </label>
             <input [(ngModel)]="formData().confirmPassword" name="confirmPassword" id="confirmPassword"
                    type="password" required placeholder="Passwort wiederholen"
@@ -58,7 +58,7 @@
                    class="w-full px-4 py-3 bg-transparent border border-white/40 rounded-lg
                           text-white placeholder-white/50 focus:outline-none focus:border-white transition-colors">
             @if (!passwordsMatch() && formData().confirmPassword.length > 0) {
-              <p class="text-red-400 text-sm mt-1">Passwörter stimmen nicht überein</p>
+              <p class="text-red-400 text-sm mt-1">{{ 'MODAL.REGISTER.PASSWORD.CONFIRM.ERROR' | translate }}</p>
             }
           </div>
 
@@ -68,14 +68,13 @@
               <button type="button" (click)="close()"
                       class="w-full sm:w-auto px-6 py-3 border border-white/40 rounded-lg text-white
                              hover:bg-white/10 transition-colors cursor-pointer font-medium">
-                Abbrechen
+                {{ 'BUTTON.CANCEL' | translate }}
               </button>
-              <button type="submit" [disabled]="!isFormValid()"
-                      [class.opacity-50]="!isFormValid()"
+              <button type="submit" [disabled]="!isFormValid()" [class.opacity-50]="!isFormValid()"
                       [class.cursor-not-allowed]="!isFormValid()"
                       class="w-full sm:w-auto px-6 py-3 bg-white text-[#1e2d58] rounded-lg
                              hover:bg-white/90 disabled:bg-white/50 transition-all font-bold cursor-pointer">
-                Registrieren
+                {{ 'BUTTON.REGISTER' | translate }}
               </button>
             </div>
           </div>

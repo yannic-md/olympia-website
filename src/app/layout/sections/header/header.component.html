@@ -9,26 +9,30 @@
       <!-- Tournament Title -->
       <a routerLink="/" class="tracking-normal font-normal text-sm hover:brightness-50
                                transition-all duration-200">
-        <span class="hidden sm:inline">Winterspiele 2026</span>
+        <span class="hidden sm:inline">{{ 'BREADCRUMB.CONTENT.TITLE' | translate }}</span>
         <span class="sm:hidden">WS 2026</span>
       </a>
 
       <!-- Action Buttons -->
       <div class="flex items-center gap-2 sm:gap-3 md:gap-3">
         <!-- Login Button - Hidden on small screens -->
-        <a routerLink="/login">
+        <a (click)="this.logout();">
           <button class="hidden sm:flex bg-[#cfe2f3] hover:bg-[#bed7ee] text-zinc-950 px-2 md:px-3.5 py-1 md:py-0 rounded-full
                        items-center gap-0 transition-all cursor-pointer group duration-200 hover:drop-shadow-md">
-            <img ngSrc="/assets/images/icons/user-alt.svg" width="40" height="40" alt="User Icon" class="w-7 h-7 md:w-8 md:h-8" />
-            <span class="font-medium text-sm">Anmelden</span>
+            <img [ngSrc]="authService.isLoggedIn() ? '/assets/images/icons/exit.svg' : '/assets/images/icons/user-alt.svg'"
+                 width="30" height="30" alt="User Icon" class="w-7 h-7 md:w-8 md:h-8"
+                 [ngClass]="authService.isLoggedIn() ? 'py-1' : ''" />
+            <span class="font-medium text-sm">{{ authService.isLoggedIn() ? ('HEADER.LOGOUT' | translate)
+                                                                          : ('HEADER.LOGIN' | translate) }}</span>
           </button>
         </a>
 
         <!-- Login Icon for mobile -->
-        <a routerLink="/login">
+        <a (click)="this.logout();">
           <button class="sm:hidden bg-[#cfe2f3] hover:bg-[#bed7ee] text-zinc-950 rounded-full transition-all
-                       cursor-pointer duration-200">
-            <img ngSrc="/assets/images/icons/user-alt.svg" width="32" height="32" alt="User Icon" />
+                       cursor-pointer duration-200 h-7.5 mt-1">
+            <img [ngSrc]="authService.isLoggedIn() ? '/assets/images/icons/exit.svg' : '/assets/images/icons/user-alt.svg'"
+                 width="30" height="30" alt="User Icon" [ngClass]="authService.isLoggedIn() ? 'p-1' : ''" />
           </button>
         </a>
 
@@ -39,7 +43,7 @@
                          rounded-full flex items-center justify-between gap-2 sm:gap-3 md:gap-3 cursor-pointer
                          hover:drop-shadow-md transition-all duration-200">
             <span class="font-normal text-sm md:text-sm leading-[0.9px]">
-              {{ currentLanguage === 'Deutsch' ? 'Deutsch' : 'English' }}</span>
+              {{ currentLanguage === 'Deutsch' ? 'Deutsch' : currentLanguage === 'French' ? 'French' : 'English' }}</span>
             <img ngSrc="/assets/images/icons/chevron-down.svg" width="10" height="10" alt="Chevron Down Icon"
                  [class.rotate-180]="isLanguageMenuOpen" class="mb-0.5 transition-transform duration-200 md:w-2.5 md:h-2.5" />
           </button>
@@ -55,6 +59,10 @@
                       class="w-full px-4 sm:px-6 py-2 sm:py-3 text-left text-neutral-600 hover:bg-gray-50
                              transition-colors duration-200 font-normal text-base sm:text-xl cursor-pointer"
                       [class.bg-gray-100]="currentLanguage === 'English'">English</button>
+              <button (click)="changeLanguage('French')"
+                      class="w-full px-4 sm:px-6 py-2 sm:py-3 text-left text-neutral-600 hover:bg-gray-50
+                             transition-colors duration-200 font-normal text-base sm:text-xl cursor-pointer"
+                      [class.bg-gray-100]="currentLanguage === 'French'">French</button>
             </div>
           }
         </div>
@@ -76,10 +84,10 @@
                   text-black tracking-tight">
         @for (item of miscService.nav_items; track $index) {
           @if (!item.externalUrl) {
-            <a [routerLink]="item.path"
+            <a [routerLink]="item.path" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="after:w-full"
                class="relative after:content-[''] after:absolute after:-bottom-4.75 after:left-0
                        after:w-0 after:h-0.5 after:bg-black after:transition-all after:duration-200
-                       hover:after:w-full">{{ item.label }}</a>
+                       hover:after:w-full">{{ item.label | translate }}</a>
           }
         }
       </nav>
@@ -107,7 +115,7 @@
             @if (!item.externalUrl) {
               <a [routerLink]="item.path" (click)="isMobileMenuOpen = false"
                  class="py-3 text-xl text-black border-b border-neutral-100 last:border-b-0 hover:bg-gray-50
-                        transition-colors duration-200">{{ item.label }}</a>
+                        transition-colors duration-200">{{ item.label | translate }}</a>
             }
           }
         </nav>

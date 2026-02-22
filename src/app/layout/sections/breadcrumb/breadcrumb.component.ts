@@ -1,12 +1,14 @@
 import { Component } from '@angular/core';
 import {Router, RouterLink, RouterLinkActive} from "@angular/router";
-import {MiscService} from "../../../services/misc.service";
+import {MiscService} from "../../../services/misc/misc.service";
+import {TranslatePipe} from "@ngx-translate/core";
 
 @Component({
   selector: 'app-breadcrumb',
   imports: [
     RouterLink,
-    RouterLinkActive
+    RouterLinkActive,
+    TranslatePipe
   ],
   templateUrl: './breadcrumb.component.html',
   styleUrl: './breadcrumb.component.css',

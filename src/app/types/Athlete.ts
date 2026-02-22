@@ -1,3 +1,5 @@
+export type ScoreType = 'TIME' | 'PTS' | 'WINS';
+
 // used in forms
 export interface AthleteForm {
   id?: number;
@@ -5,6 +7,8 @@ export interface AthleteForm {
   countryCode: string;
   countryName: string;
   sport: string;
+  sportRawName: string;
+  scoreType: ScoreType | null;
   goldMedals: number;
   silverMedals: number;
   bronzeMedals: number;
@@ -15,9 +19,12 @@ export interface AthleteForm {
 export interface Athlete {
   id: number;
   name: string;
+  countryId: number;
   countryCode: string;
   countryName: string;
   sport: string;
+  sportRawName: string;
+  scoreType: ScoreType | null;
   medals: { gold: number; silver: number; bronze: number };
   bestTime: string | null;
 }
