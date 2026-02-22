@@ -19,7 +19,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   // user wants to make something he needs a login for (like editing athletes or countries)
   const authHeader: string | null = inject(AuthService).getBasicAuthHeader();
-  if (authHeader && req.url.startsWith('/api') && !req.url.includes("/public")) {
+  if (authHeader && !req.url.includes("/public")) {
     return next(req.clone({setHeaders: {Authorization: authHeader}}));
   }
 
