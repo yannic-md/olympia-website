@@ -266,6 +266,7 @@ export class DetailedComponent implements OnDestroy {
     this.countryService.deleteCountry(countryId).subscribe({
       next: (): void => {
         this.countriesData.update(current => current.filter(c => c.countryId !== countryId));
+        this.athletes.update(current => current.filter(a => a.countryId !== countryId));
         this.alertService.success(
           (this.translateService.instant('ALERT.COUNTRY.DELETE')).replace('[name]', country.countryName));
       },
@@ -308,6 +309,12 @@ export class DetailedComponent implements OnDestroy {
                                                                              medals: { gold: form.goldMedals,
                                                                                        silver: form.silverMedals,
                                                                                        bronze: form.bronzeMedals}} : c)
+        );
+
+        this.athletes.update(current =>
+          current.map(a => a.countryId === country.countryId
+            ? { ...a, countryCode: form.countryCode.toUpperCase(), countryName: form.countryName }
+            : a)
         );
 
         this.editingCountry.set(null);
