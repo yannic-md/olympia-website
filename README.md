@@ -25,3 +25,18 @@ Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To u
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+# Docker
+1. Projekt unter Docker starten (webseite ist unter http://localhost:4200/ erreichbar)
+```bash
+docker compose up -d
+```
+2. Docker image entfernen
+```bash
+docker compose down
+```
+3. Projekt neustarten
+```bash
+docker compose restart
+```
