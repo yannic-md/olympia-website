@@ -32,8 +32,8 @@
         <div class="w-full sm:w-[calc(50%-12px)] md:flex-1 min-w-50">
           <app-filter-select [label]="'PAGE.DETAILED.FILTER.SPORTS' | translate" id="filter-sports" [(value)]="filterSport">
             <option value="all">{{ 'PAGE.DETAILED.FILTER.SPORTS.PLACEHOLDER' | translate }}</option>
-            @for (sport of sports(); track sport) {
-              <option [value]="sport">{{ sport }}</option>
+            @for (sport of sports(); track sport.rawName) {
+              <option [value]="sport.rawName">{{ sport.name }}</option>
             }
           </app-filter-select>
         </div>

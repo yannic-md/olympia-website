@@ -22,6 +22,7 @@ import {AthleteService} from "../../services/api/athlete/athlete.service";
 import {CountryService} from "../../services/api/country/country.service";
 import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {Subscription, forkJoin} from "rxjs";
+import {SportsService, SportEntry} from "../../services/api/sports/sports.service";
 
 @Component({
   selector: 'app-detailed',
@@ -59,12 +60,12 @@ export class DetailedComponent implements OnDestroy {
   protected athletes: WritableSignal<Athlete[]> = signal<Athlete[]>([]);
   protected countriesData: WritableSignal<CountryStats[]> = signal<CountryStats[]>([]);
   protected countries: Signal<string[]> = computed((): string[] => this.countriesData().map(c => c.countryName).sort());
-  protected sports: WritableSignal<string[]> = signal<string[]>(Array.from(new Set(this.athletes().map(a => a.sport))).sort());
+  protected sports: WritableSignal<SportEntry[]> = signal([]);
 
   constructor(protected miscService: MiscService, protected leaderboardService: LeaderboardService,
               private alertService: AlertService, protected authService: AuthService,
               private athleteService: AthleteService, private countryService: CountryService,
-              private translateService: TranslateService) {
+              private translateService: TranslateService, private sportsService: SportsService) {
     this.loadLeaderboardData();
 
     this.translateSub = this.translateService.onLangChange.subscribe((): void => {
@@ -86,13 +87,14 @@ export class DetailedComponent implements OnDestroy {
    * When not logged in, only the public leaderboard data is loaded.
    */
   private loadLeaderboardData(): void {
+    const lang: string = this.translateService.getCurrentLang() || 'en';
+
     if (this.authService.isLoggedIn()) {
-      forkJoin({
-        leaderboard: this.leaderboardService.getLeaderboard(),
-        allAthletes: this.athleteService.getAllAthletes(),
-        allCountries: this.countryService.getAllCountries()
+      forkJoin({leaderboard: this.leaderboardService.getLeaderboard(), allAthletes: this.athleteService.getAllAthletes(),
+                allCountries: this.countryService.getAllCountries(), allSports: this.sportsService.getAllSports(lang)
       }).subscribe({
-        next: ({ leaderboard, allAthletes, allCountries }): void => {
+        next: ({ leaderboard, allAthletes, allCountries, allSports }): void => {
+          this.sports.set(allSports);
           this.mergeData(leaderboard, allAthletes, allCountries);
         },
         error: (error: HttpErrorResponse): void => {
@@ -101,11 +103,12 @@ export class DetailedComponent implements OnDestroy {
         }
       });
     } else {
-      this.leaderboardService.getLeaderboard().subscribe({
-        next: (athletes: Athlete[]): void => {
-          this.athletes.set(athletes);
+      forkJoin({leaderboard: this.leaderboardService.getLeaderboard(), allSports: this.sportsService.getAllSports(lang)
+      }).subscribe({
+        next: ({ leaderboard, allSports }): void => {
+          this.sports.set(allSports);
+          this.athletes.set(leaderboard);
           this.initializeCountriesFromAthletes([]);
-          this.updateSportsList();
         },
         error: (error: HttpErrorResponse): void => {
           console.error('Error loading leaderboard data:', error);
@@ -123,34 +126,24 @@ export class DetailedComponent implements OnDestroy {
     const athleteMap = new Map<number, Athlete>();
     leaderboard.forEach(a => athleteMap.set(a.id, a));
 
-    // Add athletes without results from /api/athletes
-    allAthletes.forEach((a: any) => {
+    allAthletes.forEach((a: any): void => {
       if (!athleteMap.has(a.id)) {
-        athleteMap.set(a.id, {
-          id: a.id,
-          name: `${a.firstName} ${a.lastName}`,
-          countryId: a.country?.id ?? 0,
-          countryCode: a.country?.code ?? '',
-          countryName: a.country?.name ?? '',
-          sport: '',
-          medals: { gold: 0, silver: 0, bronze: 0 },
-          bestTime: null
-        });
+        athleteMap.set(a.id, {id: a.id, name: `${a.firstName} ${a.lastName}`, countryId: a.country?.id ?? 0,
+                              countryCode: a.country?.code ?? '', countryName: a.country?.name ?? '', sport: a.sport ?? '',
+                              sportRawName: a.sport ?? '', scoreType: a.scoreType ?? null,
+                              medals: { gold: 0, silver: 0, bronze: 0 }, bestTime: null});
+      } else {
+        const existing: Athlete = athleteMap.get(a.id)!;
+
+        if (!existing.sport && a.sport) { existing.sport = a.sport; }
+        if (a.sport) { existing.sportRawName = a.sport; }
+        if (a.scoreType) { existing.scoreType = a.scoreType; }
+        athleteMap.set(a.id, existing);
       }
     });
 
     this.athletes.set(Array.from(athleteMap.values()));
     this.initializeCountriesFromAthletes(allCountries);
-    this.updateSportsList();
-  }
-
-  /**
-   * Updates the sports list based on the current athletes.
-   * Extracts unique sports from all athletes and sorts them alphabetically.
-   */
-  private updateSportsList(): void {
-    const uniqueSports = Array.from(new Set(this.athletes().map(a => a.sport))).sort();
-    this.sports.set(uniqueSports);
   }
 
   /**
@@ -163,9 +156,14 @@ export class DetailedComponent implements OnDestroy {
     const athlete: Athlete | null = this.editingAthlete();
     if (!athlete) return null;
 
+    // Strip unit suffixes so the input field shows the raw numeric/time value
+    const rawBestTime: string = (athlete.bestTime || '').replace(/\s*pts$/i, '').replace(/\s*wins$/i, '')
+                                                        .replace(/\s*(Siege|Punkte|Victoires|Points)$/i, '').trim();
+
     return { id: athlete.id, name: athlete.name, countryCode: athlete.countryCode, countryName: athlete.countryName,
-             sport: athlete.sport, goldMedals: athlete.medals.gold, silverMedals: athlete.medals.silver,
-             bronzeMedals: athlete.medals.bronze, bestTime: athlete.bestTime || '' };
+             sport: athlete.sport, sportRawName: athlete.sportRawName, scoreType: athlete.scoreType,
+             goldMedals: athlete.medals.gold, silverMedals: athlete.medals.silver,
+             bronzeMedals: athlete.medals.bronze, bestTime: rawBestTime };
   });
 
   /**
@@ -227,15 +225,15 @@ export class DetailedComponent implements OnDestroy {
   protected onUpdateAthlete(form: AthleteForm): void {
     if (!form.id) return;
 
-    const nameParts = form.name.trim().split(/\s+/);
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
-    const country = this.countriesData().find(c => c.countryName === form.countryName);
-    const countryId = country ? country.countryId : 0;
+    const nameParts: string[] = form.name.trim().split(/\s+/);
+    const firstName: string = nameParts[0] || '';
+    const lastName: string = nameParts.slice(1).join(' ') || '';
+    const country: CountryStats | undefined = this.countriesData().find(c => c.countryName === form.countryName);
+    const countryId: number = country ? country.countryId : 0;
 
     this.athleteService.updateAthlete(form.id, { firstName, lastName, countryId,
       goldMedals: form.goldMedals, silverMedals: form.silverMedals, bronzeMedals: form.bronzeMedals,
-      bestTime: form.bestTime || null }).subscribe({
+      bestTime: form.bestTime || null, sport: form.sportRawName, scoreType: form.scoreType }).subscribe({
       next: (): void => {
         this.loadLeaderboardData();
         this.editingAthlete.set(null);
@@ -298,7 +296,7 @@ export class DetailedComponent implements OnDestroy {
    * @param {CountryForm} form - The form data containing updated country information.
    */
   protected onUpdateCountry(form: CountryForm): void {
-    const country = this.editingCountry();
+    const country: CountryStats | null = this.editingCountry();
     if (!country) return;
 
     this.countryService.updateCountry(country.countryId, { code: form.countryCode, name: form.countryName }).subscribe({
@@ -347,7 +345,7 @@ export class DetailedComponent implements OnDestroy {
       const matchesCountryFilter: boolean = this.filterCountry() === 'all' ||
         athlete.countryName === this.filterCountry();
 
-      const matchesSportsFilter: boolean = this.filterSport() === 'all' || athlete.sport === this.filterSport();
+      const matchesSportsFilter: boolean = this.filterSport() === 'all' || athlete.sportRawName === this.filterSport();
       return matchesSearchText && matchesCountryFilter && matchesSportsFilter;
     });
 
@@ -446,27 +444,18 @@ export class DetailedComponent implements OnDestroy {
    * Sends a create request to the backend API, then reloads leaderboard data to reflect the new athlete.
    * Closes the modal dialog and displays a success or error alert.
    *
-   * @param {Object} form - The form data containing athlete information.
-   * @param {string} form.name - The full name of the athlete.
-   * @param {string} form.countryCode - The ISO country code (will be converted to uppercase).
-   * @param {string} form.countryName - The full country name.
-   * @param {string} form.sport - The sport discipline.
-   * @param {number} form.goldMedals - Number of gold medals won.
-   * @param {number} form.silverMedals - Number of silver medals won.
-   * @param {number} form.bronzeMedals - Number of bronze medals won.
-   * @param {string} form.bestTime - Best time achieved (optional, will be null if empty).
+   * @param {AthleteForm} form - The form data containing athlete information.
    */
-  protected onAddAthlete(form: { name: string; countryCode: string; countryName: string; sport: string;
-                                 goldMedals: number; silverMedals: number; bronzeMedals: number; bestTime: string }): void {
-    const nameParts = form.name.trim().split(/\s+/);
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
-    const country = this.countriesData().find(c => c.countryName === form.countryName);
-    const countryId = country ? country.countryId : 0;
+  protected onAddAthlete(form: AthleteForm): void {
+    const nameParts: string[] = form.name.trim().split(/\s+/);
+    const firstName: string = nameParts[0] || '';
+    const lastName: string = nameParts.slice(1).join(' ') || '';
+    const country: CountryStats | undefined = this.countriesData().find(c => c.countryName === form.countryName);
+    const countryId: number = country ? country.countryId : 0;
 
     this.athleteService.createAthlete({ firstName, lastName, countryId,
       goldMedals: form.goldMedals, silverMedals: form.silverMedals, bronzeMedals: form.bronzeMedals,
-      bestTime: form.bestTime || null, sport: form.sport }).subscribe({
+      bestTime: form.bestTime || null, sport: form.sportRawName, scoreType: form.scoreType }).subscribe({
       next: (): void => {
         this.loadLeaderboardData();
         this.isAthleteModalOpen.set(false);

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import {Athlete} from "../../../types/Athlete";
+import {Athlete, ScoreType} from "../../../types/Athlete";
 import {API_URL} from "../../../types/API";
 import {TranslateService} from "@ngx-translate/core";
 
@@ -14,8 +14,10 @@ interface LeaderboardEntry {
   countryCode: string;
   countryName: string;
   timeOrPoints: string | null;
+  scoreType: ScoreType | null;
   medal: 'GOLD' | 'SILVER' | 'BRONZE';
   sportName: string;
+  sportRawName: string;
 }
 
 @Injectable({
@@ -57,7 +59,9 @@ export class LeaderboardService {
 
       if (!athleteMap.has(key)) {
         athleteMap.set(key, { id: entry.athleteId, name: entry.athleteName, countryId: entry.countryId,
-                              countryCode: entry.countryCode, countryName: entry.countryName, sport: entry.sportName,
+                              countryCode: entry.countryCode, countryName: entry.countryName,
+                              sport: entry.sportName, sportRawName: entry.sportRawName ?? '',
+                              scoreType: entry.scoreType ?? null,
                               medals: { gold: 0, silver: 0, bronze: 0 }, bestTime: entry.timeOrPoints });
       }
 

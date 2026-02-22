@@ -28,6 +28,8 @@ export class AppComponent {
             this.translateService.use('de');
             break;
         }
+
+        return;
       }
 
       // get browser language if not saved

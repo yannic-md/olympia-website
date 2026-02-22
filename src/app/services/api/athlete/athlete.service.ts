@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_URL } from '../../../types/API';
+import {ScoreType} from "../../../types/Athlete";
 
 @Injectable({
   providedIn: 'root'
@@ -27,7 +28,8 @@ export class AthleteService {
    */
   createAthlete(data: { firstName: string; lastName: string; countryId: number;
                          goldMedals: number; silverMedals: number; bronzeMedals: number;
-                         bestTime: string | null; sport: string }): Observable<any> {
+                         bestTime: string | null; sport: string;
+                         scoreType: ScoreType | null }): Observable<any> {
     return this.http.post(`${API_URL}/athletes`, data);
   }
 
@@ -35,12 +37,13 @@ export class AthleteService {
    * Updates an existing athlete by their ID.
    *
    * @param {number} id - The unique ID of the athlete to update.
-   * @param {Object} data - The update payload with firstName, lastName, countryId, medals and bestTime.
+   * @param {Object} data - The update payload.
    * @returns {Observable<any>} Observable with the updated athlete.
    */
   updateAthlete(id: number, data: { firstName: string; lastName: string; countryId: number;
                                      goldMedals: number; silverMedals: number; bronzeMedals: number;
-                                     bestTime: string | null }): Observable<any> {
+                                     bestTime: string | null; sport: string;
+                                     scoreType: ScoreType | null }): Observable<any> {
     return this.http.put(`${API_URL}/athletes/${id}`, data);
   }
 
