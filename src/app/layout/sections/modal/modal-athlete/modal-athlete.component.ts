@@ -54,6 +54,7 @@ export class ModalAthleteComponent {
 
   protected formData: WritableSignal<AthleteForm> = signal(this.getEmptyForm());
   protected scoreError: WritableSignal<string> = signal('');
+  protected nameError: WritableSignal<string> = signal('');
   protected isEditMode: Signal<boolean> = computed((): boolean => this.editData() !== null);
 
   /** The active scoreType based on the currently selected sport */
@@ -72,6 +73,7 @@ export class ModalAthleteComponent {
       if (data) {
         this.formData.set({ ...data });
         this.scoreError.set('');
+        this.nameError.set('');
       }
     });
   }
@@ -110,11 +112,26 @@ export class ModalAthleteComponent {
   protected isFormValid: Signal<boolean> = computed((): boolean => {
     const data: AthleteForm = this.formData();
     if (!data.name.trim() || !data.countryName || !data.sport) return false;
-    if (this.scoreError() !== '') return false;
+    if (this.scoreError() !== '' || this.nameError() !== '') return false;
 
     // Score field is required only when a scoreType is known
     return !(data.scoreType !== null && data.bestTime.trim() === '');
   });
+
+  /**
+   * Validates that the athlete name contains at least a first and last name separated by a space.
+   *
+   * @param {string} value - The name value to validate
+   */
+  protected onNameChange(value: string): void {
+    this.miscService.updateField(this.formData, 'name', value);
+    const parts: string[] = value.trim().split(/\s+/);
+    if (value.trim() && parts.length < 2) {
+      this.nameError.set(this.translateService.instant('MODAL.ATHLETE.NAME.ERROR'));
+    } else {
+      this.nameError.set('');
+    }
+  }
 
   /**
    * Validates the score input field based on the active scoreType.
@@ -170,6 +187,7 @@ export class ModalAthleteComponent {
   protected close(): void {
     this.formData.set(this.getEmptyForm());
     this.scoreError.set('');
+    this.nameError.set('');
     this.closeModal.emit();
   }
 
