@@ -59,7 +59,7 @@ export class DetailedComponent implements OnDestroy {
 
   protected athletes: WritableSignal<Athlete[]> = signal<Athlete[]>([]);
   protected countriesData: WritableSignal<CountryStats[]> = signal<CountryStats[]>([]);
-  protected countries: Signal<string[]> = computed((): string[] => this.countriesData().map(c => c.countryName).sort());
+  protected countries: Signal<string[]> = computed((): string[] => this.countriesData().map(c => c.countryName).sort((a, b) => a.localeCompare(b)));
   protected sports: WritableSignal<SportEntry[]> = signal([]);
 
   constructor(protected miscService: MiscService, protected leaderboardService: LeaderboardService,
