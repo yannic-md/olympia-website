@@ -11,6 +11,17 @@ export class CountryService {
   constructor(private http: HttpClient) {}
 
   /**
+   * Updates an existing country by their ID.
+   *
+   * @param {number} id - The unique ID of the country to update.
+   * @param {Object} data - The update payload with code and name.
+   * @returns {Observable<any>} Observable with the updated country.
+   */
+  updateCountry(id: number, data: { code: string; name: string }): Observable<any> {
+    return this.http.put(`${API_URL}/countries/${id}`, data);
+  }
+
+  /**
    * Deletes an country by their ID.
    *
    * @param {number} id - The unique ID of the country to delete.

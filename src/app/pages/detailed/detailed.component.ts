@@ -178,17 +178,34 @@ export class DetailedComponent implements OnDestroy {
    * @param {AthleteForm} form - The form data containing updated athlete information.
    */
   protected onUpdateAthlete(form: AthleteForm): void {
-    this.athletes.update(current =>
-      current.map(a => a.id === form.id ? { ...a, name: form.name, countryCode: form.countryCode.toUpperCase(),
-                                                    countryName: form.countryName, sport: form.sport,
-                                                    bestTime: form.bestTime || null, medals: { gold: form.goldMedals,
-                                                    silver: form.silverMedals, bronze: form.bronzeMedals }} : a)
-    );
+    if (!form.id) return;
 
-    this.editingAthlete.set(null);
-    this.isAthleteModalOpen.set(false);
-    this.alertService.success(
-      (this.translateService.instant('ALERT.ATHLETE.EDIT')).replace('[name]', form.name));
+    const nameParts = form.name.trim().split(/\s+/);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+    const athlete = this.editingAthlete();
+    const countryId = athlete ? athlete.countryId : 0;
+
+    this.athleteService.updateAthlete(form.id, { firstName, lastName, countryId }).subscribe({
+      next: (): void => {
+        this.athletes.update(current =>
+          current.map(a => a.id === form.id ? { ...a, name: form.name, countryCode: form.countryCode.toUpperCase(),
+                                                        countryName: form.countryName, sport: form.sport,
+                                                        bestTime: form.bestTime || null, medals: { gold: form.goldMedals,
+                                                        silver: form.silverMedals, bronze: form.bronzeMedals }} : a)
+        );
+
+        this.editingAthlete.set(null);
+        this.isAthleteModalOpen.set(false);
+        this.alertService.success(
+          (this.translateService.instant('ALERT.ATHLETE.EDIT')).replace('[name]', form.name));
+      },
+      error: (error: HttpErrorResponse): void => {
+        console.error('Error updating athlete:', error);
+        this.alertService.error(
+          (this.translateService.instant('ALERT.ATHLETE.EDIT.ERROR')).replace('[name]', form.name));
+      }
+    });
   }
 
   /**
@@ -237,17 +254,30 @@ export class DetailedComponent implements OnDestroy {
    * @param {CountryForm} form - The form data containing updated country information.
    */
   protected onUpdateCountry(form: CountryForm): void {
-    this.countriesData.update(current =>
-      current.map(c => c.countryCode === form.countryCode ? { ...c, countryName: form.countryName,
-                                                                           medals: { gold: form.goldMedals,
-                                                                                     silver: form.silverMedals,
-                                                                                     bronze: form.bronzeMedals}} : c)
-    );
+    const country = this.editingCountry();
+    if (!country) return;
 
-    this.editingCountry.set(null);
-    this.isCountryModalOpen.set(false);
-    this.alertService.success(
-      (this.translateService.instant('ALERT.COUNTRY.EDIT')).replace('[name]', form.countryName));
+    this.countryService.updateCountry(country.countryId, { code: form.countryCode, name: form.countryName }).subscribe({
+      next: (): void => {
+        this.countriesData.update(current =>
+          current.map(c => c.countryId === country.countryId ? { ...c, countryCode: form.countryCode,
+                                                                             countryName: form.countryName,
+                                                                             medals: { gold: form.goldMedals,
+                                                                                       silver: form.silverMedals,
+                                                                                       bronze: form.bronzeMedals}} : c)
+        );
+
+        this.editingCountry.set(null);
+        this.isCountryModalOpen.set(false);
+        this.alertService.success(
+          (this.translateService.instant('ALERT.COUNTRY.EDIT')).replace('[name]', form.countryName));
+      },
+      error: (error: HttpErrorResponse): void => {
+        console.error('Error updating country:', error);
+        this.alertService.error(
+          (this.translateService.instant('ALERT.COUNTRY.EDIT.ERROR')).replace('[name]', form.countryName));
+      }
+    });
   }
 
   /**
