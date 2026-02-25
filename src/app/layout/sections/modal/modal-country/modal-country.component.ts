@@ -13,7 +13,7 @@ import {FormsModule} from "@angular/forms";
 import {NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
 import {MiscService} from "../../../../services/misc/misc.service";
-import {CountryForm} from "../../../../types/Country";
+import {CountryForm, CountryStats} from "../../../../types/Country";
 import {TranslatePipe} from "@ngx-translate/core";
 
 @Component({
@@ -49,6 +49,8 @@ import {TranslatePipe} from "@ngx-translate/core";
 export class ModalCountryComponent {
   isOpen: InputSignal<boolean> = input.required<boolean>();
   editData: InputSignal<CountryForm | null> = input<CountryForm | null>(null);
+  /** Full list of existing countries used for client-side duplicate validation. */
+  existingCountries: InputSignal<CountryStats[]> = input<CountryStats[]>([]);
 
   closeModal: OutputEmitterRef<void> = output<void>();
   addCountry: OutputEmitterRef<CountryForm> = output<CountryForm>();
@@ -64,6 +66,33 @@ export class ModalCountryComponent {
       if (data) { this.formData.set({ ...data }); }
     });
   }
+
+  /**
+   * Returns true if the country code has been entered but is shorter than 2 characters.
+   */
+  protected codeTooShort: Signal<boolean> = computed((): boolean => {
+    const code: string = this.formData().countryCode.trim();
+    return code.length > 0 && code.length < 2;
+  });
+
+  /**
+   * Checks whether the entered country code or name already exists in the current country list.
+   * Only active in add-mode (not when editing an existing country).
+   * Returns null if no duplicate is found, or an object describing which field conflicts.
+   */
+  protected duplicateError: Signal<{ code: boolean; name: boolean } | null> = computed(() => {
+    if (this.isEditMode()) return null;
+
+    const code: string = this.formData().countryCode.toUpperCase().trim();
+    const name: string = this.formData().countryName.trim().toLowerCase();
+
+    const codeExists: boolean = code.length > 0 &&
+      this.existingCountries().some(c => c.countryCode.toUpperCase() === code);
+    const nameExists: boolean = name.length > 0 &&
+      this.existingCountries().some(c => c.countryName.trim().toLowerCase() === name);
+
+    return (codeExists || nameExists) ? { code: codeExists, name: nameExists } : null;
+  });
 
   /**
    * Returns an empty country form object with default values.
@@ -82,8 +111,11 @@ export class ModalCountryComponent {
 
   /**
    * Submits the country form and emits the data to the parent component.
+   * Blocks submission when a client-side duplicate is detected.
    */
   protected onSubmit(): void {
+    if (this.duplicateError()) return;
+
     if (this.isEditMode()) {
       this.updateCountry.emit(this.formData());
     } else {
@@ -98,7 +130,7 @@ export class ModalCountryComponent {
    */
   protected isFormValid: Signal<boolean> = computed((): boolean => {
     const data: CountryForm = this.formData();
-    return data.countryName.trim() !== '' && data.countryCode !== '';
+    return data.countryName.trim() !== '' && data.countryCode !== '' && !this.duplicateError() && !this.codeTooShort();
   });
 
 }

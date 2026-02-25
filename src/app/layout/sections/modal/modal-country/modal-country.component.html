@@ -26,7 +26,13 @@
               <input [(ngModel)]="formData().countryCode" name="countryCode" id="country-code"
                      type="text" maxlength="2" required placeholder="z.B. DE"
                      (ngModelChange)="miscService.updateField(this.formData, 'countryCode', $event)"
+                     [class.border-red-400]="duplicateError()?.code || codeTooShort()"
                      class="w-full px-4 py-2 border border-gray-300 rounded-lg placeholder-neutral-400">
+              @if (codeTooShort()) {
+                <p class="mt-1 text-xs text-red-500">{{ 'MODAL.COUNTRY.ERROR.CODE.TOO_SHORT' | translate }}</p>
+              } @else if (duplicateError()?.code) {
+                <p class="mt-1 text-xs text-red-500">{{ 'MODAL.COUNTRY.ERROR.DUPLICATE.CODE' | translate }}</p>
+              }
             </div>
 
             <div class="w-full">
@@ -36,7 +42,11 @@
               <input [(ngModel)]="formData().countryName" name="countryName" id="country-name"
                      type="text" required [placeholder]="'MODAL.COUNTRY.NAME.PLACEHOLDER' | translate"
                      (ngModelChange)="miscService.updateField(this.formData, 'countryName', $event)"
+                     [class.border-red-400]="duplicateError()?.name"
                      class="w-full px-4 py-2 border border-gray-300 rounded-lg placeholder-neutral-400">
+              @if (duplicateError()?.name) {
+                <p class="mt-1 text-xs text-red-500">{{ 'MODAL.COUNTRY.ERROR.DUPLICATE.NAME' | translate }}</p>
+              }
             </div>
           </div>
 

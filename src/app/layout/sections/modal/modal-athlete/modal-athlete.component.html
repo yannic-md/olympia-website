@@ -26,10 +26,12 @@
               </label>
               <input [ngModel]="formData().name" [maxLength]="25" name="name" id="athlete-name" type="text" required
                      (ngModelChange)="onNameChange($event)" placeholder="Yanic Doepner, Nils Sievers, .."
-                     [class.border-red-500]="nameError()"
+                     [class.border-red-500]="nameError() || duplicateNameError()"
                      class="w-full px-4 py-2 border border-gray-300 rounded-lg placeholder-neutral-400">
               @if (nameError()) {
                 <p class="mt-1 text-sm text-red-600">{{ nameError() }}</p>
+              } @else if (duplicateNameError()) {
+                <p class="mt-1 text-sm text-red-600">{{ 'MODAL.ATHLETE.ERROR.DUPLICATE.NAME' | translate }}</p>
               }
             </div>
             <div>

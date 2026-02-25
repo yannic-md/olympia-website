@@ -13,7 +13,7 @@ import {FormsModule} from "@angular/forms";
 import {NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
 import {MiscService} from "../../../../services/misc/misc.service";
-import {AthleteForm, ScoreType} from "../../../../types/Athlete";
+import {Athlete, AthleteForm, ScoreType} from "../../../../types/Athlete";
 import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 
 @Component({
@@ -44,6 +44,7 @@ import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 })
 export class ModalAthleteComponent {
   isOpen: InputSignal<boolean> = input.required<boolean>();
+  athletes: InputSignal<Athlete[]> = input.required<Athlete[]>();
   countries: InputSignal<string[]> = input.required<string[]>();
   sports: InputSignal<{ name: string; rawName: string; scoreType: ScoreType }[]> = input.required<{ name: string; rawName: string; scoreType: ScoreType }[]>();
   closeModal: OutputEmitterRef<void> = output<void>();
@@ -107,12 +108,26 @@ export class ModalAthleteComponent {
   }
 
   /**
+   * Returns true when the entered athlete name already exists in the athletes list.
+   * In edit mode the athlete's own current name is excluded from the check.
+   */
+  protected duplicateNameError: Signal<boolean> = computed((): boolean => {
+    const currentName: string = this.formData().name.trim().toLowerCase();
+    if (!currentName) return false;
+    return this.athletes().some((a: Athlete): boolean => {
+      if (this.isEditMode() && a.id === this.editData()!.id) return false;
+      return a.name.trim().toLowerCase() === currentName;
+    });
+  });
+
+  /**
    * Computed signal — true when all required fields are filled and the score input is valid.
    */
   protected isFormValid: Signal<boolean> = computed((): boolean => {
     const data: AthleteForm = this.formData();
     if (!data.name.trim() || !data.countryName || !data.sport) return false;
     if (this.scoreError() !== '' || this.nameError() !== '') return false;
+    if (this.duplicateNameError()) return false;
 
     // Score field is required only when a scoreType is known
     return !(data.scoreType !== null && data.bestTime.trim() === '');

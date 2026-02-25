@@ -14,15 +14,14 @@ import {AlertBoxComponent} from "../../layout/sections/alert-box/alert-box.compo
 import {ModalCountryComponent} from "../../layout/sections/modal/modal-country/modal-country.component";
 import {CountryForm, CountryStats} from "../../types/Country";
 import {Athlete, AthleteForm} from "../../types/Athlete";
-import {LeaderboardService} from "../../services/api/leaderboard/leaderboard.service";
 import {HttpErrorResponse} from "@angular/common/http";
 import {AlertService} from "../../services/api/alert/alert.service";
 import {AuthService} from "../../services/api/auth/auth.service";
 import {AthleteService} from "../../services/api/athlete/athlete.service";
 import {CountryService} from "../../services/api/country/country.service";
 import {TranslatePipe, TranslateService} from "@ngx-translate/core";
-import {Subscription, forkJoin, skip} from "rxjs";
-import {SportsService, SportEntry} from "../../services/api/sports/sports.service";
+import {Subscription} from "rxjs";
+import {DataHolderService} from "../../services/data-holder/data-holder.service";
 
 @Component({
   selector: 'app-detailed',
@@ -57,22 +56,20 @@ export class DetailedComponent implements OnDestroy {
   protected isCountryModalOpen: WritableSignal<boolean> = signal(false);
   private readonly translateSub: Subscription;
 
-  protected athletes: WritableSignal<Athlete[]> = signal<Athlete[]>([]);
-  protected countriesData: WritableSignal<CountryStats[]> = signal<CountryStats[]>([]);
-  protected countries: Signal<string[]> = computed((): string[] => this.countriesData()
-    .map(c => c.countryName).sort((a, b): number => a.localeCompare(b)));
-  protected sports: WritableSignal<SportEntry[]> = signal([]);
+  protected get athletes() { return this.dataService.athletes; }
+  protected get countriesData() { return this.dataService.countriesData; }
+  protected get countries() { return this.dataService.countries; }
+  protected get sports() { return this.dataService.sports; }
+  protected get isLoading() { return this.dataService.isLoading; }
 
-  protected isLoading: WritableSignal<boolean> = signal(false);
-
-  constructor(protected miscService: MiscService, protected leaderboardService: LeaderboardService,
+  constructor(protected miscService: MiscService, public dataService: DataHolderService,
               private alertService: AlertService, protected authService: AuthService,
               private athleteService: AthleteService, private countryService: CountryService,
-              private translateService: TranslateService, private sportsService: SportsService) {
-    this.loadLeaderboardData();
+              private translateService: TranslateService) {
+    this.dataService.load();
 
     this.translateSub = this.translateService.onLangChange.subscribe((): void => {
-      this.loadLeaderboardData();
+      this.dataService.load();
     });
   }
 
@@ -81,78 +78,6 @@ export class DetailedComponent implements OnDestroy {
    * */
   ngOnDestroy(): void {
     if (this.translateSub) { this.translateSub.unsubscribe(); }
-  }
-
-  /**
-   * Loads leaderboard data, all athletes and all countries from the backend API.
-   * Merges athletes without results and countries without athletes into the displayed data
-   * so that newly created entries are visible even if they have no results yet.
-   * When not logged in, only the public leaderboard data is loaded.
-   */
-  private loadLeaderboardData(): void {
-    const lang: string = this.translateService.getCurrentLang() || 'en';
-    if (this.isLoading()) { return; } // avoid duplicate requests
-    this.isLoading.set(true);
-
-    if (this.authService.isLoggedIn()) {
-      forkJoin({leaderboard: this.leaderboardService.getLeaderboard(), allAthletes: this.athleteService.getAllAthletes(),
-                allCountries: this.countryService.getAllCountries(), allSports: this.sportsService.getAllSports(lang)
-      }).subscribe({
-        next: ({ leaderboard, allAthletes, allCountries, allSports }): void => {
-          this.sports.set(allSports);
-          this.mergeData(leaderboard, allAthletes, allCountries);
-          this.isLoading.set(false);
-        },
-        error: (error: HttpErrorResponse): void => {
-          console.error('Error loading data:', error);
-          this.alertService.error(this.translateService.instant('ALERT.ERROR'));
-          this.isLoading.set(false);
-        }
-      });
-    } else {
-      forkJoin({leaderboard: this.leaderboardService.getLeaderboard(), allSports: this.sportsService.getAllSports(lang)
-      }).subscribe({
-        next: ({ leaderboard, allSports }): void => {
-          this.sports.set(allSports);
-          this.athletes.set(leaderboard);
-          this.initializeCountriesFromAthletes([]);
-          this.isLoading.set(false);
-        },
-        error: (error: HttpErrorResponse): void => {
-          console.error('Error loading leaderboard data:', error);
-          this.alertService.error(this.translateService.instant('ALERT.ERROR'));
-          this.isLoading.set(false);
-        }
-      });
-    }
-  }
-
-  /**
-   * Merges leaderboard athletes with all athletes and all countries from the API.
-   * Ensures athletes without results and countries without athletes appear in the UI.
-   */
-  private mergeData(leaderboard: Athlete[], allAthletes: any[], allCountries: any[]): void {
-    const athleteMap = new Map<number, Athlete>();
-    leaderboard.forEach(a => athleteMap.set(a.id, a));
-
-    allAthletes.forEach((a: any): void => {
-      if (!athleteMap.has(a.id)) {
-        athleteMap.set(a.id, {id: a.id, name: `${a.firstName} ${a.lastName}`, countryId: a.country?.id ?? 0,
-                              countryCode: a.country?.code ?? '', countryName: a.country?.name ?? '', sport: a.sport ?? '',
-                              sportRawName: a.sport ?? '', scoreType: a.scoreType ?? null,
-                              medals: { gold: 0, silver: 0, bronze: 0 }, bestTime: null});
-      } else {
-        const existing: Athlete = athleteMap.get(a.id)!;
-
-        if (!existing.sport && a.sport) { existing.sport = a.sport; }
-        if (a.sport) { existing.sportRawName = a.sport; }
-        if (a.scoreType) { existing.scoreType = a.scoreType; }
-        athleteMap.set(a.id, existing);
-      }
-    });
-
-    this.athletes.set(Array.from(athleteMap.values()));
-    this.initializeCountriesFromAthletes(allCountries);
   }
 
   /**
@@ -176,7 +101,7 @@ export class DetailedComponent implements OnDestroy {
   });
 
   /**
-   * Computed signal that transforms the currently selected country into an `CountryForm` model.
+   * Computed signal that transforms the currently selected country into a `CountryForm` model.
    *
    * This ensures that the edit form always receives a consistent and type-safe data structure
    * whenever `editingCountry` changes.
@@ -244,7 +169,7 @@ export class DetailedComponent implements OnDestroy {
       goldMedals: form.goldMedals, silverMedals: form.silverMedals, bronzeMedals: form.bronzeMedals,
       bestTime: form.bestTime || null, sport: form.sportRawName, scoreType: form.scoreType }).subscribe({
       next: (): void => {
-        this.loadLeaderboardData();
+        this.dataService.load();
         this.editingAthlete.set(null);
         this.isAthleteModalOpen.set(false);
         this.alertService.success(
@@ -278,7 +203,7 @@ export class DetailedComponent implements OnDestroy {
           (this.translateService.instant('ALERT.COUNTRY.DELETE')).replace('[name]', country.countryName));
       },
       error: (error: HttpErrorResponse): void => {
-        console.error('Error deleting athlete:', error);
+        console.error('Error deleting country:', error);
         this.alertService.error(
           (this.translateService.instant('ALERT.COUNTRY.DELETE.ERROR')).replace('[name]', country.countryName));
       }
@@ -286,7 +211,7 @@ export class DetailedComponent implements OnDestroy {
   }
 
   /**
-   * Opens the modal to edit an country from the list by their object.
+   * Opens the modal to edit a country from the list by their object.
    *
    * @param {CountryStats} country - The object of the country.
    */
@@ -386,45 +311,8 @@ export class DetailedComponent implements OnDestroy {
   });
 
   /**
-   * Initializes the countries data by aggregating medal counts from all athletes
-   * and merging in countries from the API that have no athletes yet.
-   *
-   * @param allCountries - List of all countries from the backend API
-   */
-  private initializeCountriesFromAthletes(allCountries: any[]): void {
-    const countryMap = new Map<string, CountryStats>();
-
-    this.athletes().forEach(athlete => {
-      if (!athlete.countryCode) return;
-      if (!countryMap.has(athlete.countryCode)) {
-        countryMap.set(athlete.countryCode, { countryCode: athlete.countryCode, countryName: athlete.countryName,
-                                              medals: { gold: 0, silver: 0, bronze: 0 }, countryId: athlete.countryId });
-      }
-
-      const stat: CountryStats = countryMap.get(athlete.countryCode)!;
-      stat.medals.gold += athlete.medals.gold;
-      stat.medals.silver += athlete.medals.silver;
-      stat.medals.bronze += athlete.medals.bronze;
-    });
-
-    // Add countries without athletes from /api/countries
-    allCountries.forEach((c: any) => {
-      if (!countryMap.has(c.code)) {
-        countryMap.set(c.code, { countryCode: c.code, countryName: c.name,
-                                 medals: { gold: 0, silver: 0, bronze: 0 }, countryId: c.id });
-      }
-    });
-
-    this.countriesData.set(Array.from(countryMap.values()));
-  }
-
-  /**
    * Sorts two objects by their medal counts, prioritizing a specific medal type if filtered, then by total medals,
    * and finally alphabetically by name.
-   *
-   * This method first checks if a specific medal type filter is active. If so, it sorts by that medal type in descending order.
-   * Otherwise, it sorts by gold, silver, and bronze medals in that priority order (descending).
-   * If all medal counts are equal, it falls back to alphabetical comparison of the provided names.
    *
    * @param {object} a - First object containing medal counts (gold, silver, bronze).
    * @param {object} b - Second object containing medal counts (gold, silver, bronze).
@@ -466,7 +354,7 @@ export class DetailedComponent implements OnDestroy {
       goldMedals: form.goldMedals, silverMedals: form.silverMedals, bronzeMedals: form.bronzeMedals,
       bestTime: form.bestTime || null, sport: form.sportRawName, scoreType: form.scoreType }).subscribe({
       next: (): void => {
-        this.loadLeaderboardData();
+        this.dataService.load();
         this.isAthleteModalOpen.set(false);
         this.alertService.success(
           (this.translateService.instant('ALERT.ATHLETE.ADD')).replace('[name]', form.name));
@@ -482,30 +370,26 @@ export class DetailedComponent implements OnDestroy {
   /**
    * Handles the creation and addition of a new country to the statistics list.
    *
-   * Sends a create request to the backend API if the country does not already exist.
-   * The country code is converted to uppercase before checking for duplicates. After processing, the modal
-   * is closed and a success or error alert is displayed.
+   * Sends a create request to the backend API. On success, reloads data and shows a success alert.
+   * On error, emits the error back to the modal so it can display an inline validation message.
    *
-   * @param {Object} form - The form data containing country information.
-   * @param {string} form.countryCode - The ISO country code (will be converted to uppercase).
-   * @param {string} form.countryName - The full country name.
-   * @param {number} form.goldMedals - Number of gold medals for the country.
-   * @param {number} form.silverMedals - Number of silver medals for the country.
-   * @param {number} form.bronzeMedals - Number of bronze medals for the country.
+   * @param {CountryForm} form - The form data containing country information.
    */
-  protected onAddCountry(form: { countryCode: string; countryName: string;
-                                 goldMedals: number; silverMedals: number; bronzeMedals: number;}): void {
+  protected onAddCountry(form: CountryForm): void {
     this.countryService.createCountry({ code: form.countryCode.toUpperCase(), name: form.countryName }).subscribe({
       next: (): void => {
-        this.loadLeaderboardData();
+        this.dataService.load();
         this.isCountryModalOpen.set(false);
         this.alertService.success(
           (this.translateService.instant('ALERT.COUNTRY.ADD')).replace('[name]', form.countryName));
       },
       error: (error: HttpErrorResponse): void => {
         console.error('Error creating country:', error);
-        this.alertService.error(
-          (this.translateService.instant('ALERT.COUNTRY.EDIT.ERROR')).replace('[name]', form.countryName));
+        // 409 Conflict = duplicate code/name – let the modal handle the inline error display
+        if (error.status !== 409) {
+          this.alertService.error(
+            (this.translateService.instant('ALERT.COUNTRY.ADD.ERROR')).replace('[name]', form.countryName));
+        }
       }
     });
   }
