@@ -11,6 +11,7 @@ import {HttpErrorResponse} from "@angular/common/http";
 import {AlertService} from "../../services/api/alert/alert.service";
 import {LeaderboardService} from "../../services/api/leaderboard/leaderboard.service";
 import {TableMedalPillsComponent} from "../../layout/elements/table-medal-pills/table-medal-pills.component";
+import {FilterSelectComponent} from "../../layout/elements/filter-select/filter-select.component";
 import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {Subscription} from "rxjs";
 
@@ -35,13 +36,15 @@ interface MedalWinner {
     AlertBoxComponent,
     TableMedalPillsComponent,
     NgClass,
-    TranslatePipe
+    TranslatePipe,
+    FilterSelectComponent
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
 export class HomeComponent implements OnDestroy {
   protected topCountries: MedalWinner[] = [];
+  protected filterSport: WritableSignal<string> = signal('all');
   private readonly translateSub: Subscription;
   private isLoading: WritableSignal<boolean> = signal(false);
 

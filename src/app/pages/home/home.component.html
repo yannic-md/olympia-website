@@ -13,7 +13,14 @@
       {{ 'PAGE.HOME.TITLE' | translate }}
     </h2>
 
-    <div class="flex items-center gap-4 md:gap-6 justify-center lg:justify-end">
+    <div class="flex flex-col lg:flex-row items-center gap-4 md:gap-6 justify-center lg:justify-end">
+      <!-- TODO: Functionality & API Call - should sort the top winners based on discipline winners -->
+      <div class="w-full md:w-3/4 lg:w-48">
+        <app-filter-select id="home-filter-sports" [(value)]="filterSport">
+          <option value="all">{{ 'PAGE.DETAILED.FILTER.SPORTS.PLACEHOLDER' | translate }}</option>
+        </app-filter-select>
+      </div>
+
       <a routerLink="/detailed" class="w-full md:w-auto">
         <button class="w-full md:w-auto bg-[rgb(215,195,120)] hover:bg-[#cfbc7e] text-white text-sm
                        md:text-base font-medium py-2 md:py-1.5 px-4 rounded shadow-sm transition-colors cursor-pointer">
