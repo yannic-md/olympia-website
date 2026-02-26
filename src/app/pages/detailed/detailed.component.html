@@ -229,12 +229,13 @@
 
 <!-- Modals -->
 <app-modal-athlete [isOpen]="isAthleteModalOpen()" [athletes]="athletes()" [countries]="countries()" [sports]="sports()"
-                   [editData]="athleteEditData()" (addAthlete)="onAddAthlete($event)"
-                   (closeModal)="isAthleteModalOpen.set(false); editingAthlete.set(null)"
-                   (updateAthlete)="onUpdateAthlete($event)" />
+                   [editData]="athleteEditData()" [resumeData]="suspendedAthleteForm()"
+                   (addAthlete)="onAddAthlete($event)" (updateAthlete)="onUpdateAthlete($event)"
+                   (closeModal)="isAthleteModalOpen.set(false); editingAthlete.set(null); suspendedAthleteForm.set(null)"
+                   (openCountryModal)="onOpenCountryModalFromAthlete($event)" />
 <app-modal-country [isOpen]="isCountryModalOpen()" [editData]="countryEditData()" [existingCountries]="countriesData()"
-                   (closeModal)="isCountryModalOpen.set(false); editingCountry.set(null)"
-                   (addCountry)="onAddCountry($event)" (updateCountry)="onUpdateCountry($event)" />
+                   (closeModal)="onCloseCountryModal()" (addCountry)="onAddCountry($event)"
+                   (updateCountry)="onUpdateCountry($event)" />
 
 <!-- Show confirmation popups -->
 <app-alert-box />

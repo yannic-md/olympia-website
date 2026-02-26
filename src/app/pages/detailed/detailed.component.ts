@@ -22,6 +22,7 @@ import {CountryService} from "../../services/api/country/country.service";
 import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {Subscription} from "rxjs";
 import {DataHolderService} from "../../services/data-holder/data-holder.service";
+import {SportEntry} from "../../services/api/sports/sports.service";
 
 @Component({
   selector: 'app-detailed',
@@ -54,13 +55,15 @@ export class DetailedComponent implements OnDestroy {
   protected editingCountry: WritableSignal<CountryStats | null> = signal(null);
   protected isAthleteModalOpen: WritableSignal<boolean> = signal(false);
   protected isCountryModalOpen: WritableSignal<boolean> = signal(false);
+  /** Holds the suspended athlete form data when the user opens the country modal from within the athlete modal. */
+  protected suspendedAthleteForm: WritableSignal<AthleteForm | null> = signal(null);
   private readonly translateSub: Subscription;
 
-  protected get athletes() { return this.dataService.athletes; }
-  protected get countriesData() { return this.dataService.countriesData; }
-  protected get countries() { return this.dataService.countries; }
-  protected get sports() { return this.dataService.sports; }
-  protected get isLoading() { return this.dataService.isLoading; }
+  protected get athletes(): WritableSignal<Athlete[]> { return this.dataService.athletes; }
+  protected get countriesData(): WritableSignal<CountryStats[]> { return this.dataService.countriesData; }
+  protected get countries(): Signal<string[]> { return this.dataService.countries; }
+  protected get sports(): WritableSignal<SportEntry[]> { return this.dataService.sports; }
+  protected get isLoading(): WritableSignal<boolean> { return this.dataService.isLoading; }
 
   constructor(protected miscService: MiscService, public dataService: DataHolderService,
               private alertService: AlertService, protected authService: AuthService,
@@ -356,6 +359,7 @@ export class DetailedComponent implements OnDestroy {
       next: (): void => {
         this.dataService.load();
         this.isAthleteModalOpen.set(false);
+        this.suspendedAthleteForm.set(null);
         this.alertService.success(
           (this.translateService.instant('ALERT.ATHLETE.ADD')).replace('[name]', form.name));
       },
@@ -382,6 +386,20 @@ export class DetailedComponent implements OnDestroy {
         this.isCountryModalOpen.set(false);
         this.alertService.success(
           (this.translateService.instant('ALERT.COUNTRY.ADD')).replace('[name]', form.countryName));
+
+        // Re-open the athlete modal and pre-select the newly created country
+        const suspended: AthleteForm | null = this.suspendedAthleteForm();
+        if (suspended === null) { this.suspendedAthleteForm.set(null); return; }
+
+        const resumeForm: AthleteForm = { ...suspended, countryName: form.countryName,
+                                          countryCode: form.countryCode.toUpperCase() };
+        this.editingAthlete.set(null);
+
+        // Use a minimal timeout so that the data reload has been queued first
+        setTimeout((): void => {
+          this.suspendedAthleteForm.set(resumeForm);
+          this.isAthleteModalOpen.set(true);
+        }, 150);
       },
       error: (error: HttpErrorResponse): void => {
         console.error('Error creating country:', error);
@@ -392,6 +410,31 @@ export class DetailedComponent implements OnDestroy {
         }
       }
     });
+  }
+
+  /**
+   * Opens the country creation modal from within the athlete modal.
+   * Suspends the current athlete form state so it can be restored afterwards.
+   *
+   * @param {AthleteForm} currentForm - The current athlete form data to restore after country creation.
+   */
+  protected onOpenCountryModalFromAthlete(currentForm: AthleteForm): void {
+    this.suspendedAthleteForm.set({ ...currentForm });
+    this.isAthleteModalOpen.set(false);
+    this.isCountryModalOpen.set(true);
+  }
+
+  /**
+   * Closes the country modal. If the modal was opened from within the athlete modal,
+   * the athlete modal is re-opened with the previously suspended form state.
+   */
+  protected onCloseCountryModal(): void {
+    this.isCountryModalOpen.set(false);
+    this.editingCountry.set(null);
+
+    if (this.suspendedAthleteForm() !== null) {
+      this.isAthleteModalOpen.set(true);
+    }
   }
 
 }

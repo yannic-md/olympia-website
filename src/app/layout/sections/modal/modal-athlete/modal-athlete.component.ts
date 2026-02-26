@@ -48,8 +48,11 @@ export class ModalAthleteComponent {
   countries: InputSignal<string[]> = input.required<string[]>();
   sports: InputSignal<{ name: string; rawName: string; scoreType: ScoreType }[]> = input.required<{ name: string; rawName: string; scoreType: ScoreType }[]>();
   closeModal: OutputEmitterRef<void> = output<void>();
+  openCountryModal: OutputEmitterRef<AthleteForm> = output<AthleteForm>();
 
   editData: InputSignal<AthleteForm | null> = input<AthleteForm | null>(null);
+  /** Restores a previously suspended form state (e.g. after returning from country creation). Does not activate edit mode. */
+  resumeData: InputSignal<AthleteForm | null> = input<AthleteForm | null>(null);
   addAthlete: OutputEmitterRef<AthleteForm> = output<AthleteForm>();
   updateAthlete: OutputEmitterRef<AthleteForm> = output<AthleteForm>();
 
@@ -71,6 +74,16 @@ export class ModalAthleteComponent {
     // set data if user wants to edit instead of add
     effect((): void => {
       const data: AthleteForm | null = this.editData();
+      if (data) {
+        this.formData.set({ ...data });
+        this.scoreError.set('');
+        this.nameError.set('');
+      }
+    });
+
+    // restore suspended form state when returning from country creation
+    effect((): void => {
+      const data: AthleteForm | null = this.resumeData();
       if (data) {
         this.formData.set({ ...data });
         this.scoreError.set('');

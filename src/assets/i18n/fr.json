@@ -74,6 +74,7 @@
   "MODAL.ATHLETE.NAME.ERROR": "Vous devez saisir un prénom et un nom.",
   "MODAL.ATHLETE.COUNTRY": "Choisir le pays d'origine...",
   "MODAL.ATHLETE.COUNTRY.PLACEHOLDER": "Sélectionner un pays",
+  "MODAL.ATHLETE.COUNTRY.ADD": "Créer un nouveau pays",
   "MODAL.ATHLETE.SPORTS": "Choisir la discipline...",
   "MODAL.ATHLETE.SPORTS.PLACEHOLDER": "Sélectionner une discipline",
   "MODAL.ATHLETE.BESTTIME": "Meilleur temps",
