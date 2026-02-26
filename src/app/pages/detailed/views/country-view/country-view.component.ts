@@ -76,14 +76,7 @@ export class CountryViewComponent {
   protected athletesForCountry(countryId: number): Athlete[] {
     return this.dataService.athletes()
       .filter(a => a.countryId === countryId)
-      .sort((a, b): number => {
-        const totalA: number = a.medals.gold + a.medals.silver + a.medals.bronze;
-        const totalB: number = b.medals.gold + b.medals.silver + b.medals.bronze;
-        if (totalA !== totalB) return totalB - totalA;
-        if (a.medals.gold !== b.medals.gold) return b.medals.gold - a.medals.gold;
-        if (a.medals.silver !== b.medals.silver) return b.medals.silver - a.medals.silver;
-        return b.medals.bronze - a.medals.bronze;
-      });
+      .sort((a, b): number => sortByMedals(a, b, a.name, b.name, this.filterMedal()));
   }
 
   /**
