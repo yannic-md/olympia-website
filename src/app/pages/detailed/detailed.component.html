@@ -269,7 +269,7 @@
 <app-footer />
 
 <!-- Modals -->
-<app-modal-athlete [isOpen]="isAthleteModalOpen()" [athletes]="athletes()" [countries]="countries()" [sports]="sports()"
+<app-modal-athlete [isOpen]="isAthleteModalOpen()" [athletes]="athletes()" [countries]="countries()"
                    [editData]="athleteEditData()" [resumeData]="suspendedAthleteForm()"
                    (addAthlete)="onAddAthlete($event)" (updateAthlete)="onUpdateAthlete($event)"
                    (closeModal)="isAthleteModalOpen.set(false); editingAthlete.set(null); suspendedAthleteForm.set(null)"
