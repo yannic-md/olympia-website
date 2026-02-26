@@ -179,7 +179,13 @@
         <!-- For Country View -->
           @if (selectedView() === 'countries') {
             @for (country of filteredCountries(); track country.countryCode; let i = $index) {
-              <tr class="group border-b border-gray-200/50 hover:bg-black/5 odd:bg-neutral-200/50 transition-colors">
+              @let countryAthletes = athletesForCountry(country.countryId);
+
+              <!-- Country row (clickable to expand) -->
+              <tr class="group border-b border-gray-200/50 hover:bg-black/5 odd:bg-neutral-200/50
+                         transition-all select-none" (click)="toggleCountry(country.countryId)"
+                  [class.cursor-pointer]="countryAthletes.length > 0"
+                  [class.border-neutral-300]="isCountryExpanded(country.countryId)">
                 <td class="py-4 pl-2 pr-2 text-center">
                   @if (i === 0) { <span class="text-2xl" title="1">🏆</span> }
                   @else if (i === 1) { <span class="text-2xl" title="2">🥈</span> }
@@ -187,18 +193,54 @@
                   @else { <span class="text-sm font-medium text-gray-500">{{ '#' + (i + 1) }}</span> }
                 </td>
                 <td class="py-4 pl-2 font-semibold text-gray-800 tracking-wide">
-                  <app-table-country-badge [code]="country.countryCode" [name]="country.countryName" />
+                  <div class="flex items-center gap-2">
+                    <app-table-country-badge [code]="country.countryCode" [name]="country.countryName" />
+
+                    @if (countryAthletes.length > 0) {
+                      <img ngSrc="/assets/images/icons/chevron-down.svg" width="8" height="8" alt="Chevron Down"
+                           class="w-2 h-2 text-gray-400 shrink-0 transition-transform duration-200"
+                           [class.rotate-180]="isCountryExpanded(country.countryId)" />
+                    }
+                  </div>
                 </td>
                 <td class="py-4">
                   <app-table-medal-pills [medals]="country.medals" [activeFilter]="filterMedal()" />
                 </td>
 
                 @if (authService.isLoggedIn()) {
-                  <td class="py-4">
+                  <td class="py-4" (click)="$event.stopPropagation()">
                     <app-table-actions (edit)="onEditCountry(country)" (delete)="onDeleteCountry(country.countryId)" />
                   </td>
                 }
               </tr>
+
+              <!-- Expanded athletes sub-rows -->
+              @if (isCountryExpanded(country.countryId)) {
+                @for (athlete of countryAthletes; track athlete.id; let last = $last) {
+                  <tr class="bg-neutral-250 border-b hover:bg-neutral-100/80 transition-colors"
+                      [class.border-neutral-200]="!last" [class.border-neutral-300]="last">
+                    <!-- indent spacer -->
+                    <td class="py-2.5 pl-2 pr-2 text-center">
+                      <span class="text-xs text-gray-400 font-medium pl-2">-</span>
+                    </td>
+                    <!-- Athlete name -->
+                    <td class="py-2.5 pl-9 pr-4">
+                      <div class="flex flex-col">
+                        <span class="text-sm font-medium text-gray-700 font-olympic-sans tracking-wide">
+                          {{ athlete.name }}
+                        </span>
+                      </div>
+                    </td>
+                    <!-- Medals -->
+                    <td class="py-2.5 pr-4">
+                      <app-table-medal-pills [medals]="athlete.medals" [activeFilter]="filterMedal()" />
+                    </td>
+
+                    @if (authService.isLoggedIn()) { <td></td> }
+                  </tr>
+                }
+                }
+              }
             }
 
             @if (filteredCountries().length === 0) {
@@ -217,7 +259,6 @@
                 </td>
               </tr>
             }
-          }
         </tbody>
       </table>
     </div>

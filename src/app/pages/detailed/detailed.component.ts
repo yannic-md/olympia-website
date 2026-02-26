@@ -50,6 +50,8 @@ export class DetailedComponent implements OnDestroy {
   protected filterSport: WritableSignal<string> = signal<string>('all');
   protected filterMedal: WritableSignal<'all' | 'gold' | 'silver' | 'bronze'> = signal<'all' | 'gold' | 'silver' | 'bronze'>('all');
   protected searchQuery: WritableSignal<string> = signal<string>('');
+  /** Tracks which country rows are currently expanded (by countryId). */
+  protected expandedCountries: WritableSignal<Set<number>> = signal<Set<number>>(new Set());
 
   protected editingAthlete: WritableSignal<Athlete | null> = signal(null);
   protected editingCountry: WritableSignal<CountryStats | null> = signal(null);
@@ -422,6 +424,50 @@ export class DetailedComponent implements OnDestroy {
     this.suspendedAthleteForm.set({ ...currentForm });
     this.isAthleteModalOpen.set(false);
     this.isCountryModalOpen.set(true);
+  }
+
+  /**
+   * Toggles the expanded state of a country row in the countries table.
+   *
+   * @param {number} countryId - The ID of the country to toggle.
+   */
+  protected toggleCountry(countryId: number): void {
+    if (this.athletesForCountry(countryId).length <= 0) { return; }
+
+    this.expandedCountries.update(set => {
+      const next = new Set(set);
+      next.has(countryId) ? next.delete(countryId) : next.add(countryId);
+      return next;
+    });
+  }
+
+  /**
+   * Returns whether a country row is currently expanded.
+   *
+   * @param {number} countryId - The ID of the country to check.
+   * @returns {boolean} True if the row is expanded.
+   */
+  protected isCountryExpanded(countryId: number): boolean {
+    return this.expandedCountries().has(countryId);
+  }
+
+  /**
+   * Returns athletes belonging to a given country, sorted by total medals descending.
+   *
+   * @param {number} countryId - The ID of the country.
+   * @returns {Athlete[]} Filtered and sorted athletes.
+   */
+  protected athletesForCountry(countryId: number): Athlete[] {
+    return this.athletes()
+      .filter(a => a.countryId === countryId)
+      .sort((a, b) => {
+        const totalA = a.medals.gold + a.medals.silver + a.medals.bronze;
+        const totalB = b.medals.gold + b.medals.silver + b.medals.bronze;
+        if (totalA !== totalB) return totalB - totalA;
+        if (a.medals.gold !== b.medals.gold) return b.medals.gold - a.medals.gold;
+        if (a.medals.silver !== b.medals.silver) return b.medals.silver - a.medals.silver;
+        return b.medals.bronze - a.medals.bronze;
+      });
   }
 
   /**
