@@ -15,31 +15,39 @@
     <div class="flex flex-wrap gap-6">
 
       <div class="w-full sm:w-[calc(50%-12px)] md:flex-1 min-w-50">
-        <app-filter-select [label]="'PAGE.DETAILED.FILTER.VIEW' | translate" id="view-picker" [(value)]="selectedView" [bold]="true">
+        <app-filter-select [label]="'PAGE.DETAILED.FILTER.VIEW' | translate" id="view-picker"
+                           [(value)]="selectedView" [bold]="true">
           <option value="athletes">{{ 'PAGE.DETAILED.FILTER.VIEW.ATHLETES' | translate }}</option>
           <option value="countries">{{ 'PAGE.DETAILED.FILTER.VIEW.COUNTRIES' | translate }}</option>
+          <option value="disciplines">{{ 'PAGE.DETAILED.FILTER.VIEW.DISCIPLINES' | translate }}</option>
         </app-filter-select>
       </div>
+
       <div class="w-full sm:w-[calc(50%-12px)] md:flex-1 min-w-50">
-        <app-filter-select [label]="'PAGE.DETAILED.FILTER.COUNTRY' | translate" id="filter-country" [(value)]="filterCountry">
+        <app-filter-select [label]="'PAGE.DETAILED.FILTER.COUNTRY' | translate" id="filter-country"
+                           [(value)]="filterCountry">
           <option value="all">{{ 'PAGE.DETAILED.FILTER.COUNTRY.PLACEHOLDER' | translate }}</option>
-          @for (country of countries(); track country) {
+          @for (country of dataService.countries(); track country) {
             <option [value]="country">{{ country }}</option>
           }
         </app-filter-select>
       </div>
-      @if (selectedView() != 'countries') {
+
+      @if (selectedView() === 'athletes') {
         <div class="w-full sm:w-[calc(50%-12px)] md:flex-1 min-w-50">
-          <app-filter-select [label]="'PAGE.DETAILED.FILTER.SPORTS' | translate" id="filter-sports" [(value)]="filterSport">
+          <app-filter-select [label]="'PAGE.DETAILED.FILTER.SPORTS' | translate" id="filter-sports"
+                             [(value)]="filterSport">
             <option value="all">{{ 'PAGE.DETAILED.FILTER.SPORTS.PLACEHOLDER' | translate }}</option>
-            @for (sport of sports(); track sport.rawName) {
+            @for (sport of dataService.sports(); track sport.rawName) {
               <option [value]="sport.rawName">{{ sport.name }}</option>
             }
           </app-filter-select>
         </div>
       }
+
       <div class="w-full sm:w-[calc(50%-12px)] md:flex-1 min-w-50">
-        <app-filter-select [label]="'PAGE.DETAILED.FILTER.MEDAL' | translate" id="filter-medal" [(value)]="filterMedal">
+        <app-filter-select [label]="'PAGE.DETAILED.FILTER.MEDAL' | translate" id="filter-medal"
+                           [(value)]="filterMedal">
           <option value="all">{{ 'PAGE.DETAILED.FILTER.MEDAL.PLACEHOLDER' | translate }}</option>
           <option value="gold">🥇 {{ 'MODAL.GOLD' | translate }}</option>
           <option value="silver">🥈 {{ 'MODAL.SILVER' | translate }}</option>
@@ -49,235 +57,42 @@
 
     </div>
 
-    <!-- Second Row (Search by Athlet/Country) -->
+    <!-- Second Row (Search) -->
     <div class="mt-10">
       <label for="filter-search" class="mb-1 block text-xs font-medium text-gray-500">
         {{ 'PAGE.DETAILED.FILTER.SEARCH' | translate }}
       </label>
       <div class="relative flex items-center border-b border-gray-300">
-
         <img ngSrc="/assets/images/icons/search.svg" width="20" height="20" alt="Search Icon"
-             class="absolute left-0 top-2.5 h-5 w-5 opacity-50"/>
+             class="absolute left-0 top-2.5 h-5 w-5 opacity-50" />
         <input [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" id="filter-search"
                type="text" [placeholder]="'PAGE.DETAILED.FILTER.SEARCH.PLACEHOLDER' | translate"
                class="w-full bg-transparent py-2 pl-8 text-gray-700 placeholder-gray-400 focus:outline-none">
-
       </div>
     </div>
   </div>
 
-  <!-- Result Table -->
+  <!-- View Content -->
   <div class="bg-neutral-100 mb-8 md:mb-12 p-4 md:p-10 md:px-23 md:pb-6 border-neutral-200 border-t">
-    <!-- Header stuff -->
-    <div class="mb-8 flex flex-col items-start justify-between lg:flex-row md:items-center">
-      <h2 class="text-4xl tracking-wide font-normal text-gray-900 mx-auto lg:mx-0 mb-4 lg:mb-0">
-        @if (selectedView() === 'athletes') { {{ 'PAGE.DETAILED.ATHLETES.TITLE' | translate }} }
-        @else { {{ 'PAGE.DETAILED.COUNTRIES.TITLE' | translate }} }
-      </h2>
-
-      @if (authService.isLoggedIn()) {
-        <div class="flex justify-center gap-x-4 mx-auto lg:mx-0">
-          <button class="flex items-center gap-2 rounded bg-purple-500 px-4 py-2 text-sm font-semibold text-white
-                     transition hover:bg-purple-600 shadow-sm cursor-pointer">
-            <img ngSrc="/assets/images/icons/upload.svg" width="16" height="16" alt="Chevron Down" class="invert" />
-            {{ 'BUTTON.IMPORT' | translate }}
-          </button>
-          <button class="flex items-center gap-2 rounded bg-green-500 px-4 py-2 text-sm font-semibold text-white
-                     transition hover:bg-green-600 shadow-sm cursor-pointer"
-                  (click)="selectedView() === 'athletes' ? this.isAthleteModalOpen.set(true)
-                                                         : this.isCountryModalOpen.set(true)">
-            <img ngSrc="/assets/images/icons/plus.svg" width="16" height="16" alt="Chevron Down" class="invert" />
-            {{ selectedView() === 'athletes' ? ('MODAL.ATHLETE.ADD.TITLE' | translate)
-                                             : ('MODAL.COUNTRY.ADD.TITLE' | translate) }}
-          </button>
-        </div>
+    @switch (selectedView()) {
+      @case ('athletes') {
+        <app-athlete-view [filterCountry]="filterCountry()" [filterSport]="filterSport()" [filterMedal]="filterMedal()"
+                          [searchQuery]="searchQuery()" />
       }
-    </div>
-
-    <!-- Actual Table -->
-    <div class="w-full overflow-y-auto max-h-150 border border-gray-200 rounded-lg shadow-sm relative">
-      <table class="w-full min-w-150 table-auto text-left">
-        <thead class="sticky top-0 z-10 bg-neutral-100 shadow-sm">
-          <tr class="text-left text-xs text-gray-500 border-b border-gray-300">
-            <th class="pl-2 w-12 text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.RANK' | translate }}</th>
-
-            @if (selectedView() === 'athletes') {
-              <th class="pl-2 text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.ATHLETE' | translate }}</th>
-            }
-
-            <th class="pl-2 text-sm leading-8 font-medium" [class.pl-2]="selectedView() === 'countries'">
-              {{ 'PAGE.DETAILED.TABLE.COUNTRY' | translate }}
-            </th>
-
-            <th class="text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.MEDAL' | translate }}</th>
-
-            @if (selectedView() === 'athletes') {
-              <th class="text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.SPORTS' | translate }}</th>
-            }
-
-            @if (selectedView() === 'athletes') {
-              <th class="text-sm leading-8 font-medium">{{ 'MODAL.ATHLETE.BESTTIME' | translate }}</th>
-            }
-
-            @if (authService.isLoggedIn()) {
-              <th class="text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.ACTIONS' | translate }}</th>
-            }
-          </tr>
-        </thead>
-
-        <!-- Table Content -->
-        <tbody class="text-sm">
-          @if (selectedView() === 'athletes') {
-
-            <!-- For Athlete View -->
-            @for (athlete of filteredAthletes(); track athlete.id; let i = $index) {
-              <tr class="group border-b border-gray-200/50 hover:bg-black/5 odd:bg-neutral-200/50 transition-colors">
-                <td class="py-4 pl-2 pr-2 text-center">
-                  @if (i === 0) { <span class="text-2xl" title="1">🏆</span> }
-                  @else if (i === 1) { <span class="text-2xl" title="2">🥈</span> }
-                  @else if (i === 2) { <span class="text-2xl" title="3">🥉</span> }
-                  @else { <span class="text-sm font-medium text-gray-500">{{ '#' + (i + 1) }}</span> }
-                </td>
-                <td class="py-4 pl-2 pr-4 lg:pr-0 font-semibold text-gray-800 font-olympic-sans tracking-wide">{{ athlete.name }}</td>
-                <td class="py-4 pr-4 lg:pr-0">
-                  <app-table-country-badge [code]="athlete.countryCode" [name]="athlete.countryName" />
-                </td>
-                <td class="py-4 pr-4 lg:pr-0">
-                  <app-table-medal-pills [medals]="athlete.medals" [activeFilter]="filterMedal()" />
-                </td>
-                <td class="py-4 pr-4 lg:pr-0 text-gray-600">{{ athlete.sport }}</td>
-                <td class="py-4 pr-4 lg:pr-0 font-mono">
-                  @if (athlete.bestTime) { {{ athlete.bestTime }} }
-                  @else { <span class="text-gray-400">-</span> }
-                </td>
-                @if (authService.isLoggedIn()) {
-                  <td class="py-4 pr-4 lg:pr-0">
-                    <app-table-actions (edit)="onEditAthlete(athlete)" (delete)="onDeleteAthlete(athlete.id)" />
-                  </td>
-                }
-              </tr>
-            }
-
-            @if (filteredAthletes().length === 0) {
-              <tr>
-                <td colspan="7" class="py-8 text-center">
-                  @if (isLoading()) {
-                    <div class="flex pl-36 justify-start sm:justify-center sm:pl-0 items-center gap-2 text-gray-400">
-                      <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                      </svg>
-                    </div>
-                  } @else {
-                    <span class="text-sm text-gray-400">{{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}</span>
-                  }
-                </td>
-              </tr>
-            }
-          }
-
-        <!-- For Country View -->
-          @if (selectedView() === 'countries') {
-            @for (country of filteredCountries(); track country.countryCode; let i = $index) {
-              @let countryAthletes = athletesForCountry(country.countryId);
-
-              <!-- Country row (clickable to expand) -->
-              <tr class="group border-b border-gray-200/50 hover:bg-black/5 odd:bg-neutral-200/50
-                         transition-all select-none" (click)="toggleCountry(country.countryId)"
-                  [class.cursor-pointer]="countryAthletes.length > 0"
-                  [class.border-neutral-300]="isCountryExpanded(country.countryId)">
-                <td class="py-4 pl-2 pr-2 text-center">
-                  @if (i === 0) { <span class="text-2xl" title="1">🏆</span> }
-                  @else if (i === 1) { <span class="text-2xl" title="2">🥈</span> }
-                  @else if (i === 2) { <span class="text-2xl" title="3">🥉</span> }
-                  @else { <span class="text-sm font-medium text-gray-500">{{ '#' + (i + 1) }}</span> }
-                </td>
-                <td class="py-4 pl-2 font-semibold text-gray-800 tracking-wide">
-                  <div class="flex items-center gap-2">
-                    <app-table-country-badge [code]="country.countryCode" [name]="country.countryName" />
-
-                    @if (countryAthletes.length > 0) {
-                      <img ngSrc="/assets/images/icons/chevron-down.svg" width="8" height="8" alt="Chevron Down"
-                           class="w-2 h-2 text-gray-400 shrink-0 transition-transform duration-200"
-                           [class.rotate-180]="isCountryExpanded(country.countryId)" />
-                    }
-                  </div>
-                </td>
-                <td class="py-4">
-                  <app-table-medal-pills [medals]="country.medals" [activeFilter]="filterMedal()" />
-                </td>
-
-                @if (authService.isLoggedIn()) {
-                  <td class="py-4" (click)="$event.stopPropagation()">
-                    <app-table-actions (edit)="onEditCountry(country)" (delete)="onDeleteCountry(country.countryId)" />
-                  </td>
-                }
-              </tr>
-
-              <!-- Expanded athletes sub-rows -->
-              @if (isCountryExpanded(country.countryId)) {
-                @for (athlete of countryAthletes; track athlete.id; let last = $last) {
-                  <tr class="bg-neutral-250 border-b hover:bg-neutral-100/80 transition-colors"
-                      [class.border-neutral-200]="!last" [class.border-neutral-300]="last">
-                    <!-- indent spacer -->
-                    <td class="py-2.5 pl-2 pr-2 text-center">
-                      <span class="text-xs text-gray-400 font-medium pl-2">-</span>
-                    </td>
-                    <!-- Athlete name -->
-                    <td class="py-2.5 pl-9 pr-4">
-                      <div class="flex flex-col">
-                        <span class="text-sm font-medium text-gray-700 font-olympic-sans tracking-wide">
-                          {{ athlete.name }}
-                        </span>
-                      </div>
-                    </td>
-                    <!-- Medals -->
-                    <td class="py-2.5 pr-4">
-                      <app-table-medal-pills [medals]="athlete.medals" [activeFilter]="filterMedal()" />
-                    </td>
-
-                    @if (authService.isLoggedIn()) { <td></td> }
-                  </tr>
-                }
-                }
-              }
-            }
-
-            @if (filteredCountries().length === 0) {
-              <tr>
-                <td colspan="5" class="py-8 text-center">
-                  @if (isLoading()) {
-                    <div class="flex pl-36 justify-start sm:justify-center sm:pl-0 items-center gap-2 text-gray-400">
-                      <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                      </svg>
-                    </div>
-                  } @else {
-                    <span class="text-sm text-gray-400">{{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}</span>
-                  }
-                </td>
-              </tr>
-            }
-        </tbody>
-      </table>
-    </div>
+      @case ('countries') {
+        <app-country-view [filterCountry]="filterCountry()" [filterMedal]="filterMedal()" [searchQuery]="searchQuery()" />
+      }
+      @case ('disciplines') {
+        <app-disciplines-view [filterCountry]="filterCountry()" [filterMedal]="filterMedal()" [searchQuery]="searchQuery()" />
+      }
+    }
   </div>
+
 </section>
 
-<!-- Footer (At the end of the page) -->
+<!-- Footer -->
 <app-footer />
 
-<!-- Modals -->
-<app-modal-athlete [isOpen]="isAthleteModalOpen()" [athletes]="athletes()" [countries]="countries()"
-                   [editData]="athleteEditData()" [resumeData]="suspendedAthleteForm()"
-                   (addAthlete)="onAddAthlete($event)" (updateAthlete)="onUpdateAthlete($event)"
-                   (closeModal)="isAthleteModalOpen.set(false); editingAthlete.set(null); suspendedAthleteForm.set(null)"
-                   (openCountryModal)="onOpenCountryModalFromAthlete($event)" />
-<app-modal-country [isOpen]="isCountryModalOpen()" [editData]="countryEditData()" [existingCountries]="countriesData()"
-                   (closeModal)="onCloseCountryModal()" (addCountry)="onAddCountry($event)"
-                   (updateCountry)="onUpdateCountry($event)" />
-
-<!-- Show confirmation popups -->
+<!-- Global alert popups -->
 <app-alert-box />
 
