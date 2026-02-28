@@ -54,28 +54,51 @@ export class CountryViewComponent {
 
   /**
    * Filtered and sorted list of countries based on current filter and search criteria.
+   * Also includes countries where at least one athlete matches the search query.
    */
   protected filteredCountries: Signal<CountryStats[]> = computed((): CountryStats[] => {
+    const query: string = this.searchQuery().toLowerCase();
+
     return this.dataService.countriesData()
       .filter(country => {
-        const matchesSearch: boolean = country.countryName.toLowerCase()
-          .includes(this.searchQuery().toLowerCase());
         const matchesCountryFilter: boolean =
           this.filterCountry() === 'all' || country.countryName === this.filterCountry();
-        return matchesSearch && matchesCountryFilter;
+        if (!matchesCountryFilter) return false;
+
+        const matchesCountrySearch: boolean = country.countryName.toLowerCase().includes(query);
+        if (matchesCountrySearch) return true;
+
+        // Also include the country if any of its athletes match the search query
+        return this.dataService.athletes().some(
+          a => a.countryId === country.countryId && a.name.toLowerCase().includes(query)
+        );
       })
       .sort((a, b) => sortByMedals(a, b, a.countryName, b.countryName, this.filterMedal()));
   });
 
   /**
-   * Returns athletes belonging to a given country, sorted by total medals descending.
+   * Returns athletes belonging to a given country, filtered by the current search query
+   * (only when the search does not match the country name itself) and sorted by total medals descending.
    *
    * @param {number} countryId - The ID of the country.
    * @returns {Athlete[]} Filtered and sorted athletes.
    */
   protected athletesForCountry(countryId: number): Athlete[] {
+    const query: string = this.searchQuery().toLowerCase();
+    const country: CountryStats | undefined = this.dataService.countriesData()
+      .find(c => c.countryId === countryId);
+
+    // If the search matches the country name (or is empty), show all athletes of this country
+    const countryMatchesSearch: boolean = !query || (!!country && country.countryName.toLowerCase().includes(query));
+
     return this.dataService.athletes()
-      .filter(a => a.countryId === countryId)
+      .filter(a => {
+        if (a.countryId !== countryId) return false;
+
+        // Only filter athletes by name when the country itself doesn't match the search
+        if (!countryMatchesSearch) return a.name.toLowerCase().includes(query);
+        return true;
+      })
       .sort((a, b): number => sortByMedals(a, b, a.name, b.name, this.filterMedal()));
   }
 
@@ -96,12 +119,24 @@ export class CountryViewComponent {
 
   /**
    * Returns whether a country row is currently expanded.
+   * Auto-expands when an active search query matches an athlete (but not the country name).
    *
    * @param {number} countryId - The ID of the country to check.
    * @returns {boolean} True if the row is expanded.
    */
   protected isCountryExpanded(countryId: number): boolean {
-    return this.expandedCountries().has(countryId);
+    if (this.expandedCountries().has(countryId)) return true;
+
+    const query: string = this.searchQuery().toLowerCase();
+    if (!query) return false;
+
+    const country: CountryStats | undefined = this.dataService.countriesData()
+      .find(c => c.countryId === countryId);
+    const countryMatchesSearch: boolean = !!country && country.countryName.toLowerCase().includes(query);
+
+    // Auto-expand if search matches an athlete but not the country name
+    return !countryMatchesSearch && this.dataService.athletes()
+      .some(a => a.countryId === countryId && a.name.toLowerCase().includes(query));
   }
 
   /**
