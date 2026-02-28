@@ -17,9 +17,9 @@
       <div class="w-full sm:w-[calc(50%-12px)] md:flex-1 min-w-50">
         <app-filter-select [label]="'PAGE.DETAILED.FILTER.VIEW' | translate" id="view-picker"
                            [(value)]="selectedView" [bold]="true">
+          <option value="disciplines">{{ 'PAGE.DETAILED.FILTER.VIEW.DISCIPLINES' | translate }}</option>
           <option value="athletes">{{ 'PAGE.DETAILED.FILTER.VIEW.ATHLETES' | translate }}</option>
           <option value="countries">{{ 'PAGE.DETAILED.FILTER.VIEW.COUNTRIES' | translate }}</option>
-          <option value="disciplines">{{ 'PAGE.DETAILED.FILTER.VIEW.DISCIPLINES' | translate }}</option>
         </app-filter-select>
       </div>
 
@@ -33,7 +33,7 @@
         </app-filter-select>
       </div>
 
-      @if (selectedView() === 'athletes') {
+      @if (selectedView() != 'countries') {
         <div class="w-full sm:w-[calc(50%-12px)] md:flex-1 min-w-50">
           <app-filter-select [label]="'PAGE.DETAILED.FILTER.SPORTS' | translate" id="filter-sports"
                              [(value)]="filterSport">
@@ -83,7 +83,8 @@
         <app-country-view [filterCountry]="filterCountry()" [filterMedal]="filterMedal()" [searchQuery]="searchQuery()" />
       }
       @case ('disciplines') {
-        <app-disciplines-view [filterCountry]="filterCountry()" [filterMedal]="filterMedal()" [searchQuery]="searchQuery()" />
+        <app-disciplines-view [filterCountry]="filterCountry()" [filterSport]="filterSport()"
+                              [filterMedal]="filterMedal()" [searchQuery]="searchQuery()" />
       }
     }
   </div>

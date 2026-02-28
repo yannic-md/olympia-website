@@ -1,10 +1,11 @@
 import {Component, input, InputSignal} from '@angular/core';
-import {NgOptimizedImage} from "@angular/common";
+import {NgClass, NgOptimizedImage} from "@angular/common";
 
 @Component({
   selector: 'app-table-country-badge',
   imports: [
-    NgOptimizedImage
+    NgOptimizedImage,
+    NgClass
   ],
   templateUrl: './table-country-badge.component.html',
   styleUrl: './table-country-badge.component.css',
@@ -12,6 +13,7 @@ import {NgOptimizedImage} from "@angular/common";
 export class TableCountryBadgeComponent {
   code: InputSignal<string> = input.required<string>();
   name: InputSignal<string> = input.required<string>();
+  smallVersion: InputSignal<boolean | undefined> = input<boolean>();
 
   protected isError: boolean = false;
   protected flagUrl: () => string = (): string => `https://flagcdn.com/h20/${this.code().toLowerCase()}.png`;

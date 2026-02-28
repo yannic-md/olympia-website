@@ -1,0 +1,21 @@
+@if (activeFilter() === 'all' || activeFilter() === medalType()) {
+  <!-- Show information about the winner in a mini-table -->
+  @if (winner()) {
+    <div class="flex items-center gap-3 px-4 py-2">
+      <span class="text-lg shrink-0">{{ medal() }}</span>
+      <div class="flex flex-col min-w-0 flex-1 gap-0.5">
+        <span class="text-sm font-semibold text-gray-800 truncate font-olympic-sans">{{ winner()!.name }}</span>
+
+        <app-table-country-badge [code]="winner()!.countryCode" [name]="winner()!.countryName" [smallVersion]="true" />
+      </div>
+      <span class="text-xs font-mono text-gray-500 shrink-0">{{ winner()!.result }}</span>
+    </div>
+
+  <!-- Show "no winner found" info -->
+  } @else if (activeFilter() === medalType()) {
+    <div class="flex items-center gap-3 px-4 py-2 text-gray-300">
+      <span class="text-lg shrink-0">{{ medal() }}</span>
+      <span class="text-xs italic">{{ 'PAGE.DETAILED.DISCIPLINES.NO_WINNER' | translate }}</span>
+    </div>
+  }
+}

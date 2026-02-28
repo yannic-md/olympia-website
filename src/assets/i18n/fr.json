@@ -21,6 +21,9 @@
   "PAGE.DETAILED.FILTER.SEARCH.PLACEHOLDER": "Athlète ou pays...",
   "PAGE.DETAILED.ATHLETES.TITLE": "Résultats des athlètes",
   "PAGE.DETAILED.COUNTRIES.TITLE": "Résultats par pays",
+  "PAGE.DETAILED.DISCIPLINES.TITLE": "Résultats par discipline",
+  "PAGE.DETAILED.DISCIPLINES.NO_WINNER": "Aucun vainqueur enregistré..",
+  "PAGE.DETAILED.FILTER.VIEW.DISCIPLINES": "Disciplines",
 
   "PAGE.DETAILED.TABLE.ATHLETE": "Athlète",
   "PAGE.DETAILED.TABLE.COUNTRY": "Pays",
@@ -68,6 +71,7 @@
   "ALERT.REGISTER.ERROR.CONFLICT": "Ce nom d'utilisateur est déjà pris.",
   "ALERT.REGISTER.ERROR": "Échec de l'inscription. Veuillez réessayer.",
 
+  "MODAL.DISCIPLINES.ADD.TITLE": "Enregistrer un résultat sportif",
   "MODAL.ATHLETE.ADD.TITLE": "Ajouter un athlète",
   "MODAL.ATHLETE.EDIT.TITLE": "Modifier l'athlète",
   "MODAL.ATHLETE.NAME": "Comment s'appelle l'athlète ?",

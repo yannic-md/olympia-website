@@ -21,6 +21,9 @@
   "PAGE.DETAILED.FILTER.SEARCH.PLACEHOLDER": "Athlete or country..",
   "PAGE.DETAILED.ATHLETES.TITLE": "Athlete results",
   "PAGE.DETAILED.COUNTRIES.TITLE": "Country results",
+  "PAGE.DETAILED.DISCIPLINES.TITLE": "Discipline results",
+  "PAGE.DETAILED.DISCIPLINES.NO_WINNER": "No winner found..",
+  "PAGE.DETAILED.FILTER.VIEW.DISCIPLINES": "Disciplines",
 
   "PAGE.DETAILED.TABLE.ATHLETE": "Athlete",
   "PAGE.DETAILED.TABLE.COUNTRY": "Country",
@@ -68,6 +71,7 @@
   "ALERT.REGISTER.ERROR.CONFLICT": "This username is already taken.",
   "ALERT.REGISTER.ERROR": "Registration failed. Please try again.",
 
+  "MODAL.DISCIPLINES.ADD.TITLE": "Add discipline result",
   "MODAL.ATHLETE.ADD.TITLE": "Add athlete",
   "MODAL.ATHLETE.EDIT.TITLE": "Edit athlete",
   "MODAL.ATHLETE.NAME": "What is the athlete's name?",

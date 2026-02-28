@@ -33,7 +33,7 @@ import {DisciplinesViewComponent} from './views/disciplines-view/disciplines-vie
 })
 export class DetailedComponent implements OnDestroy {
   protected selectedView: WritableSignal<'athletes' | 'countries' | 'disciplines'> =
-    signal<'athletes' | 'countries' | 'disciplines'>('athletes');
+    signal<'athletes' | 'countries' | 'disciplines'>('disciplines');
   protected filterCountry: WritableSignal<string> = signal<string>('all');
   protected filterSport: WritableSignal<string> = signal<string>('all');
   protected filterMedal: WritableSignal<'all' | 'gold' | 'silver' | 'bronze'> =
