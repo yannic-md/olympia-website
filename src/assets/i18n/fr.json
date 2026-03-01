@@ -72,6 +72,11 @@
   "ALERT.REGISTER.ERROR": "Échec de l'inscription. Veuillez réessayer.",
 
   "MODAL.DISCIPLINES.ADD.TITLE": "Enregistrer un résultat sportif",
+  "MODAL.DISCIPLINES.ATHLETE": "Athlète",
+  "MODAL.DISCIPLINES.ATHLETE.PLACEHOLDER": "Sélectionner un athlète",
+  "MODAL.DISCIPLINES.SPORT": "Discipline",
+  "MODAL.DISCIPLINES.SPORT.PLACEHOLDER": "Sélectionner une discipline",
+  "MODAL.DISCIPLINES.MEDAL": "Médaille",
   "MODAL.ATHLETE.ADD.TITLE": "Ajouter un athlète",
   "MODAL.ATHLETE.EDIT.TITLE": "Modifier l'athlète",
   "MODAL.ATHLETE.NAME": "Comment s'appelle l'athlète ?",

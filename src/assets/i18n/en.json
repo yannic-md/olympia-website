@@ -72,6 +72,11 @@
   "ALERT.REGISTER.ERROR": "Registration failed. Please try again.",
 
   "MODAL.DISCIPLINES.ADD.TITLE": "Add discipline result",
+  "MODAL.DISCIPLINES.ATHLETE": "Athlete",
+  "MODAL.DISCIPLINES.ATHLETE.PLACEHOLDER": "Select athlete",
+  "MODAL.DISCIPLINES.SPORT": "Sport",
+  "MODAL.DISCIPLINES.SPORT.PLACEHOLDER": "Select sport",
+  "MODAL.DISCIPLINES.MEDAL": "Medal",
   "MODAL.ATHLETE.ADD.TITLE": "Add athlete",
   "MODAL.ATHLETE.EDIT.TITLE": "Edit athlete",
   "MODAL.ATHLETE.NAME": "What is the athlete's name?",

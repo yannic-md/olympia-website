@@ -1,20 +1,30 @@
 import {Component, computed, input, InputSignal, Signal, signal, WritableSignal} from '@angular/core';
 import {NgOptimizedImage} from '@angular/common';
-import {TranslatePipe} from '@ngx-translate/core';
+import {TranslatePipe, TranslateService} from '@ngx-translate/core';
+import {HttpErrorResponse} from '@angular/common/http';
 import {DisciplineWinnerRowComponent} from '../../../../layout/elements/discipline-winner-row/discipline-winner-row.component';
 import {DataHolderService} from '../../../../services/data-holder/data-holder.service';
 import {AuthService} from '../../../../services/api/auth/auth.service';
+import {AthleteService} from '../../../../services/api/athlete/athlete.service';
+import {CountryService} from '../../../../services/api/country/country.service';
+import {AlertService} from '../../../../services/api/alert/alert.service';
 import {SportEntry} from '../../../../services/api/sports/sports.service';
+import {AthleteForm} from '../../../../types/Athlete';
+import {CountryForm, CountryStats} from '../../../../types/Country';
 import {
   DISCIPLINE_RESULTS,
   DisciplineCard,
-  DisciplineResult,
+  DisciplineResult, DisciplineResultForm,
   DisciplineWinner,
 } from '../../../../types/Disciplines';
+import {ModalDisciplineComponent} from '../../../../layout/sections/modal/modal-discipline/modal-discipline.component';
+import {ModalAthleteComponent} from '../../../../layout/sections/modal/modal-athlete/modal-athlete.component';
+import {ModalCountryComponent} from '../../../../layout/sections/modal/modal-country/modal-country.component';
 
 @Component({
   selector: 'app-disciplines-view',
-  imports: [TranslatePipe, NgOptimizedImage, DisciplineWinnerRowComponent],
+  imports: [TranslatePipe, NgOptimizedImage, DisciplineWinnerRowComponent,
+            ModalDisciplineComponent, ModalAthleteComponent, ModalCountryComponent],
   templateUrl: './disciplines-view.component.html',
   styleUrls: ['./disciplines-view.component.css']
 })
@@ -24,10 +34,16 @@ export class DisciplinesViewComponent {
   filterMedal: InputSignal<'all' | 'gold' | 'silver' | 'bronze'> = input.required<'all' | 'gold' | 'silver' | 'bronze'>();
   searchQuery: InputSignal<string> = input.required<string>();
 
-  /** Tracks per-card image load errors by rawName. */
   protected imageErrors: WritableSignal<Set<string>> = signal(new Set<string>());
+  protected isDisciplineModalOpen: WritableSignal<boolean> = signal(false);
+  protected isAthleteModalOpen: WritableSignal<boolean> = signal(false);
+  protected isCountryModalOpen: WritableSignal<boolean> = signal(false);
+  protected suspendedDisciplineForm: WritableSignal<DisciplineResultForm | null> = signal(null);
+  protected suspendedAthleteForm: WritableSignal<AthleteForm | null> = signal(null);
 
-  constructor(protected dataService: DataHolderService, protected authService: AuthService) {}
+  constructor(protected dataService: DataHolderService, protected authService: AuthService,
+              private athleteService: AthleteService, private countryService: CountryService,
+              private alertService: AlertService, private translateService: TranslateService) {}
 
   /**
    * Marks a sport card image as failed so the fallback placeholder is rendered instead.
@@ -133,5 +149,154 @@ export class DisciplinesViewComponent {
     }
 
     return winner;
+  }
+
+  /**
+   * Handles a submitted discipline result from the modal.
+   *
+   * @param {DisciplineResultForm} form - The submitted discipline result form data.
+   */
+  protected onSubmitDisciplineResult(form: DisciplineResultForm): void {
+    console.log('Discipline result submitted:', form);
+    // TODO: call backend service, reload data, show alert
+  }
+
+  /**
+   * Closes the discipline modal and resets suspended state.
+   */
+  protected onCloseDisciplineModal(): void {
+    this.isDisciplineModalOpen.set(false);
+    this.suspendedDisciplineForm.set(null);
+  }
+
+  /**
+   * Suspends the discipline form snapshot and opens the athlete modal.
+   * The snapshot is passed back via [resumeData] on the discipline modal when returning.
+   *
+   * @param {DisciplineResultForm} snapshot - The current discipline form state.
+   */
+  protected onOpenAthleteModalFromDiscipline(snapshot: DisciplineResultForm): void {
+    this.suspendedDisciplineForm.set({ ...snapshot });
+    this.isDisciplineModalOpen.set(false);
+    this.isAthleteModalOpen.set(true);
+  }
+
+  /**
+   * Handles adding a new athlete from within the discipline flow.
+   * TODO: AthleteForm doesnt use medals / besttime and sports anymore
+   *
+   * @param {AthleteForm} form - The new athlete form data.
+   */
+  protected onAddAthleteFromDiscipline(form: AthleteForm): void {
+    const { firstName, lastName, countryId } = this.splitNameAndCountry(form);
+    this.athleteService.createAthlete({
+      firstName, lastName, countryId,
+      goldMedals: form.goldMedals, silverMedals: form.silverMedals, bronzeMedals: form.bronzeMedals,
+      bestTime: form.bestTime || null, sport: form.sportRawName, scoreType: form.scoreType,
+    }).subscribe({
+      next: (created: any): void => {
+        // Patch the suspended snapshot immediately using the API-returned ID
+        // so the new athlete is pre-selected when the discipline modal re-opens.
+        const newId: number = created?.id ?? 0;
+        this.suspendedDisciplineForm.update(f => f && newId
+          ? { ...f, athleteId: newId, athleteName: form.name }
+          : f
+        );
+
+        this.dataService.load(); // TODO: avoid reloading all data, only athletes
+        this.isAthleteModalOpen.set(false);
+        this.suspendedAthleteForm.set(null);
+        this.alertService.success(
+          this.translateService.instant('ALERT.ATHLETE.ADD').replace('[name]', form.name));
+
+        // Open after a short delay so the data reload has settled.
+        setTimeout((): void => {
+          this.isDisciplineModalOpen.set(true);
+        }, 150);
+      },
+      error: (error: HttpErrorResponse): void => {
+        console.error('Error creating athlete:', error);
+        this.alertService.error(this.translateService.instant('ALERT.ATHLETE.ADD.ERROR'));
+      }
+    });
+  }
+
+  /**
+   * Closes the athlete modal and re-opens the discipline modal if a snapshot is present.
+   */
+  protected onCloseAthleteModal(): void {
+    this.isAthleteModalOpen.set(false);
+    this.suspendedAthleteForm.set(null);
+    if (this.suspendedDisciplineForm() !== null) {
+      this.isDisciplineModalOpen.set(true);
+    }
+  }
+
+  /**
+   * Suspends the athlete form snapshot and opens the country modal.
+   *
+   * @param {AthleteForm} currentForm - The athlete form state to suspend.
+   */
+  protected onOpenCountryModalFromAthlete(currentForm: AthleteForm): void {
+    this.suspendedAthleteForm.set({ ...currentForm });
+    this.isAthleteModalOpen.set(false);
+    this.isCountryModalOpen.set(true);
+  }
+
+  /**
+   * Handles adding a new country from within the discipline → athlete → country chain.
+   *
+   * @param {CountryForm} form - The country form data.
+   */
+  protected onAddCountryFromDiscipline(form: CountryForm): void {
+    this.countryService.createCountry({ code: form.countryCode.toUpperCase(), name: form.countryName }).subscribe({
+      next: (): void => {
+        this.dataService.load(); // TODO: Avoid loading all data again, only countries
+        this.isCountryModalOpen.set(false);
+        this.alertService.success(
+          this.translateService.instant('ALERT.COUNTRY.ADD').replace('[name]', form.countryName));
+
+        const suspended: AthleteForm | null = this.suspendedAthleteForm();
+        if (!suspended) { this.suspendedAthleteForm.set(null); return; }
+
+        const resumeForm: AthleteForm = {
+          ...suspended, countryName: form.countryName, countryCode: form.countryCode.toUpperCase()
+        };
+
+        setTimeout((): void => {
+          this.suspendedAthleteForm.set(resumeForm);
+          this.isAthleteModalOpen.set(true);
+        }, 150);
+      },
+      error: (error: HttpErrorResponse): void => {
+        console.error('Error creating country:', error);
+        if (error.status !== 409) {
+          this.alertService.error(
+            this.translateService.instant('ALERT.COUNTRY.ADD.ERROR').replace('[name]', form.countryName));
+        }
+      }
+    });
+  }
+
+  /**
+   * Closes the country modal and re-opens the athlete modal if suspended.
+   */
+  protected onCloseCountryModal(): void {
+    this.isCountryModalOpen.set(false);
+    if (this.suspendedAthleteForm() !== null) {
+      this.isAthleteModalOpen.set(true);
+    }
+  }
+
+  /**
+   * Splits a full name and resolves the countryId from the countries data.
+   */
+  private splitNameAndCountry(form: AthleteForm): { firstName: string; lastName: string; countryId: number } {
+    const parts: string[] = form.name.trim().split(/\s+/);
+    const country: CountryStats | undefined =
+      this.dataService.countriesData().find(c => c.countryName === form.countryName);
+
+    return { firstName: parts[0] || '', lastName: parts.slice(1).join(' ') || '',
+             countryId: country ? country.countryId : 0 };
   }
 }

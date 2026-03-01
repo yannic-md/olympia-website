@@ -11,7 +11,8 @@
         <img ngSrc="/assets/images/icons/upload.svg" width="16" height="16" alt="Upload Icon" class="invert" />
         {{ 'BUTTON.IMPORT' | translate }} <!-- TODO -->
       </button>
-      <button class="flex items-center gap-2 rounded bg-green-500 px-4 py-2 text-sm font-semibold text-white
+      <button (click)="suspendedDisciplineForm.set(null); isDisciplineModalOpen.set(true)"
+              class="flex items-center gap-2 rounded bg-green-500 px-4 py-2 text-sm font-semibold text-white
                      transition hover:bg-green-600 shadow-sm cursor-pointer">
         <img ngSrc="/assets/images/icons/plus.svg" width="16" height="16" alt="Plus Icon" class="invert" />
         {{ 'MODAL.DISCIPLINES.ADD.TITLE' | translate }} <!-- TODO -->
@@ -86,3 +87,19 @@
     }
   </div>
 }
+
+<!-- Discipline result modal -->
+<app-modal-discipline [isOpen]="isDisciplineModalOpen()" [athletes]="dataService.athletes()" [sports]="dataService.sports()"
+                      [countries]="dataService.countries()" [resumeData]="suspendedDisciplineForm()"
+                      (closeModal)="onCloseDisciplineModal()" (submitResult)="onSubmitDisciplineResult($event)"
+                      (openAthleteModal)="onOpenAthleteModalFromDiscipline($event)" />
+
+<!-- Athlete sub-modal (opened from within the discipline modal) -->
+<app-modal-athlete [isOpen]="isAthleteModalOpen()" [athletes]="dataService.athletes()" [countries]="dataService.countries()"
+                   [editData]="null" [resumeData]="suspendedAthleteForm()" (closeModal)="onCloseAthleteModal()"
+                   (addAthlete)="onAddAthleteFromDiscipline($event)"
+                   (openCountryModal)="onOpenCountryModalFromAthlete($event)" />
+
+<!-- Country sub-modal (opened from within the athlete sub-modal) -->
+<app-modal-country [isOpen]="isCountryModalOpen()" [existingCountries]="dataService.countriesData()"
+                   (closeModal)="onCloseCountryModal()" (addCountry)="onAddCountryFromDiscipline($event)" />

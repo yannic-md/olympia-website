@@ -28,6 +28,19 @@ export interface DisciplineResult {
   bronze: DisciplineWinner;
 }
 
+/** Medal options available for a discipline result. */
+export type MedalType = 'gold' | 'silver' | 'bronze';
+
+/** Form model for a new or updated discipline result entry. */
+export interface DisciplineResultForm {
+  athleteId: number;
+  athleteName: string;
+  sportRawName: string;
+  medal: MedalType;
+  /** The result value (time, points or wins) as a raw string. */
+  resultValue: string;
+}
+
 // Placeholder Data TODO: Replace with real api
 export const DISCIPLINE_RESULTS: Record<string, DisciplineResult> = {
   'Alpine Skiing': {
