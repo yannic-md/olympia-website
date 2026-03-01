@@ -78,9 +78,12 @@
           } @else {
 
             <!-- Show correct medal(s) based on Winner and result -->
-            <app-discipline-winner-row medal="🥇" medalType="gold"   [winner]="card.gold"   [activeFilter]="filterMedal()" />
-            <app-discipline-winner-row medal="🥈" medalType="silver" [winner]="card.silver" [activeFilter]="filterMedal()" />
-            <app-discipline-winner-row medal="🥉" medalType="bronze" [winner]="card.bronze" [activeFilter]="filterMedal()" />
+            <app-discipline-winner-row medal="🥇" medalType="gold"   [winner]="card.gold"   [activeFilter]="filterMedal()"
+                                       (deleteWinner)="onDeleteWinner(card.rawName, $event)" />
+            <app-discipline-winner-row medal="🥈" medalType="silver" [winner]="card.silver" [activeFilter]="filterMedal()"
+                                       (deleteWinner)="onDeleteWinner(card.rawName, $event)" />
+            <app-discipline-winner-row medal="🥉" medalType="bronze" [winner]="card.bronze" [activeFilter]="filterMedal()"
+                                       (deleteWinner)="onDeleteWinner(card.rawName, $event)" />
           }
         </div>
       </div>

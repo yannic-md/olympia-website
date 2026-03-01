@@ -9,6 +9,14 @@
         <app-table-country-badge [code]="winner()!.countryCode" [name]="winner()!.countryName" [smallVersion]="true" />
       </div>
       <span class="text-xs font-mono text-gray-500 shrink-0">{{ winner()!.result }}</span>
+
+      @if (this.authService.isLoggedIn()) {
+        <button (click)="deleteWinner.emit(medalType())" class="p-1 rounded-full hover:bg-gray-100 transition-colors">
+          <img ngSrc="/assets/images/icons/cross-close.svg" alt="Close Icon" height="16" width="16"
+               class="flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold
+                      leading-none transition shrink-0 cursor-pointer red-icon-filter">
+        </button>
+      }
     </div>
 
   <!-- Show "no winner found" info -->

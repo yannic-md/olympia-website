@@ -162,6 +162,17 @@ export class DisciplinesViewComponent {
   }
 
   /**
+   * Marks a medal slot as locally deleted so it disappears from the grid immediately.
+   * The actual API call will be added later.
+   *
+   * @param {string} rawName - The raw sport identifier of the discipline card.
+   * @param {'gold' | 'silver' | 'bronze'} medal - The medal rank to remove.
+   */
+  protected onDeleteWinner(rawName: string, medal: 'gold' | 'silver' | 'bronze'): void {
+    // TODO: call backend delete endpoint
+  }
+
+  /**
    * Closes the discipline modal and resets suspended state.
    */
   protected onCloseDisciplineModal(): void {
