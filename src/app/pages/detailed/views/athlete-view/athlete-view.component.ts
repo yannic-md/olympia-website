@@ -16,6 +16,7 @@ import {CountryService} from '../../../../services/api/country/country.service';
 import {DataHolderService} from '../../../../services/data-holder/data-holder.service';
 import {signal, WritableSignal} from '@angular/core';
 import {sortByMedals} from '../../utils/medal-sort.util';
+import {AthleteResult, DISCIPLINE_RESULTS, DisciplineResult} from '../../../../types/Disciplines';
 
 @Component({
   selector: 'app-athlete-view',
@@ -45,6 +46,7 @@ export class AthleteViewComponent {
   protected isAthleteModalOpen: WritableSignal<boolean> = signal(false);
   protected isCountryModalOpen: WritableSignal<boolean> = signal(false);
   protected editingAthlete: WritableSignal<Athlete | null> = signal(null);
+  protected expandedAthletes: WritableSignal<Set<number>> = signal(new Set<number>());
 
   constructor(protected dataService: DataHolderService, protected authService: AuthService,
               private alertService: AlertService, private athleteService: AthleteService,
@@ -234,6 +236,58 @@ export class AthleteViewComponent {
     if (this.suspendedAthleteForm() !== null) {
       this.isAthleteModalOpen.set(true);
     }
+  }
+
+  /**
+   * Derives all sport results for a given athlete by scanning {@link DISCIPLINE_RESULTS}.
+   * Resolves the translated sport display name from the loaded sports data.
+   * Results are sorted gold → silver → bronze to match the medal-pills order.
+   * TODO: Replace with real API data once available.
+   *
+   * @param {string} name - The athlete's full name.
+   * @returns {AthleteResult[]} Sorted list of sport results with translated names.
+   */
+  protected resultsForAthlete(name: string): AthleteResult[] {
+    const medalOrder: Record<string, number> = { gold: 0, silver: 1, bronze: 2 };
+    const sportNameMap: Map<string, string> = new Map(
+      this.dataService.sports().map(s => [s.rawName, s.name])
+    );
+
+    const results: AthleteResult[] = [];
+    for (const [rawName, entry] of Object.entries(DISCIPLINE_RESULTS) as [string, DisciplineResult][]) {
+      const sport: string = sportNameMap.get(rawName) ?? rawName;
+      if (entry.gold.name   === name) results.push({ sport, medal: 'gold',   result: entry.gold.result });
+      if (entry.silver.name === name) results.push({ sport, medal: 'silver', result: entry.silver.result });
+      if (entry.bronze.name === name) results.push({ sport, medal: 'bronze', result: entry.bronze.result });
+    }
+
+    return results.sort((a, b) => medalOrder[a.medal] - medalOrder[b.medal]);
+  }
+
+  /**
+   * Toggles the expanded state of an athlete row.
+   * Has no effect when the athlete has no results.
+   *
+   * @param {Athlete} athlete - The athlete whose row should be toggled.
+   */
+  protected toggleAthlete(athlete: Athlete): void {
+    if (this.resultsForAthlete(athlete.name).length === 0) return;
+
+    this.expandedAthletes.update(set => {
+      const next = new Set(set);
+      next.has(athlete.id) ? next.delete(athlete.id) : next.add(athlete.id);
+      return next;
+    });
+  }
+
+  /**
+   * Returns whether an athlete row is currently expanded.
+   *
+   * @param {number} athleteId - The ID of the athlete to check.
+   * @returns {boolean} True if the row is expanded.
+   */
+  protected isAthleteExpanded(athleteId: number): boolean {
+    return this.expandedAthletes().has(athleteId);
   }
 
   /**

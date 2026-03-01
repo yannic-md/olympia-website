@@ -50,6 +50,8 @@ export class HomeComponent implements OnDestroy {
 
   constructor(protected miscService: MiscService, private leaderboardService: LeaderboardService,
               private alertService: AlertService, private translateService: TranslateService) {
+    this.loadTopCountries();
+
     this.translateSub = this.translateService.onLangChange.subscribe((): void => {
       this.loadTopCountries();
     });

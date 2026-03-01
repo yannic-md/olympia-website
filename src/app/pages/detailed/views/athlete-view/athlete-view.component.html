@@ -31,8 +31,6 @@
         <th class="pl-2 text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.ATHLETE' | translate }}</th>
         <th class="pl-2 text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.COUNTRY' | translate }}</th>
         <th class="text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.MEDAL' | translate }}</th>
-        <th class="text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.SPORTS' | translate }}</th>
-        <th class="text-sm leading-8 font-medium">{{ 'MODAL.ATHLETE.BESTTIME' | translate }}</th>
         @if (authService.isLoggedIn()) {
           <th class="text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.ACTIONS' | translate }}</th>
         }
@@ -42,8 +40,12 @@
     <!-- Content -->
     <tbody class="text-sm">
       @for (athlete of filteredAthletes(); track athlete.id; let i = $index) {
+        @let athleteResults = resultsForAthlete(athlete.name);
 
-        <tr class="group border-b border-gray-200/50 hover:bg-black/5 odd:bg-neutral-200/50 transition-colors">
+        <!-- Athlete row (clickable to expand if results exist) -->
+        <tr class="group border-b border-gray-200/50 hover:bg-black/5 odd:bg-neutral-200/50
+                   transition-colors select-none" (click)="toggleAthlete(athlete)"
+            [class.cursor-pointer]="athleteResults.length > 0" [class.border-neutral-300]="isAthleteExpanded(athlete.id)">
           <!-- Position / Rank -->
           <td class="py-4 pl-2 pr-2 text-center">
             @if (i === 0) { <span class="text-2xl" title="1">🏆</span> }
@@ -54,7 +56,14 @@
 
           <!-- Athlete Name -->
           <td class="py-4 pl-2 pr-4 lg:pr-0 font-semibold text-gray-800 font-olympic-sans tracking-wide">
-            {{ athlete.name }}
+            <div class="flex items-center gap-2">
+              {{ athlete.name }}
+              @if (athleteResults.length > 0) {
+                <img ngSrc="/assets/images/icons/chevron-down.svg" width="8" height="8" alt="Chevron Down"
+                     class="w-2 h-2 text-gray-400 shrink-0 transition-transform duration-200"
+                     [class.rotate-180]="isAthleteExpanded(athlete.id)" />
+              }
+            </div>
           </td>
 
           <!-- Country Flag & Name -->
@@ -67,20 +76,51 @@
             <app-table-medal-pills [medals]="athlete.medals" [activeFilter]="filterMedal()" />
           </td>
 
-          <!-- Last Discipline & Best time TODO: Get real one -->
-          <td class="py-4 pr-4 lg:pr-0 text-gray-600">{{ athlete.sport }}</td>
-          <td class="py-4 pr-4 lg:pr-0 font-mono">
-            @if (athlete.bestTime) { {{ athlete.bestTime }} }
-            @else { <span class="text-gray-400">-</span> }
-          </td>
-
           <!-- Actions -->
           @if (authService.isLoggedIn()) {
-            <td class="py-4 pr-4 lg:pr-0">
+            <td class="py-4 pr-4 lg:pr-0" (click)="$event.stopPropagation()">
               <app-table-actions (edit)="onEditAthlete(athlete)" (delete)="onDeleteAthlete(athlete.id)" />
             </td>
           }
         </tr>
+
+        <!-- Expanded sport result sub-rows TODO: Show real results -->
+        @if (isAthleteExpanded(athlete.id)) {
+          @for (result of athleteResults; track result.sport; let last = $last) {
+            <tr class="bg-neutral-250 border-b hover:bg-neutral-100/80 transition-colors"
+                [class.border-neutral-200]="!last" [class.border-neutral-300]="last">
+
+              <!-- Spacer -->
+              <td class="py-2.5 pl-2 pr-2 text-center">
+                <span class="text-xs text-gray-400 font-medium pl-2">-</span>
+              </td>
+
+              <!-- Sport Name -->
+              <td class="py-2.5 pl-2 pr-0">
+                <span class="text-sm font-medium text-gray-700 font-olympic-sans tracking-wide">
+                  {{ result.sport }}
+                </span>
+              </td>
+
+              <!-- Result -->
+              <td class="py-2.5 pr-4 font-mono text-sm text-gray-600">{{ result.result }}</td>
+
+              <!-- Medal: three pill-aligned slots matching TableMedalPills layout -->
+              <td class="py-2.5 pr-4">
+                <div class="flex items-center gap-2">
+                  <span class="flex items-center justify-center w-6 py-0.5 text-lg rounded-full"
+                        [class.opacity-0]="result.medal !== 'gold'">🥇</span>
+                  <span class="flex items-center justify-center w-6 py-0.5 text-lg rounded-full"
+                        [class.opacity-0]="result.medal !== 'silver'">🥈</span>
+                  <span class="flex items-center justify-center w-6 py-0.5 text-lg rounded-full"
+                        [class.opacity-0]="result.medal !== 'bronze'">🥉</span>
+                </div>
+              </td>
+
+              @if (authService.isLoggedIn()) { <td></td> }
+            </tr>
+          }
+        }
 
       }
 

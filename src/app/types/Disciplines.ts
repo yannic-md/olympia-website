@@ -1,3 +1,10 @@
+/** A single sport result entry for an athlete, derived from {@link DISCIPLINE_RESULTS}. */
+export interface AthleteResult {
+  sport: string;
+  medal: 'gold' | 'silver' | 'bronze';
+  result: string;
+}
+
 /** winner for a single medal rank within a discipline. */
 export interface DisciplineWinner {
   name: string;
