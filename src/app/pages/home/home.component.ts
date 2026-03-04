@@ -11,7 +11,7 @@ import {AlertService} from "../../services/api/alert/alert.service";
 import {TableMedalPillsComponent} from "../../layout/elements/table-medal-pills/table-medal-pills.component";
 import {FilterSelectComponent} from "../../layout/elements/filter-select/filter-select.component";
 import {TranslatePipe, TranslateService} from "@ngx-translate/core";
-import {Subscription} from "rxjs";
+import {Subscription} from 'rxjs';
 import {ApiService} from "../../services/api/api.service";
 import {V2Sport} from "../../types/Disciplines";
 import {V2Country} from "../../types/Country";
@@ -48,9 +48,9 @@ export class HomeComponent implements OnDestroy {
   protected filterSport: WritableSignal<string> = signal('all');
   protected isLoading: WritableSignal<boolean> = signal(false);
   private allCountries: WritableSignal<V2Country[]> = signal<V2Country[]>([]);
-  private allSports: WritableSignal<V2Sport[]> = signal<V2Sport[]>([]); // used to filter later
-  protected sports: WritableSignal<V2Sport[]> = signal<V2Sport[]>([]);
-  private readonly translateSub: Subscription;
+  protected allSports: WritableSignal<V2Sport[]> = signal<V2Sport[]>([]);
+  private readonly translateSub: Subscription | undefined;
+  private dataSub: Subscription | undefined;
 
   constructor(protected miscService: MiscService, private apiService: ApiService,
               private alertService: AlertService, private translateService: TranslateService) {
@@ -67,6 +67,7 @@ export class HomeComponent implements OnDestroy {
    */
   ngOnDestroy(): void {
     if (this.translateSub) { this.translateSub.unsubscribe(); }
+    if (this.dataSub) { this.dataSub.unsubscribe(); }
   }
 
   /**
@@ -172,12 +173,10 @@ export class HomeComponent implements OnDestroy {
     if (this.isLoading()) { return; }
     this.isLoading.set(true);
 
-    // Load countries (for "all sports" view) and sports (for per-sport filter) in parallel
-    this.apiService.getLeaderboard(this.translateService.getCurrentLang() || 'en').subscribe({
+    this.dataSub = this.apiService.getLeaderboard(this.translateService.getCurrentLang() || 'en').subscribe({
       next: (data: LeaderboardResponse): void => {
         this.allCountries.set(data.countries);
         this.allSports.set(data.sports);
-        this.sports.set(data.sports);
 
         this.isLoading.set(false);
       },
