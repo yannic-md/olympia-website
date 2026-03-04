@@ -1,9 +1,9 @@
 import { Component, input, InputSignal, output, OutputEmitterRef } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TableCountryBadgeComponent } from '../table-country-badge/table-country-badge.component';
-import { DisciplineWinner, MedalType } from '../../../types/Disciplines';
 import {AuthService} from "../../../services/api/auth/auth.service";
 import {NgOptimizedImage} from "@angular/common";
+import {DisciplineWinner, MedalType} from "../../../types/Disciplines";
 
 @Component({
   selector: 'app-discipline-winner-row',

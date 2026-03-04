@@ -8,18 +8,17 @@ import {AuthService} from '../../../../services/api/auth/auth.service';
 import {AthleteService} from '../../../../services/api/athlete/athlete.service';
 import {CountryService} from '../../../../services/api/country/country.service';
 import {AlertService} from '../../../../services/api/alert/alert.service';
-import {SportEntry} from '../../../../services/api/sports/sports.service';
 import {AthleteForm} from '../../../../types/Athlete';
 import {CountryForm, CountryStats} from '../../../../types/Country';
 import {
-  DISCIPLINE_RESULTS,
-  DisciplineCard,
-  DisciplineResult, DisciplineResultForm,
-  DisciplineWinner,
+  DisciplineCard, DisciplineParticipant,
+  DisciplineResultForm,
+  DisciplineWinner, V2Sport,
 } from '../../../../types/Disciplines';
 import {ModalDisciplineComponent} from '../../../../layout/sections/modal/modal-discipline/modal-discipline.component';
 import {ModalAthleteComponent} from '../../../../layout/sections/modal/modal-athlete/modal-athlete.component';
 import {ModalCountryComponent} from '../../../../layout/sections/modal/modal-country/modal-country.component';
+import {LeaderboardResponse} from "../../../../types/API";
 
 @Component({
   selector: 'app-disciplines-view',
@@ -59,96 +58,117 @@ export class DisciplinesViewComponent {
   }
 
   /**
-   * Builds the filtered and mapped list of discipline cards to display in the grid.
+   * Reactive computed signal that produces the fully filtered and sorted list of
+   * {@link DisciplineCard} objects displayed in the discipline grid.
    *
-   * Reads the static {@link DISCIPLINE_RESULTS} map as the source of truth for medal winners
-   * and applies three independent filters: the sport-dropdown selection, the free-text search
-   * query (matched against sport name, winner names and country names), and the country filter.
+   * Re-evaluates automatically whenever any of the four filter signals change.
+   * Returns an empty array while the V2 leaderboard data has not yet been loaded.
    */
   protected disciplineCards: Signal<DisciplineCard[]> = computed((): DisciplineCard[] => {
+    const leaderboardData: LeaderboardResponse | null = this.dataService.leaderboardData();
+    if (!leaderboardData) { return []; }
+
     const query: string         = this.searchQuery().toLowerCase().trim();
-    const countryFilter: string = this.filterCountry();
     const sportFilter: string   = this.filterSport();
+    const countryFilter: string = this.filterCountry();
+    void this.filterMedal(); // register as reactive dependency; row-level filtering is handled in the template
 
-    void this.filterMedal(); // reactive dependency – row visibility is handled in the template
-    const sportNameMap: Map<string, string> = this.buildSportNameMap();
-
-    return Object.entries(DISCIPLINE_RESULTS)
-      .filter(([rawName, results]: [string, DisciplineResult]): boolean =>
-        // check if the discipline should be displayed based on the filter
-        this.matchesSportFilter(rawName, results, sportFilter, query, sportNameMap))
-      .map(([rawName, results]: [string, DisciplineResult]): DisciplineCard => {
-        // Transform each passing entry into a DisciplineCard
-        const displayName: string = sportNameMap.get(rawName) ?? rawName;
-        const sportNameMatches: boolean = !query || displayName.toLowerCase().includes(query) ||
-                                          rawName.toLowerCase().includes(query);
-
-        return { rawName, displayName,
-                 gold:   this.resolveSlot(results.gold,   countryFilter, query, sportNameMatches),
-                 silver: this.resolveSlot(results.silver, countryFilter, query, sportNameMatches),
-                 bronze: this.resolveSlot(results.bronze, countryFilter, query, sportNameMatches) };
-      }).sort((a: DisciplineCard, b: DisciplineCard): number => a.displayName.localeCompare(b.displayName));
+    return leaderboardData.sports
+      .filter((sport: V2Sport): boolean => this.sportPassesFilters(sport, sportFilter, query))
+      .map((sport: V2Sport): DisciplineCard => this.buildDisciplineCard(sport, query, countryFilter))
+      .sort((a: DisciplineCard, b: DisciplineCard): number => a.displayName.localeCompare(b.displayName));
   });
 
   /**
-   * Builds a rawName → translated display name map from the loaded sports API data.
-   * Falls back to the rawName itself when no translation is available.
+   * Returns `true` when a sport should be included in the visible card list.
+   *
+   * A sport is excluded when:
+   * - A specific sport filter is active and the sport's rawName does not match it.
+   * - A free-text query is active and neither the sport name, any participant's full
+   *   name, nor any participant's country name contains the query string.
+   *
+   * @param {V2Sport} sport       - The V2 sport entry to evaluate.
+   * @param {string}  sportFilter - The currently selected sport rawName, or `'all'`.
+   * @param {string}  query       - Lower-cased, trimmed free-text search string (may be empty).
    */
-  private buildSportNameMap(): Map<string, string> {
-    return new Map<string, string>(
-      this.dataService.sports().map((s: SportEntry): [string, string] => [s.rawName, s.name])
+  private sportPassesFilters(sport: V2Sport, sportFilter: string, query: string): boolean {
+    if (sportFilter !== 'all' && sport.rawName !== sportFilter) { return false; }
+    if (!query) { return true; }
+    if (this.sportNameMatchesQuery(sport, query)) { return true; }
+
+    return sport.participants.some((p: DisciplineParticipant): boolean =>
+      this.participantMatchesQuery(p, query)
     );
   }
 
   /**
-   * Returns true when the given sport entry should be included based on the
-   * sport-dropdown filter and the free-text search query.
+   * Returns `true` when the sport's display name or raw name contains the query string.
    *
-   * @param rawName - The raw sport identifier.
-   * @param results - The discipline's winner data.
-   * @param sportFilter - The currently selected sport rawName, or 'all'.
-   * @param query - The normalised (lowercase, trimmed) search string.
-   * @param sportNameMap - Translated name lookup built by {@link buildSportNameMap}.
+   * @param {V2Sport} sport - The V2 sport entry to check.
+   * @param {string}  query - Lower-cased search string.
    */
-  private matchesSportFilter(rawName: string, results: DisciplineResult, sportFilter: string, query: string,
-                             sportNameMap: Map<string, string>): boolean {
-    if (sportFilter !== 'all' && rawName !== sportFilter) return false;
-    if (!query) return true;
-
-    const displayName: string = sportNameMap.get(rawName) ?? rawName;
-    if (displayName.toLowerCase().includes(query) || rawName.toLowerCase().includes(query)) return true;
-
-    return [results.gold, results.silver, results.bronze].some(
-      (w: DisciplineWinner): boolean =>
-        w.name.toLowerCase().includes(query) ||
-        w.countryName.toLowerCase().includes(query)
-    );
+  private sportNameMatchesQuery(sport: V2Sport, query: string): boolean {
+    return sport.name.toLowerCase().includes(query) || sport.rawName.toLowerCase().includes(query);
   }
 
   /**
-   * Resolves a single medal slot to its winner or null.
+   * Returns `true` when a participant's full name or country name contains the query string.
    *
-   * Returns null when the winner does not match the active country filter,
-   * or when a free-text query is active but neither the winner's name nor
-   * country name contains it (unless the sport name itself already matched).
-   *
-   * @param winner - The candidate winner for this slot.
-   * @param countryFilter - The currently selected country name, or 'all'.
-   * @param query - The normalised search string.
-   * @param sportNameMatches - Whether the sport name itself already satisfies the query.
+   * @param {DisciplineParticipant} participant - A single sport participant.
+   * @param {string}                query       - Lower-cased search string.
    */
-  private resolveSlot(winner: DisciplineWinner, countryFilter: string, query: string,
-                      sportNameMatches: boolean): DisciplineWinner | null {
-    if (countryFilter !== 'all' && winner.countryName !== countryFilter) return null;
+  private participantMatchesQuery(participant: DisciplineParticipant, query: string): boolean {
+    const fullName: string    = `${participant.firstName} ${participant.lastName}`.toLowerCase();
+    const countryName: string = (participant.countryName ?? '').toLowerCase();
+    return fullName.includes(query) || countryName.includes(query);
+  }
 
-    if (!sportNameMatches) {
-      const winnerMatches: boolean =
-        winner.name.toLowerCase().includes(query) ||
-        winner.countryName.toLowerCase().includes(query);
-      if (!winnerMatches) return null;
-    }
+  /**
+   * Maps a single V2 sport entry into a {@link DisciplineCard}, resolving each of
+   * the three medal slots (GOLD / SILVER / BRONZE) individually.
+   *
+   * @param {V2Sport} sport         - The V2 sport to transform.
+   * @param {string}  query         - Lower-cased, trimmed free-text query (may be empty).
+   * @param {string}  countryFilter - The currently selected country name, or `'all'`.
+   */
+  private buildDisciplineCard(sport: V2Sport, query: string, countryFilter: string): DisciplineCard {
+    const sportNameMatches: boolean = !query || this.sportNameMatchesQuery(sport, query);
 
-    return winner;
+    return { rawName: sport.rawName, displayName: sport.name,
+             gold:   this.resolveWinner(sport, 'GOLD',   query, countryFilter, sportNameMatches),
+             silver: this.resolveWinner(sport, 'SILVER', query, countryFilter, sportNameMatches),
+             bronze: this.resolveWinner(sport, 'BRONZE', query, countryFilter, sportNameMatches) };
+  }
+
+  /**
+   * Resolves a single medal slot to a {@link DisciplineWinner} or `null`.
+   *
+   * Returns `null` when:
+   * - No participant with the requested medal exists in this sport.
+   * - A country filter is active and the winner's country does not match.
+   * - A free-text query is active, the sport name itself does not match, and
+   *   neither the winner's name nor country name satisfies the query.
+   *
+   * @param {V2Sport}                      sport            - The V2 sport to search in.
+   * @param {'GOLD' | 'SILVER' | 'BRONZE'} medal            - The medal rank to resolve (`GOLD`, `SILVER`, or `BRONZE`).
+   * @param {string}                       query            - Lower-cased, trimmed free-text query (may be empty).
+   * @param {string}                       countryFilter    - The currently selected country name, or `'all'`.
+   * @param {boolean}                      sportNameMatches - Whether the sport name already satisfies the query.
+   */
+  private resolveWinner(sport: V2Sport, medal: 'GOLD' | 'SILVER' | 'BRONZE', query: string, countryFilter: string,
+                        sportNameMatches: boolean): DisciplineWinner | null {
+    const participant: DisciplineParticipant | undefined =
+      sport.participants.find((p: DisciplineParticipant): boolean => p.medal === medal);
+
+    if (!participant) { return null; }
+    const fullName: string    = `${participant.firstName} ${participant.lastName}`;
+    const countryName: string = participant.countryName ?? participant.countryCode ?? '';
+
+    if (countryFilter !== 'all' && countryName !== countryFilter) { return null; }
+    if (!sportNameMatches && !this.participantMatchesQuery(participant, query)) { return null; }
+
+    return { name: fullName, countryCode: (participant.countryCode ?? '').toLowerCase(),
+             countryName: countryName, result: participant.result ?? ''};
   }
 
   /**

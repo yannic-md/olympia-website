@@ -2,7 +2,7 @@ import {Component, computed, input, InputSignal, output, OutputEmitterRef, Signa
 import {NgOptimizedImage} from '@angular/common';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
 import {HttpErrorResponse} from '@angular/common/http';
-import {Athlete, AthleteForm} from '../../../../types/Athlete';
+import {Athlete, AthleteForm, AthleteResult, V2Athlete} from '../../../../types/Athlete';
 import {CountryStats, CountryForm} from '../../../../types/Country';
 import {TableCountryBadgeComponent} from '../../../../layout/elements/table-country-badge/table-country-badge.component';
 import {TableMedalPillsComponent} from '../../../../layout/elements/table-medal-pills/table-medal-pills.component';
@@ -16,7 +16,8 @@ import {CountryService} from '../../../../services/api/country/country.service';
 import {DataHolderService} from '../../../../services/data-holder/data-holder.service';
 import {signal, WritableSignal} from '@angular/core';
 import {sortByMedals} from '../../utils/medal-sort.util';
-import {AthleteResult, DISCIPLINE_RESULTS, DisciplineResult} from '../../../../types/Disciplines';
+import {LeaderboardResponse} from "../../../../types/API";
+import {V2SportResult} from "../../../../types/Disciplines";
 
 @Component({
   selector: 'app-athlete-view',
@@ -239,29 +240,26 @@ export class AthleteViewComponent {
   }
 
   /**
-   * Derives all sport results for a given athlete by scanning {@link DISCIPLINE_RESULTS}.
-   * Resolves the translated sport display name from the loaded sports data.
-   * Results are sorted gold → silver → bronze to match the medal-pills order.
-   * TODO: Replace with real API data once available.
+   * Derives all sport results for a given athlete from the API data.
+   * Sorted gold → silver → bronze to match medal-pills order.
    *
-   * @param {string} name - The athlete's full name.
+   * @param {number} athleteId - The athlete's ID.
    * @returns {AthleteResult[]} Sorted list of sport results with translated names.
    */
-  protected resultsForAthlete(name: string): AthleteResult[] {
+  protected resultsForAthlete(athleteId: number): AthleteResult[] {
+    const leaderboardData: LeaderboardResponse | null = this.dataService.leaderboardData();
+    if (!leaderboardData) { return []; }
+
+    const athlete: V2Athlete | undefined = leaderboardData.athletes.find(a => a.id === athleteId);
+    if (!athlete) { return []; }
+
     const medalOrder: Record<string, number> = { gold: 0, silver: 1, bronze: 2 };
-    const sportNameMap: Map<string, string> = new Map(
-      this.dataService.sports().map(s => [s.rawName, s.name])
-    );
 
-    const results: AthleteResult[] = [];
-    for (const [rawName, entry] of Object.entries(DISCIPLINE_RESULTS) as [string, DisciplineResult][]) {
-      const sport: string = sportNameMap.get(rawName) ?? rawName;
-      if (entry.gold.name   === name) results.push({ sport, medal: 'gold',   result: entry.gold.result });
-      if (entry.silver.name === name) results.push({ sport, medal: 'silver', result: entry.silver.result });
-      if (entry.bronze.name === name) results.push({ sport, medal: 'bronze', result: entry.bronze.result });
-    }
-
-    return results.sort((a, b) => medalOrder[a.medal] - medalOrder[b.medal]);
+    // return the list of sport results ONLY if there's a medal & convert it to AthleteResult
+    return athlete.results.filter(r => r.medal !== null)
+      .map((r: V2SportResult): AthleteResult => ({ sport: r.sportName, result: r.result ?? '',
+                                                   medal: r.medal!.toLowerCase() as 'gold' | 'silver' | 'bronze' }))
+      .sort((a, b) => medalOrder[a.medal] - medalOrder[b.medal]);
   }
 
   /**
@@ -271,7 +269,7 @@ export class AthleteViewComponent {
    * @param {Athlete} athlete - The athlete whose row should be toggled.
    */
   protected toggleAthlete(athlete: Athlete): void {
-    if (this.resultsForAthlete(athlete.name).length === 0) return;
+    if (this.resultsForAthlete(athlete.id).length === 0) return;
 
     this.expandedAthletes.update(set => {
       const next = new Set(set);

@@ -14,10 +14,12 @@
     </h2>
 
     <div class="flex flex-col lg:flex-row items-center gap-4 md:gap-6 justify-center lg:justify-end">
-      <!-- TODO: Functionality & API Call - should sort the top winners based on discipline winners -->
       <div class="w-full md:w-3/4 lg:w-48">
         <app-filter-select id="home-filter-sports" [(value)]="filterSport">
           <option value="all">{{ 'PAGE.DETAILED.FILTER.SPORTS.PLACEHOLDER' | translate }}</option>
+          @for (sport of sports(); track sport.rawName) {
+            <option [value]="sport.rawName">{{ sport.name }}</option>
+          }
         </app-filter-select>
       </div>
 
@@ -32,7 +34,7 @@
 
   <!-- Leaderboard (First Top 10) -->
   <div class="xl:grid xl:grid-cols-3 gap-4 lg:gap-6">
-    @for (country of topCountries; track country.countryCode) {
+    @for (country of topCountries(); track country.countryCode) {
       <div class="bg-white p-4 md:p-6 rounded shadow-sm flex flex-col items-center mb-4 xl:mb-0"
            [class.sm:col-start-1]="country.rank === 10" [class.xl:col-start-2]="country.rank === 10"
            [class.sm:col-span-2]="country.rank === 10" [class.xl:col-span-1]="country.rank === 10"
@@ -66,7 +68,7 @@
       </div>
     }
 
-    @if (topCountries.length === 0) {
+    @if (topCountries().length === 0) {
       <p class="col-span-3 text-center text-gray-400 py-8">{{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}</p>
     }
   </div>

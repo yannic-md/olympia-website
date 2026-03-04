@@ -15,7 +15,7 @@
                      transition hover:bg-green-600 shadow-sm cursor-pointer"
               (click)="isAthleteModalOpen.set(true)">
         <img ngSrc="/assets/images/icons/plus.svg" width="16" height="16" alt="Plus Icon" class="invert" />
-        {{ 'MODAL.ATHLETE.ADD.TITLE' | translate }}
+        {{ 'MODAL.ATHLETE.ADD.TITLE' | translate }} <!-- TODO: Functionality -->
       </button>
     </div>
   }
@@ -40,7 +40,7 @@
     <!-- Content -->
     <tbody class="text-sm">
       @for (athlete of filteredAthletes(); track athlete.id; let i = $index) {
-        @let athleteResults = resultsForAthlete(athlete.name);
+        @let athleteResults = resultsForAthlete(athlete.id);
 
         <!-- Athlete row (clickable to expand if results exist) -->
         <tr class="group border-b border-gray-200/50 hover:bg-black/5 odd:bg-neutral-200/50
@@ -84,7 +84,7 @@
           }
         </tr>
 
-        <!-- Expanded sport result sub-rows TODO: Show real results -->
+        <!-- Expanded sport result sub-rows -->
         @if (isAthleteExpanded(athlete.id)) {
           @for (result of athleteResults; track result.sport; let last = $last) {
             <tr class="bg-neutral-250 border-b hover:bg-neutral-100/80 transition-colors"
