@@ -10,15 +10,13 @@ import {CountryService} from '../../../../services/api/country/country.service';
 import {AlertService} from '../../../../services/api/alert/alert.service';
 import {AthleteForm} from '../../../../types/Athlete';
 import {CountryForm, CountryStats} from '../../../../types/Country';
-import {
-  DisciplineCard, DisciplineParticipant,
+import {DisciplineCard, DisciplineParticipant,
   DisciplineResultForm,
   DisciplineWinner, V2Sport,
 } from '../../../../types/Disciplines';
 import {ModalDisciplineComponent} from '../../../../layout/sections/modal/modal-discipline/modal-discipline.component';
 import {ModalAthleteComponent} from '../../../../layout/sections/modal/modal-athlete/modal-athlete.component';
 import {ModalCountryComponent} from '../../../../layout/sections/modal/modal-country/modal-country.component';
-import {LeaderboardResponse} from "../../../../types/API";
 
 @Component({
   selector: 'app-disciplines-view',
@@ -65,15 +63,15 @@ export class DisciplinesViewComponent {
    * Returns an empty array while the V2 leaderboard data has not yet been loaded.
    */
   protected disciplineCards: Signal<DisciplineCard[]> = computed((): DisciplineCard[] => {
-    const leaderboardData: LeaderboardResponse | null = this.dataService.leaderboardData();
-    if (!leaderboardData) { return []; }
+    const sports: V2Sport[] = this.dataService.sports();
+    if (!sports.length) { return []; }
 
     const query: string         = this.searchQuery().toLowerCase().trim();
     const sportFilter: string   = this.filterSport();
     const countryFilter: string = this.filterCountry();
     void this.filterMedal(); // register as reactive dependency; row-level filtering is handled in the template
 
-    return leaderboardData.sports
+    return sports
       .filter((sport: V2Sport): boolean => this.sportPassesFilters(sport, sportFilter, query))
       .map((sport: V2Sport): DisciplineCard => this.buildDisciplineCard(sport, query, countryFilter))
       .sort((a: DisciplineCard, b: DisciplineCard): number => a.displayName.localeCompare(b.displayName));

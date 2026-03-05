@@ -3,7 +3,7 @@ import {NgOptimizedImage} from '@angular/common';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
 import {HttpErrorResponse} from '@angular/common/http';
 import {Athlete} from '../../../../types/Athlete';
-import {CountryForm, CountryStats} from '../../../../types/Country';
+import {CountryForm, CountryStats, FormCountryPayload, V2Country} from '../../../../types/Country';
 import {TableCountryBadgeComponent} from '../../../../layout/elements/table-country-badge/table-country-badge.component';
 import {TableMedalPillsComponent} from '../../../../layout/elements/table-medal-pills/table-medal-pills.component';
 import {TableActionsComponent} from '../../../../layout/elements/table-actions/table-actions.component';
@@ -48,8 +48,13 @@ export class CountryViewComponent {
     const country: CountryStats | null = this.editingCountry();
     if (!country) return null;
 
-    return {countryCode: country.countryCode, countryName: country.countryName,
-            goldMedals: country.medals.gold, silverMedals: country.medals.silver, bronzeMedals: country.medals.bronze};
+    const hasTranslations: boolean = !!(country.nameEn || country.nameDe || country.nameFr);
+    return {
+      countryCode: country.countryCode,
+      countryName: hasTranslations ? (country.nameEn ?? country.countryName) : country.countryName,
+      goldMedals: country.medals.gold, silverMedals: country.medals.silver, bronzeMedals: country.medals.bronze,
+      translate: hasTranslations, nameDe: country.nameDe ?? '', nameFr: country.nameFr ?? '',
+    };
   });
 
   /**
@@ -160,8 +165,13 @@ export class CountryViewComponent {
 
     this.countryService.deleteCountry(countryId).subscribe({
       next: (): void => {
+        // update all lists
         this.dataService.countriesData.update(current => current.filter(c => c.countryId !== countryId));
         this.dataService.athletes.update(current => current.filter(a => a.countryId !== countryId));
+        this.dataService.sports.update(current => current.map(s => ({
+          ...s, participants: s.participants.filter(p => p.countryId !== countryId)
+        })));
+
         this.alertService.success(
           this.translateService.instant('ALERT.COUNTRY.DELETE').replace('[name]', country.countryName));
       },
@@ -179,12 +189,25 @@ export class CountryViewComponent {
    * @param {CountryForm} form - The form data for the new country.
    */
   protected onAddCountry(form: CountryForm): void {
-    this.countryService.createCountry({ code: form.countryCode.toUpperCase(), name: form.countryName }).subscribe({
-      next: (): void => {
-        this.dataService.load();
+    const payload: FormCountryPayload = form.translate
+      ? { code: form.countryCode.toUpperCase(), name: form.countryName, nameEn: form.countryName, nameDe: form.nameDe, nameFr: form.nameFr }
+      : { code: form.countryCode.toUpperCase(), name: form.countryName };
+
+    this.countryService.createCountry(payload).subscribe({
+      next: (created: V2Country): void => {
+        const lang: string = this.translateService.getCurrentLang();
+        const displayName: string = lang === 'de' ? (created.nameDe || created.name) :
+                                    lang === 'fr' ? (created.nameFr || created.name) :
+                                                    (created.nameEn || created.name);
+
+        const newCountry: CountryStats = { countryId: created.id,  countryCode: created.code, countryName: displayName,
+                                           medals: { gold: 0, silver: 0, bronze: 0 }, nameEn: created.nameEn,
+                                           nameDe: created.nameDe, nameFr: created.nameFr };
+
+        this.dataService.countriesData.update(current => [...current, newCountry]);
         this.isCountryModalOpen.set(false);
         this.alertService.success(
-          this.translateService.instant('ALERT.COUNTRY.ADD').replace('[name]', form.countryName));
+          this.translateService.instant('ALERT.COUNTRY.ADD').replace('[name]', displayName));
       },
       error: (error: HttpErrorResponse): void => {
         console.error('Error creating country:', error);
@@ -205,23 +228,39 @@ export class CountryViewComponent {
     const country: CountryStats | null = this.editingCountry();
     if (!country) return;
 
-    this.countryService.updateCountry(country.countryId, { code: form.countryCode, name: form.countryName }).subscribe({
+    const payload: any = form.translate
+      ? { code: form.countryCode, name: form.countryName, nameEn: form.countryName, nameDe: form.nameDe, nameFr: form.nameFr }
+      : { code: form.countryCode, name: form.countryName, nameEn: null, nameDe: null, nameFr: null };
+
+    const newCode: string = form.countryCode.toUpperCase();
+    const lang: string = this.translateService.getCurrentLang();
+    this.countryService.updateCountry(country.countryId, payload).subscribe({
       next: (): void => {
+        const displayName: string = form.translate ? (lang === 'de' ? (form.nameDe ?? form.countryName)
+                                                   : lang === 'fr' ? (form.nameFr ?? form.countryName)
+                                                   : form.countryName) : form.countryName;
+
+        // update all lists
         this.dataService.countriesData.update(current =>
-          current.map(c => c.countryId === country.countryId
-            ? { ...c, countryCode: form.countryCode, countryName: form.countryName,
-                medals: { gold: form.goldMedals, silver: form.silverMedals, bronze: form.bronzeMedals } }
-            : c)
+          current.map(c => c.countryId !== country.countryId ? c : {
+            ...c, countryCode: newCode, countryName: displayName,
+            nameEn:  form.translate ? form.countryName              : undefined,
+            nameDe:  form.translate ? (form.nameDe  ?? undefined)   : undefined,
+            nameFr:  form.translate ? (form.nameFr  ?? undefined)   : undefined })
         );
         this.dataService.athletes.update(current =>
-          current.map(a => a.countryId === country.countryId
-            ? { ...a, countryCode: form.countryCode.toUpperCase(), countryName: form.countryName }
-            : a)
+          current.map(a => a.countryId !== country.countryId ? a
+            : { ...a, countryCode: newCode, countryName: displayName })
         );
+        this.dataService.sports.update(current => current.map(s => ({
+          ...s, participants: s.participants.map(p => p.countryId !== country.countryId ? p
+            : { ...p, countryCode: newCode, countryName: displayName })
+        })));
+
         this.editingCountry.set(null);
         this.isCountryModalOpen.set(false);
         this.alertService.success(
-          this.translateService.instant('ALERT.COUNTRY.EDIT').replace('[name]', form.countryName));
+          this.translateService.instant('ALERT.COUNTRY.EDIT').replace('[name]', displayName));
       },
       error: (error: HttpErrorResponse): void => {
         console.error('Error updating country:', error);

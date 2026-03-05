@@ -54,6 +54,7 @@ export interface DisciplineParticipant {
   athleteId: number;
   firstName: string;
   lastName: string;
+  countryId: number | null;
   countryCode: string | null;
   countryName: string | null;
   medal: 'GOLD' | 'SILVER' | 'BRONZE' | null;

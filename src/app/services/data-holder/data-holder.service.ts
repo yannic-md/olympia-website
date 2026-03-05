@@ -3,7 +3,6 @@ import {HttpErrorResponse} from "@angular/common/http";
 import {Athlete, V2Athlete} from "../../types/Athlete";
 import {CountryStats, V2Country} from "../../types/Country";
 import {ApiService} from "../api/api.service";
-import {SportEntry} from "../api/sports/sports.service";
 import {AlertService} from "../api/alert/alert.service";
 import {TranslateService} from "@ngx-translate/core";
 import {LeaderboardResponse} from "../../types/API";
@@ -13,7 +12,7 @@ import {V2Sport, V2SportResult} from "../../types/Disciplines";
 export class DataHolderService {
   readonly leaderboardData: WritableSignal<LeaderboardResponse | null> = signal<LeaderboardResponse | null>(null);
   readonly countriesData: WritableSignal<CountryStats[]> = signal<CountryStats[]>([]);
-  readonly sports: WritableSignal<SportEntry[]> = signal<SportEntry[]>([]);
+  readonly sports: WritableSignal<V2Sport[]> = signal<V2Sport[]>([]);
   readonly athletes: WritableSignal<Athlete[]> = signal<Athlete[]>([]);
 
   readonly isLoading: WritableSignal<boolean> = signal<boolean>(false);
@@ -41,7 +40,7 @@ export class DataHolderService {
         this.isLoading.set(false);
 
         this.leaderboardData.set(data);
-        this.sports.set(this._mapSports(data.sports));
+        this.sports.set(data.sports);
         this.athletes.set(this._mapAthletes(data.athletes));
         this.countriesData.set(this._mapCountries(data.countries));
       },
@@ -51,16 +50,6 @@ export class DataHolderService {
         this.alertService.error(this.translateService.instant('ALERT.ERROR'));
       }
     });
-  }
-
-  /**
-   * Maps the list of V2Sport to the legacy `SportEntry` format used by existing views.
-   *
-   * @param {V2Sport[]} sports List of sports from the V2 API response.
-   * @returns {SportEntry[]} List of mapped sports as `SportEntry` objects.
-   */
-  private _mapSports(sports: V2Sport[]): SportEntry[] {
-    return sports.map(s => ({ name: s.name,  rawName: s.rawName,  scoreType: s.scoreType }));
   }
 
   /**
@@ -90,8 +79,11 @@ export class DataHolderService {
    * @returns {CountryStats[]} Array of `CountryStats` objects used by legacy views.
    */
   private _mapCountries(v2Countries: V2Country[]): CountryStats[] {
-    return v2Countries.map(c => ({ countryId: c.id, countryCode: c.code,  countryName: c.name,
-                                              medals: { gold: c.medals.gold, silver: c.medals.silver, bronze: c.medals.bronze } }));
+    return v2Countries.map(c => ({
+      countryId: c.id, countryCode: c.code, countryName: c.name,
+      medals: { gold: c.medals.gold, silver: c.medals.silver, bronze: c.medals.bronze },
+      nameEn: c.nameEn, nameDe: c.nameDe, nameFr: c.nameFr
+    }));
   }
 }
 

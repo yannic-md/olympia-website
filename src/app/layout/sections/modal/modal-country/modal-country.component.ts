@@ -14,7 +14,7 @@ import {NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
 import {MiscService} from "../../../../services/misc/misc.service";
 import {CountryForm, CountryStats} from "../../../../types/Country";
-import {TranslatePipe} from "@ngx-translate/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 
 @Component({
   selector: 'app-modal-country',
@@ -43,6 +43,16 @@ import {TranslatePipe} from "@ngx-translate/core";
       transition(':leave', [
         animate('200ms ease-in', style({ opacity: 0, transform: 'scale(0.95) translateY(-20px)' }))
       ])
+    ]),
+    trigger('slideDown', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(-8px)', maxHeight: '0', overflow: 'hidden' }),
+        animate('220ms ease-out', style({ opacity: 1, transform: 'translateY(0)', maxHeight: '200px', overflow: 'hidden' }))
+      ]),
+      transition(':leave', [
+        style({ opacity: 1, transform: 'translateY(0)', maxHeight: '200px', overflow: 'hidden' }),
+        animate('180ms ease-in', style({ opacity: 0, transform: 'translateY(-8px)', maxHeight: '0', overflow: 'hidden' }))
+      ])
     ])
   ]
 })
@@ -58,13 +68,44 @@ export class ModalCountryComponent {
 
   protected formData: WritableSignal<CountryForm> = signal(this.getEmptyForm());
   protected isEditMode: Signal<boolean> = computed(() => this.editData() !== null);
+  protected translateMode: WritableSignal<boolean> = signal(false);
 
-  constructor(protected miscService: MiscService) {
+  constructor(protected miscService: MiscService, private translateService: TranslateService) {
     // set data if user wants to edit instead of add
     effect((): void => {
       const data: CountryForm | null = this.editData();
-      if (data) { this.formData.set({ ...data }); }
+      if (data) {
+        this.formData.set({ ...data });
+        this.translateMode.set(data.translate ?? false);
+      }
     });
+  }
+
+  /**
+   * Toggles translate mode. When activating, moves the current countryName value into
+   * the translation field matching the user's active language, then clears countryName
+   * so it can receive the English/base name.
+   *
+   * @param {boolean} enabled - Whether translate mode is being enabled or disabled.
+   */
+  protected onTranslateModeChange(enabled: boolean): void {
+    if (enabled) {
+      const currentName: string = this.formData().countryName.trim();
+      if (currentName) {
+        const lang: string = this.translateService.getCurrentLang();
+        if (lang === 'de') {
+          this.formData.update(f => ({ ...f, countryName: '', nameDe: currentName }));
+        } else if (lang === 'fr') {
+          this.formData.update(f => ({ ...f, countryName: '', nameFr: currentName }));
+        }
+
+        // For 'en' the value already belongs in countryName (the EN/base field), so no move needed.
+      }
+    } else {
+      this.formData.update(f => ({ ...f, nameDe: '', nameFr: '' }));
+    }
+
+    this.translateMode.set(enabled);
   }
 
   /**
@@ -76,29 +117,44 @@ export class ModalCountryComponent {
   });
 
   /**
-   * Checks whether the entered country code or name already exists in the current country list.
-   * Only active in add-mode (not when editing an existing country).
-   * Returns null if no duplicate is found, or an object describing which field conflicts.
+   * Checks whether the entered country code or any of the name fields already exists in the
+   * current country list. Only active in add-mode (not when editing an existing country).
+   * Returns null if no duplicate is found, or an object describing which fields conflict.
    */
-  protected duplicateError: Signal<{ code: boolean; name: boolean } | null> = computed(() => {
+  protected duplicateError: Signal<{ code: boolean; name: boolean; nameDe: boolean; nameFr: boolean } | null> = computed(() => {
     if (this.isEditMode()) return null;
 
-    const code: string = this.formData().countryCode.toUpperCase().trim();
-    const name: string = this.formData().countryName.trim().toLowerCase();
+    const existing: CountryStats[] = this.existingCountries();
+    const normalize: (s: string) => string = (s: string): string => s.trim().toLowerCase();
 
-    const codeExists: boolean = code.length > 0 &&
-      this.existingCountries().some(c => c.countryCode.toUpperCase() === code);
-    const nameExists: boolean = name.length > 0 &&
-      this.existingCountries().some(c => c.countryName.trim().toLowerCase() === name);
+    const existingNames: Set<string> = new Set(existing.flatMap(c => [
+      normalize(c.countryName),
+      ...(c.nameEn ? [normalize(c.nameEn)] : []),
+      ...(c.nameDe ? [normalize(c.nameDe)] : []),
+      ...(c.nameFr ? [normalize(c.nameFr)] : []),
+    ]));
 
-    return (codeExists || nameExists) ? { code: codeExists, name: nameExists } : null;
+    const code: string   = this.formData().countryCode.toUpperCase().trim();
+    const name: string   = normalize(this.formData().countryName);
+    const nameDe: string = normalize(this.formData().nameDe ?? '');
+    const nameFr: string = normalize(this.formData().nameFr ?? '');
+
+    const codeExists: boolean  = code.length > 0   && existing.some(c => c.countryCode.toUpperCase() === code);
+    const nameExists: boolean  = name.length > 0   && existingNames.has(name);
+    const nameDeExists: boolean = this.translateMode() && nameDe.length > 0 && existingNames.has(nameDe);
+    const nameFrExists: boolean = this.translateMode() && nameFr.length > 0 && existingNames.has(nameFr);
+
+    return (codeExists || nameExists || nameDeExists || nameFrExists)
+      ? { code: codeExists, name: nameExists, nameDe: nameDeExists, nameFr: nameFrExists }
+      : null;
   });
 
   /**
    * Returns an empty country form object with default values.
    */
   private getEmptyForm(): CountryForm {
-    return { countryCode: '', countryName: '', goldMedals: 0, silverMedals: 0, bronzeMedals: 0};
+    return { countryCode: '', countryName: '', goldMedals: 0, silverMedals: 0, bronzeMedals: 0,
+             translate: false, nameDe: '', nameFr: '' };
   }
 
   /**
@@ -106,6 +162,7 @@ export class ModalCountryComponent {
    */
   protected close(): void {
     this.formData.set(this.getEmptyForm());
+    this.translateMode.set(false);
     this.closeModal.emit();
   }
 
@@ -116,10 +173,13 @@ export class ModalCountryComponent {
   protected onSubmit(): void {
     if (this.duplicateError()) return;
 
+    const payload: CountryForm = { ...this.formData(), translate: this.translateMode() };
+    if (!this.translateMode()) { payload.nameDe = undefined; payload.nameFr = undefined; }
+
     if (this.isEditMode()) {
-      this.updateCountry.emit(this.formData());
+      this.updateCountry.emit(payload);
     } else {
-      this.addCountry.emit(this.formData());
+      this.addCountry.emit(payload);
     }
 
     this.close();
@@ -130,7 +190,12 @@ export class ModalCountryComponent {
    */
   protected isFormValid: Signal<boolean> = computed((): boolean => {
     const data: CountryForm = this.formData();
-    return data.countryName.trim() !== '' && data.countryCode !== '' && !this.duplicateError() && !this.codeTooShort();
+    const baseValid: boolean = data.countryName.trim() !== '' && data.countryCode !== '' && !this.duplicateError() && !this.codeTooShort();
+    if (!baseValid) return false;
+    if (this.translateMode()) {
+      return (data.nameDe ?? '').trim() !== '' && (data.nameFr ?? '').trim() !== '';
+    }
+    return true;
   });
 
 }
