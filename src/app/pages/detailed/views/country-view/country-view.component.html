@@ -38,8 +38,9 @@
 
     <!-- Content -->
     <tbody class="text-sm">
-      @for (country of filteredCountries(); track country.countryCode; let i = $index) {
+      @for (country of filteredCountries(); track country.countryCode) {
         @let countryAthletes = athletesForCountry(country.countryId);
+        @let rank = miscService.getRankOf(sortedCountries(), country.countryId, 'countryId');
 
         <!-- Country row (clickable to expand) -->
         <tr class="group border-b border-gray-200/50 hover:bg-black/5 odd:bg-neutral-200/50
@@ -49,10 +50,10 @@
 
           <!-- Position / Rank -->
           <td class="py-4 pl-2 pr-2 text-center">
-            @if (i === 0) { <span class="text-2xl" title="1">🏆</span> }
-            @else if (i === 1) { <span class="text-2xl" title="2">🥈</span> }
-            @else if (i === 2) { <span class="text-2xl" title="3">🥉</span> }
-            @else { <span class="text-sm font-medium text-gray-500">{{ '#' + (i + 1) }}</span> }
+            @if (rank === 0) { <span class="text-2xl" title="1">🏆</span> }
+            @else if (rank === 1) { <span class="text-2xl" title="2">🥈</span> }
+            @else if (rank === 2) { <span class="text-2xl" title="3">🥉</span> }
+            @else { <span class="text-sm font-medium text-gray-500">{{ '#' + (rank + 1) }}</span> }
           </td>
 
           <!-- Country Name & Flag -->

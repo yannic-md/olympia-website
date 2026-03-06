@@ -39,8 +39,9 @@
 
     <!-- Content -->
     <tbody class="text-sm">
-      @for (athlete of filteredAthletes(); track athlete.id; let i = $index) {
+      @for (athlete of filteredAthletes(); track athlete.id) {
         @let athleteResults = resultsForAthlete(athlete.id);
+        @let rank = miscService.getRankOf(sortedAthletes(), athlete.id, 'id');
 
         <!-- Athlete row (clickable to expand if results exist) -->
         <tr class="group border-b border-gray-200/50 hover:bg-black/5 odd:bg-neutral-200/50
@@ -48,10 +49,10 @@
             [class.cursor-pointer]="athleteResults.length > 0" [class.border-neutral-300]="isAthleteExpanded(athlete.id)">
           <!-- Position / Rank -->
           <td class="py-4 pl-2 pr-2 text-center">
-            @if (i === 0) { <span class="text-2xl" title="1">🏆</span> }
-            @else if (i === 1) { <span class="text-2xl" title="2">🥈</span> }
-            @else if (i === 2) { <span class="text-2xl" title="3">🥉</span> }
-            @else { <span class="text-sm font-medium text-gray-500">{{ '#' + (i + 1) }}</span> }
+            @if (rank === 0) { <span class="text-2xl" title="1">🏆</span> }
+            @else if (rank === 1) { <span class="text-2xl" title="2">🥈</span> }
+            @else if (rank === 2) { <span class="text-2xl" title="3">🥉</span> }
+            @else { <span class="text-sm font-medium text-gray-500">{{ '#' + (rank + 1) }}</span> }
           </td>
 
           <!-- Athlete Name -->

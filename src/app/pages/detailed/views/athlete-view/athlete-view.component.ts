@@ -1,3 +1,4 @@
+import {animate, style, transition, trigger} from '@angular/animations';
 import {Component, computed, input, InputSignal, output, OutputEmitterRef, Signal} from '@angular/core';
 import {NgOptimizedImage} from '@angular/common';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
@@ -13,6 +14,7 @@ import {AlertService} from '../../../../services/api/alert/alert.service';
 import {AuthService} from '../../../../services/api/auth/auth.service';
 import {AthleteService} from '../../../../services/api/athlete/athlete.service';
 import {DataHolderService} from '../../../../services/data-holder/data-holder.service';
+import {MiscService} from '../../../../services/misc/misc.service';
 import {signal, WritableSignal} from '@angular/core';
 import {sortByMedals} from '../../utils/medal-sort.util';
 import {LeaderboardResponse} from "../../../../types/API";
@@ -31,6 +33,15 @@ import {V2SportResult} from "../../../../types/Disciplines";
   ],
   templateUrl: './athlete-view.component.html',
   styleUrl: './athlete-view.component.css',
+  animations: [
+    trigger('viewEnter', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(14px)' }),
+        animate('280ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1, transform: 'translateY(0)' })),
+      ]),
+    ]),
+  ],
+  host: { '[@viewEnter]': '' },
 })
 export class AthleteViewComponent {
   filterCountry: InputSignal<string> = input.required<string>();
@@ -50,7 +61,7 @@ export class AthleteViewComponent {
 
   constructor(protected dataService: DataHolderService, protected authService: AuthService,
               private alertService: AlertService, private athleteService: AthleteService,
-              private translateService: TranslateService) {}
+              private translateService: TranslateService, protected miscService: MiscService) {}
 
   /**
    * Computed signal that transforms the currently selected athlete into an `AthleteForm` model.
@@ -74,21 +85,30 @@ export class AthleteViewComponent {
   });
 
   /**
-   * Filtered and sorted list of athletes based on current filter and search criteria.
+   * Fully sorted list of athletes (all filters except text search applied) used to determine
+   * the true rank of each athlete independently of the current search query.
    */
-  protected filteredAthletes: Signal<Athlete[]> = computed((): Athlete[] => {
+  protected sortedAthletes: Signal<Athlete[]> = computed((): Athlete[] => {
     const filtered: Athlete[] = this.dataService.athletes().filter((athlete: Athlete): boolean => {
-      const matchesSearchText: boolean =
-        athlete.name.toLowerCase().includes(this.searchQuery().toLowerCase()) ||
-        athlete.countryName.toLowerCase().includes(this.searchQuery().toLowerCase());
       const matchesCountryFilter: boolean =
         this.filterCountry() === 'all' || athlete.countryName === this.filterCountry();
       const matchesSportsFilter: boolean =
         this.filterSport() === 'all' || athlete.sportRawName === this.filterSport();
-      return matchesSearchText && matchesCountryFilter && matchesSportsFilter;
+      return matchesCountryFilter && matchesSportsFilter;
     });
 
     return filtered.sort((a, b): number => sortByMedals(a, b, a.name, b.name, this.filterMedal()));
+  });
+
+  /**
+   * Filtered and sorted list of athletes based on current filter and search criteria.
+   */
+  protected filteredAthletes: Signal<Athlete[]> = computed((): Athlete[] => {
+    const query: string = this.searchQuery().toLowerCase();
+    return this.sortedAthletes().filter((athlete: Athlete): boolean =>
+      athlete.name.toLowerCase().includes(query) ||
+      athlete.countryName.toLowerCase().includes(query)
+    );
   });
 
   /**
@@ -285,5 +305,4 @@ export class AthleteViewComponent {
     return { firstName, lastName, countryId: country?.countryId ?? 0, country };
   }
 }
-
 

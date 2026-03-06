@@ -1,3 +1,4 @@
+import {animate, style, transition, trigger} from '@angular/animations';
 import {Component, computed, input, InputSignal, Signal, signal, WritableSignal} from '@angular/core';
 import {NgOptimizedImage} from '@angular/common';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
@@ -12,6 +13,7 @@ import {AlertService} from '../../../../services/api/alert/alert.service';
 import {AuthService} from '../../../../services/api/auth/auth.service';
 import {CountryService} from '../../../../services/api/country/country.service';
 import {DataHolderService} from '../../../../services/data-holder/data-holder.service';
+import {MiscService} from '../../../../services/misc/misc.service';
 import {sortByMedals} from '../../utils/medal-sort.util';
 
 @Component({
@@ -26,6 +28,15 @@ import {sortByMedals} from '../../utils/medal-sort.util';
   ],
   templateUrl: './country-view.component.html',
   styleUrl: './country-view.component.css',
+  animations: [
+    trigger('viewEnter', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(14px)' }),
+        animate('280ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1, transform: 'translateY(0)' })),
+      ]),
+    ]),
+  ],
+  host: { '[@viewEnter]': '' },
 })
 export class CountryViewComponent {
   filterCountry: InputSignal<string> = input.required<string>();
@@ -39,7 +50,7 @@ export class CountryViewComponent {
 
   constructor(protected dataService: DataHolderService, protected authService: AuthService,
               private alertService: AlertService, private countryService: CountryService,
-              private translateService: TranslateService) {}
+              private translateService: TranslateService, protected miscService: MiscService) {}
 
   /**
    * Computed signal that transforms the currently selected country into a `CountryForm` model.
@@ -58,27 +69,31 @@ export class CountryViewComponent {
   });
 
   /**
+   * Fully sorted list of countries (all filters except text search applied) used to determine
+   * the true rank of each country independently of the current search query.
+   */
+  protected sortedCountries: Signal<CountryStats[]> = computed((): CountryStats[] => {
+    return this.dataService.countriesData()
+      .filter(country => this.filterCountry() === 'all' || country.countryName === this.filterCountry())
+      .sort((a, b): number => sortByMedals(a, b, a.countryName, b.countryName, this.filterMedal()));
+  });
+
+  /**
    * Filtered and sorted list of countries based on current filter and search criteria.
    * Also includes countries where at least one athlete matches the search query.
    */
   protected filteredCountries: Signal<CountryStats[]> = computed((): CountryStats[] => {
     const query: string = this.searchQuery().toLowerCase();
 
-    return this.dataService.countriesData()
-      .filter(country => {
-        const matchesCountryFilter: boolean =
-          this.filterCountry() === 'all' || country.countryName === this.filterCountry();
-        if (!matchesCountryFilter) return false;
+    return this.sortedCountries().filter(country => {
+      const matchesCountrySearch: boolean = country.countryName.toLowerCase().includes(query);
+      if (matchesCountrySearch || !query) return true;
 
-        const matchesCountrySearch: boolean = country.countryName.toLowerCase().includes(query);
-        if (matchesCountrySearch) return true;
-
-        // Also include the country if any of its athletes match the search query
-        return this.dataService.athletes().some(
-          a => a.countryId === country.countryId && a.name.toLowerCase().includes(query)
-        );
-      })
-      .sort((a, b) => sortByMedals(a, b, a.countryName, b.countryName, this.filterMedal()));
+      // Also include the country if any of its athletes match the search query
+      return this.dataService.athletes().some(
+        a => a.countryId === country.countryId && a.name.toLowerCase().includes(query)
+      );
+    });
   });
 
   /**
@@ -191,6 +206,4 @@ export class CountryViewComponent {
     this.editingCountry.set(null);
   }
 }
-
-
 

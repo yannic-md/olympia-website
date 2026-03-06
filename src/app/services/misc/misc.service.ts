@@ -36,6 +36,20 @@ export class MiscService {
   }
 
   /**
+   * Returns the 0-based rank of an item in a sorted list by comparing its `id` or `countryId`
+   * property against the provided identifier.
+   * Intended to display the true rank of a row independently of any active search/text filter.
+   *
+   * @param {[]} sortedList - The fully sorted list (without text-search filter applied).
+   * @param {number} id - The identifier of the item to look up.
+   * @param idKey - The property name used as the identifier (e.g. `'id'` or `'countryId'`).
+   * @returns {number} The 0-based rank position, or -1 if not found.
+   */
+  getRankOf<T>(sortedList: T[], id: number, idKey: keyof T): number {
+    return sortedList.findIndex(item => item[idKey] === id);
+  }
+
+  /**
    * Recalculates and updates the medal totals for a single country in `countriesData`
    * by summing up all athletes currently in the local `athletes` store.
    *
