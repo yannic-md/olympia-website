@@ -103,6 +103,6 @@
                    (addAthlete)="onAddAthleteFromDiscipline($event)"
                    (openCountryModal)="onOpenCountryModalFromAthlete($event)" />
 
-<!-- Country sub-modal (opened from within the athlete sub-modal) -->
-<app-modal-country [isOpen]="isCountryModalOpen()" [existingCountries]="dataService.countriesData()"
-                   (closeModal)="onCloseCountryModal()" (addCountry)="onAddCountryFromDiscipline($event)" />
+<!-- Country sub-modal (opened from within the athlete sub-modal) TODO: WIP -->
+<!--<app-modal-country [isOpen]="isCountryModalOpen()" [existingCountries]="dataService.countriesData()"-->
+<!--                   (closeModal)="onCloseCountryModal()" (addCountry)="onAddCountryFromDiscipline($any($event))" />-->

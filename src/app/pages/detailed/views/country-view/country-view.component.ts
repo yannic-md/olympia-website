@@ -3,7 +3,7 @@ import {NgOptimizedImage} from '@angular/common';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
 import {HttpErrorResponse} from '@angular/common/http';
 import {Athlete} from '../../../../types/Athlete';
-import {CountryForm, CountryStats, FormCountryPayload, V2Country} from '../../../../types/Country';
+import {CountryForm, CountryStats} from '../../../../types/Country';
 import {TableCountryBadgeComponent} from '../../../../layout/elements/table-country-badge/table-country-badge.component';
 import {TableMedalPillsComponent} from '../../../../layout/elements/table-medal-pills/table-medal-pills.component';
 import {TableActionsComponent} from '../../../../layout/elements/table-actions/table-actions.component';
@@ -179,93 +179,6 @@ export class CountryViewComponent {
         console.error('Error deleting country:', error);
         this.alertService.error(
           this.translateService.instant('ALERT.COUNTRY.DELETE.ERROR').replace('[name]', country.countryName));
-      }
-    });
-  }
-
-  /**
-   * Handles adding a new country via the modal form.
-   *
-   * @param {CountryForm} form - The form data for the new country.
-   */
-  protected onAddCountry(form: CountryForm): void {
-    const payload: FormCountryPayload = form.translate
-      ? { code: form.countryCode.toUpperCase(), name: form.countryName, nameEn: form.countryName, nameDe: form.nameDe, nameFr: form.nameFr }
-      : { code: form.countryCode.toUpperCase(), name: form.countryName };
-
-    this.countryService.createCountry(payload).subscribe({
-      next: (created: V2Country): void => {
-        const lang: string = this.translateService.getCurrentLang();
-        const displayName: string = lang === 'de' ? (created.nameDe || created.name) :
-                                    lang === 'fr' ? (created.nameFr || created.name) :
-                                                    (created.nameEn || created.name);
-
-        const newCountry: CountryStats = { countryId: created.id,  countryCode: created.code, countryName: displayName,
-                                           medals: { gold: 0, silver: 0, bronze: 0 }, nameEn: created.nameEn,
-                                           nameDe: created.nameDe, nameFr: created.nameFr };
-
-        this.dataService.countriesData.update(current => [...current, newCountry]);
-        this.isCountryModalOpen.set(false);
-        this.alertService.success(
-          this.translateService.instant('ALERT.COUNTRY.ADD').replace('[name]', displayName));
-      },
-      error: (error: HttpErrorResponse): void => {
-        console.error('Error creating country:', error);
-        if (error.status !== 409) {
-          this.alertService.error(
-            this.translateService.instant('ALERT.COUNTRY.ADD.ERROR').replace('[name]', form.countryName));
-        }
-      }
-    });
-  }
-
-  /**
-   * Handles updating an existing country via the modal form.
-   *
-   * @param {CountryForm} form - The updated form data.
-   */
-  protected onUpdateCountry(form: CountryForm): void {
-    const country: CountryStats | null = this.editingCountry();
-    if (!country) return;
-
-    const payload: any = form.translate
-      ? { code: form.countryCode, name: form.countryName, nameEn: form.countryName, nameDe: form.nameDe, nameFr: form.nameFr }
-      : { code: form.countryCode, name: form.countryName, nameEn: null, nameDe: null, nameFr: null };
-
-    const newCode: string = form.countryCode.toUpperCase();
-    const lang: string = this.translateService.getCurrentLang();
-    this.countryService.updateCountry(country.countryId, payload).subscribe({
-      next: (): void => {
-        const displayName: string = form.translate ? (lang === 'de' ? (form.nameDe ?? form.countryName)
-                                                   : lang === 'fr' ? (form.nameFr ?? form.countryName)
-                                                   : form.countryName) : form.countryName;
-
-        // update all lists
-        this.dataService.countriesData.update(current =>
-          current.map(c => c.countryId !== country.countryId ? c : {
-            ...c, countryCode: newCode, countryName: displayName,
-            nameEn:  form.translate ? form.countryName              : undefined,
-            nameDe:  form.translate ? (form.nameDe  ?? undefined)   : undefined,
-            nameFr:  form.translate ? (form.nameFr  ?? undefined)   : undefined })
-        );
-        this.dataService.athletes.update(current =>
-          current.map(a => a.countryId !== country.countryId ? a
-            : { ...a, countryCode: newCode, countryName: displayName })
-        );
-        this.dataService.sports.update(current => current.map(s => ({
-          ...s, participants: s.participants.map(p => p.countryId !== country.countryId ? p
-            : { ...p, countryCode: newCode, countryName: displayName })
-        })));
-
-        this.editingCountry.set(null);
-        this.isCountryModalOpen.set(false);
-        this.alertService.success(
-          this.translateService.instant('ALERT.COUNTRY.EDIT').replace('[name]', displayName));
-      },
-      error: (error: HttpErrorResponse): void => {
-        console.error('Error updating country:', error);
-        this.alertService.error(
-          this.translateService.instant('ALERT.COUNTRY.EDIT.ERROR').replace('[name]', form.countryName));
       }
     });
   }

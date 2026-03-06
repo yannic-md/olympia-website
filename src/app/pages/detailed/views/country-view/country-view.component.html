@@ -135,5 +135,5 @@
 <!-- Country modal -->
 <app-modal-country [isOpen]="isCountryModalOpen()" [editData]="countryEditData()"
                    [existingCountries]="dataService.countriesData()" (closeModal)="onCloseCountryModal()"
-                   (addCountry)="onAddCountry($event)" (updateCountry)="onUpdateCountry($event)" />
+                   (countryCreated)="onCloseCountryModal()" (countryUpdated)="onCloseCountryModal()" />
 

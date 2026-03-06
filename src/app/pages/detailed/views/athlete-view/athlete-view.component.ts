@@ -3,7 +3,7 @@ import {NgOptimizedImage} from '@angular/common';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
 import {HttpErrorResponse} from '@angular/common/http';
 import {Athlete, AthleteForm, AthleteResult, V2Athlete} from '../../../../types/Athlete';
-import {CountryStats, CountryForm} from '../../../../types/Country';
+import {CountryStats} from '../../../../types/Country';
 import {TableCountryBadgeComponent} from '../../../../layout/elements/table-country-badge/table-country-badge.component';
 import {TableMedalPillsComponent} from '../../../../layout/elements/table-medal-pills/table-medal-pills.component';
 import {TableActionsComponent} from '../../../../layout/elements/table-actions/table-actions.component';
@@ -12,7 +12,6 @@ import {ModalCountryComponent} from '../../../../layout/sections/modal/modal-cou
 import {AlertService} from '../../../../services/api/alert/alert.service';
 import {AuthService} from '../../../../services/api/auth/auth.service';
 import {AthleteService} from '../../../../services/api/athlete/athlete.service';
-import {CountryService} from '../../../../services/api/country/country.service';
 import {DataHolderService} from '../../../../services/data-holder/data-holder.service';
 import {signal, WritableSignal} from '@angular/core';
 import {sortByMedals} from '../../utils/medal-sort.util';
@@ -51,7 +50,7 @@ export class AthleteViewComponent {
 
   constructor(protected dataService: DataHolderService, protected authService: AuthService,
               private alertService: AlertService, private athleteService: AthleteService,
-              private countryService: CountryService, private translateService: TranslateService) {}
+              private translateService: TranslateService) {}
 
   /**
    * Computed signal that transforms the currently selected athlete into an `AthleteForm` model.
@@ -193,39 +192,25 @@ export class AthleteViewComponent {
   }
 
   /**
-   * Handles adding a new country from within the athlete view's inline country modal.
+   * Handles the resume flow after a new country was created from within the athlete modal.
+   * Re-opens the athlete modal with the suspended form pre-filled with the new country.
    *
-   * @param {CountryForm} form - The country form data.
+   * @param {CountryStats} country - The newly created country emitted by the country modal.
    */
-  protected onAddCountry(form: CountryForm): void {
-    this.countryService.createCountry({ code: form.countryCode.toUpperCase(), name: form.countryName }).subscribe({
-      next: (): void => {
-        this.dataService.load();
-        this.isCountryModalOpen.set(false);
-        this.alertService.success(
-          this.translateService.instant('ALERT.COUNTRY.ADD').replace('[name]', form.countryName));
+  protected onCountryCreated(country: CountryStats): void {
+    const suspended: AthleteForm | null = this.suspendedAthleteForm();
+    this.isCountryModalOpen.set(false);
 
-        const suspended: AthleteForm | null = this.suspendedAthleteForm();
-        if (suspended === null) { this.suspendedAthleteForm.set(null); return; }
+    if (!suspended) { this.suspendedAthleteForm.set(null); return; }
+    const resumeForm: AthleteForm = { ...suspended, countryName: country.countryName,
+                                      countryCode: country.countryCode };
+    this.editingAthlete.set(null);
 
-        const resumeForm: AthleteForm = {...suspended, countryName: form.countryName,
-                                         countryCode: form.countryCode.toUpperCase()};
-        this.editingAthlete.set(null);
-
-        // Use a minimal timeout so that the data reload has been queued first
-        setTimeout((): void => {
-          this.suspendedAthleteForm.set(resumeForm);
-          this.isAthleteModalOpen.set(true);
-        }, 150);
-      },
-      error: (error: HttpErrorResponse): void => {
-        console.error('Error creating country:', error);
-        if (error.status !== 409) {
-          this.alertService.error(
-            this.translateService.instant('ALERT.COUNTRY.ADD.ERROR').replace('[name]', form.countryName));
-        }
-      }
-    });
+    // Use a minimal timeout so that the data reload has been queued first
+    setTimeout((): void => {
+      this.suspendedAthleteForm.set(resumeForm);
+      this.isAthleteModalOpen.set(true);
+    }, 150);
   }
 
   /**

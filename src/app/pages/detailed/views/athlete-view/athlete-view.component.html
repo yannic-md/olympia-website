@@ -154,5 +154,5 @@
 
 <!-- Inline country creation modal (triggered from within the athlete modal) -->
 <app-modal-country [isOpen]="isCountryModalOpen()" [editData]="null" [existingCountries]="dataService.countriesData()"
-                   (closeModal)="onCloseCountryModal()" (addCountry)="onAddCountry($event)" (updateCountry)="$any($event)" />
+                   (closeModal)="onCloseCountryModal()" (countryCreated)="onCountryCreated($event)" />
 
