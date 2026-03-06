@@ -58,6 +58,11 @@ export class ModalDisciplineComponent {
   protected resultError: WritableSignal<string> = signal('');
   protected formData: WritableSignal<DisciplineResultForm> = signal(this.getEmptyForm());
 
+  /** Athletes sorted alphabetically by name for the dropdown. */
+  protected sortedAthletes: Signal<Athlete[]> = computed((): Athlete[] =>
+    [...this.athletes()].sort((a, b) => a.name.localeCompare(b.name))
+  );
+
   constructor(protected miscService: MiscService, private translateService: TranslateService) {
     // Restore suspended form state when returning from the athlete sub-modal.
     effect((): void => {

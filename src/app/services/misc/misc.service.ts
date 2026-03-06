@@ -1,4 +1,5 @@
 import {Injectable, WritableSignal} from '@angular/core';
+import {DataHolderService} from "../data-holder/data-holder.service";
 
 interface NavigationItem {
   label: string;
@@ -16,6 +17,8 @@ export class MiscService {
     { label: 'BREADCRUMB.NAVIGATION.LEARNMORE', externalUrl: 'https://www.olympics.com/de/olympic-games/paris-2024' }
   ];
 
+  constructor(private dataService: DataHolderService) {}
+
   /**
    * Handles backdrop clicks to close the modal when clicking outside the modal content.
    */
@@ -30,6 +33,26 @@ export class MiscService {
    */
   updateField<T, K extends keyof T>(formSignal: WritableSignal<T>, field: K, value: T[K]): void {
     formSignal.update(current => ({ ...current, [field]: value }));
+  }
+
+  /**
+   * Recalculates and updates the medal totals for a single country in `countriesData`
+   * by summing up all athletes currently in the local `athletes` store.
+   *
+   * @param {number} countryId - The ID of the country to recalculate.
+   */
+  recalcCountryMedals(countryId: number): void {
+    if (!countryId) return;
+    const totals = this.dataService.athletes().filter(a => a.countryId === countryId)
+      .reduce((acc, a) => ({
+        gold:   acc.gold   + (a.medals.gold   ?? 0),
+        silver: acc.silver + (a.medals.silver ?? 0),
+        bronze: acc.bronze + (a.medals.bronze ?? 0),
+      }), { gold: 0, silver: 0, bronze: 0 });
+
+    this.dataService.countriesData.update(list =>
+      list.map(c => c.countryId !== countryId ? c : { ...c, medals: totals })
+    );
   }
 
 }

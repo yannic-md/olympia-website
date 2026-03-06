@@ -93,17 +93,7 @@ export class AthleteViewComponent {
   });
 
   /**
-   * Opens the edit modal for the given athlete.
-   *
-   * @param {Athlete} athlete - The athlete to edit.
-   */
-  protected onEditAthlete(athlete: Athlete): void {
-    this.editingAthlete.set(athlete);
-    this.isAthleteModalOpen.set(true);
-  }
-
-  /**
-   * Deletes an athlete by their ID.
+   * Deletes an athlete by their ID and patches all local data stores.
    *
    * @param {number} athleteId - The ID of the athlete to delete.
    */
@@ -113,7 +103,7 @@ export class AthleteViewComponent {
 
     this.athleteService.deleteAthlete(athleteId).subscribe({
       next: (): void => {
-        this.dataService.athletes.update(current => current.filter(a => a.id !== athleteId));
+        this.athleteService.patchAthleteDelete(athleteId, athlete.countryId);
         this.alertService.success(
           this.translateService.instant('ALERT.ATHLETE.DELETE').replace('[name]', athlete.name));
       },
@@ -126,24 +116,28 @@ export class AthleteViewComponent {
   }
 
   /**
-   * Handles adding a new athlete via the modal form.
+   * Handles adding a new athlete via the modal form & patches all local data stores.
    *
    * @param {AthleteForm} form - The form data for the new athlete.
    */
   protected onAddAthlete(form: AthleteForm): void {
-    const { firstName, lastName, countryId } = this.splitNameAndCountry(form);
+    const { firstName, lastName, countryId, country } = this.splitNameAndCountry(form);
 
-    this.athleteService.createAthlete({firstName, lastName, countryId, goldMedals: form.goldMedals,
-                                       silverMedals: form.silverMedals, bronzeMedals: form.bronzeMedals,
-                                       bestTime: form.bestTime || null, sport: form.sportRawName,
-                                       scoreType: form.scoreType
-    }).subscribe({
-      next: (): void => {
-        this.dataService.load();
+    this.athleteService.createAthlete({firstName, lastName, countryId}).subscribe({
+      next: (api: V2Athlete): void => {
+        const mapped: Athlete = { id: api.id, name: `${api.firstName} ${api.lastName}`,
+                                  countryId: api.country?.id ?? countryId,
+                                  countryCode: api.country?.code ?? country?.countryCode ?? '',
+                                  countryName: form.countryName,  // the translated display name chosen by the user
+                                  sport: '', sportRawName: '', scoreType: null, bestTime: null,
+                                  medals: { gold: 0, silver: 0, bronze: 0 } };
+        this.athleteService.patchAthleteAdd(api, mapped);
+
         this.isAthleteModalOpen.set(false);
+        this.editingAthlete.set(null);
         this.suspendedAthleteForm.set(null);
         this.alertService.success(
-          this.translateService.instant('ALERT.ATHLETE.ADD').replace('[name]', form.name));
+          this.translateService.instant('ALERT.ATHLETE.ADD').replace('[name]', mapped.name));
       },
       error: (error: HttpErrorResponse): void => {
         console.error('Error creating athlete:', error);
@@ -154,24 +148,29 @@ export class AthleteViewComponent {
   }
 
   /**
-   * Handles updating an existing athlete via the modal form.
+   * Handles updating an existing athlete via the modal form & patches all local data stores.
    *
    * @param {AthleteForm} form - The updated form data.
    */
   protected onUpdateAthlete(form: AthleteForm): void {
     if (!form.id) return;
-    const { firstName, lastName, countryId } = this.splitNameAndCountry(form);
+    const previousAthlete: Athlete | undefined = this.dataService.athletes().find(a => a.id === form.id);
+    const previousCountryId: number = previousAthlete?.countryId ?? 0;
 
-    this.athleteService.updateAthlete(form.id, {firstName, lastName, countryId, goldMedals: form.goldMedals,
-                                                silverMedals: form.silverMedals, bronzeMedals: form.bronzeMedals,
-                                                bestTime: form.bestTime || null, sport: form.sportRawName, scoreType: form.scoreType,
-    }).subscribe({
-      next: (): void => {
-        this.dataService.load();
+    const { firstName, lastName, countryId, country } = this.splitNameAndCountry(form);
+
+    this.athleteService.updateAthlete(form.id, {firstName, lastName, countryId}).subscribe({
+      next: (api: V2Athlete): void => {
+        const updated: Athlete = { ...(previousAthlete ?? {} as Athlete), id: api.id,
+                                   name: `${api.firstName} ${api.lastName}`, countryId: api.country?.id ?? countryId,
+                                   countryCode: api.country?.code ?? country?.countryCode ?? previousAthlete?.countryCode ?? '',
+                                   countryName: form.countryName };  // the translated display name chosen by the user
+        this.athleteService.patchAthleteUpdate(api, updated, previousCountryId);
+
         this.editingAthlete.set(null);
         this.isAthleteModalOpen.set(false);
         this.alertService.success(
-          this.translateService.instant('ALERT.ATHLETE.EDIT').replace('[name]', form.name));
+          this.translateService.instant('ALERT.ATHLETE.EDIT').replace('[name]', updated.name));
       },
       error: (error: HttpErrorResponse): void => {
         console.error('Error updating athlete:', error);
@@ -289,16 +288,16 @@ export class AthleteViewComponent {
   }
 
   /**
-   * Splits a full name and resolves the countryId from the countries data.
+   * Splits a full name and resolves the countryId (+ full CountryStats) from the countries data.
    */
-  private splitNameAndCountry(form: AthleteForm): { firstName: string; lastName: string; countryId: number } {
+  private splitNameAndCountry(form: AthleteForm): { firstName: string; lastName: string;
+                                                    countryId: number; country: CountryStats | undefined } {
     const nameParts: string[] = form.name.trim().split(/\s+/);
     const firstName: string = nameParts[0] || '';
     const lastName: string = nameParts.slice(1).join(' ') || '';
 
     const country: CountryStats | undefined = this.dataService.countriesData().find(c => c.countryName === form.countryName);
-    const countryId: number = country ? country.countryId : 0;
-    return { firstName, lastName, countryId };
+    return { firstName, lastName, countryId: country?.countryId ?? 0, country };
   }
 }
 

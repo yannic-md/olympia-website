@@ -31,7 +31,7 @@
                         name="athleteId" id="discipline-athlete" required
                         class="w-full appearance-none px-4 py-2 pr-8 border border-gray-300 rounded-lg cursor-pointer bg-white">
                   <option [value]="0" disabled>{{ 'MODAL.DISCIPLINES.ATHLETE.PLACEHOLDER' | translate }}</option>
-                  @for (athlete of athletes(); track athlete.id) {
+                  @for (athlete of sortedAthletes(); track athlete.id) {
                     <option [value]="athlete.id">{{ athlete.name }}</option>
                   }
                 </select>

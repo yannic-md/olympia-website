@@ -8,7 +8,7 @@ import {AuthService} from '../../../../services/api/auth/auth.service';
 import {AthleteService} from '../../../../services/api/athlete/athlete.service';
 import {CountryService} from '../../../../services/api/country/country.service';
 import {AlertService} from '../../../../services/api/alert/alert.service';
-import {AthleteForm} from '../../../../types/Athlete';
+import {AthleteForm, V2Athlete} from '../../../../types/Athlete';
 import {CountryForm, CountryStats} from '../../../../types/Country';
 import {DisciplineCard, DisciplineParticipant,
   DisciplineResultForm,
@@ -212,36 +212,45 @@ export class DisciplinesViewComponent {
 
   /**
    * Handles adding a new athlete from within the discipline flow.
-   * TODO: AthleteForm doesnt use medals / besttime and sports anymore
+  /**
+   * Handles adding a new athlete from within the discipline flow.
+   * Patches all local data stores without triggering a full reload.
    *
    * @param {AthleteForm} form - The new athlete form data.
    */
   protected onAddAthleteFromDiscipline(form: AthleteForm): void {
     const { firstName, lastName, countryId } = this.splitNameAndCountry(form);
-    this.athleteService.createAthlete({
-      firstName, lastName, countryId,
-      goldMedals: form.goldMedals, silverMedals: form.silverMedals, bronzeMedals: form.bronzeMedals,
-      bestTime: form.bestTime || null, sport: form.sportRawName, scoreType: form.scoreType,
-    }).subscribe({
-      next: (created: any): void => {
-        // Patch the suspended snapshot immediately using the API-returned ID
-        // so the new athlete is pre-selected when the discipline modal re-opens.
-        const newId: number = created?.id ?? 0;
-        this.suspendedDisciplineForm.update(f => f && newId
-          ? { ...f, athleteId: newId, athleteName: form.name }
+    const country: CountryStats | undefined = this.dataService.countriesData().find(c => c.countryName === form.countryName);
+
+    this.athleteService.createAthlete({ firstName, lastName, countryId }).subscribe({
+      next: (api: V2Athlete): void => {
+        // Pre-select the new athlete in the suspended discipline form
+        this.suspendedDisciplineForm.update(f => f && api.id
+          ? { ...f, athleteId: api.id, athleteName: form.name }
           : f
         );
 
-        this.dataService.load(); // TODO: avoid reloading all data, only athletes
+        // Patch local stores — no full reload needed
+        const mapped = {
+          id: api.id, name: `${api.firstName} ${api.lastName}`,
+          countryId: api.country?.id ?? countryId,
+          countryCode: api.country?.code ?? country?.countryCode ?? '',
+          // form.countryName is the translated display name chosen by the user — always prefer it over the raw API name
+          countryName: form.countryName,
+          sport: '', sportRawName: '', scoreType: null, bestTime: null,
+          medals: { gold: 0, silver: 0, bronze: 0 },
+        };
+        this.athleteService.patchAthleteAdd(api, mapped);
+
         this.isAthleteModalOpen.set(false);
         this.suspendedAthleteForm.set(null);
         this.alertService.success(
           this.translateService.instant('ALERT.ATHLETE.ADD').replace('[name]', form.name));
 
-        // Open after a short delay so the data reload has settled.
+        // Re-open discipline modal after a short delay so signals propagate
         setTimeout((): void => {
           this.isDisciplineModalOpen.set(true);
-        }, 150);
+        }, 50);
       },
       error: (error: HttpErrorResponse): void => {
         console.error('Error creating athlete:', error);

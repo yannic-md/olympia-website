@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_URL } from '../../../types/API';
-import {FormCountryPayload} from "../../../types/Country";
+import {FormCountryPayload, V2Country} from "../../../types/Country";
 
 @Injectable({
   providedIn: 'root'
@@ -15,10 +15,10 @@ export class CountryService {
    * Creates a new country.
    *
    * @param {FormCountryPayload} data - The creation payload with code, name and optional translations.
-   * @returns {Observable<any>} Observable with the created country.
+   * @returns {Observable<V2Country>} Observable with the created country.
    */
-  createCountry(data: FormCountryPayload): Observable<any> {
-    return this.http.post(`${API_URL}/countries`, data);
+  createCountry(data: FormCountryPayload): Observable<V2Country> {
+    return this.http.post<V2Country>(`${API_URL}/countries`, data);
   }
 
   /**
@@ -26,10 +26,10 @@ export class CountryService {
    *
    * @param {number} id - The unique ID of the country to update.
    * @param {FormCountryPayload} data - The update payload with code, name and optional translations.
-   * @returns {Observable<any>} Observable with the updated country.
+   * @returns {Observable<V2Country>} Observable with the updated country.
    */
-  updateCountry(id: number, data: FormCountryPayload): Observable<any> {
-    return this.http.put(`${API_URL}/countries/${id}`, data);
+  updateCountry(id: number, data: FormCountryPayload): Observable<V2Country> {
+    return this.http.put<V2Country>(`${API_URL}/countries/${id}`, data);
   }
 
   /**

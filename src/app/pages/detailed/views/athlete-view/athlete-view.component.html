@@ -15,7 +15,7 @@
                      transition hover:bg-green-600 shadow-sm cursor-pointer"
               (click)="isAthleteModalOpen.set(true)">
         <img ngSrc="/assets/images/icons/plus.svg" width="16" height="16" alt="Plus Icon" class="invert" />
-        {{ 'MODAL.ATHLETE.ADD.TITLE' | translate }} <!-- TODO: Functionality -->
+        {{ 'MODAL.ATHLETE.ADD.TITLE' | translate }}
       </button>
     </div>
   }
@@ -79,7 +79,8 @@
           <!-- Actions -->
           @if (authService.isLoggedIn()) {
             <td class="py-4 pr-4 lg:pr-0" (click)="$event.stopPropagation()">
-              <app-table-actions (edit)="onEditAthlete(athlete)" (delete)="onDeleteAthlete(athlete.id)" />
+              <app-table-actions (edit)="this.editingAthlete.set(athlete); this.isAthleteModalOpen.set(true);"
+                                 (delete)="onDeleteAthlete(athlete.id)" />
             </td>
           }
         </tr>

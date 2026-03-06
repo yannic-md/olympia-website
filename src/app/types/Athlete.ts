@@ -33,6 +33,13 @@ export interface Athlete {
   bestTime: string | null;
 }
 
+// used for CRUD operations (new)
+export interface AthletePayload {
+  firstName: string;
+  lastName: string;
+  countryId: number;
+}
+
 // Sorted list of sport results with translated names.
 export interface AthleteResult {
   sport: string;
