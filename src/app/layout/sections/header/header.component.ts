@@ -99,15 +99,22 @@ export class HeaderComponent implements OnInit {
   }
 
   /**
-   * Log out the currently logged in user.
+   * Log out the currently logged in user by invalidating the session cookie on the backend.
    */
   protected logout(): void {
     if (!this.authService.isLoggedIn()) { this.router.navigate(["/login"]).then(); return; }
 
-    localStorage.clear(); // delete saved user
-    this.authService.currentUser.set(null);
-
-    this.alertService.success(this.translateService.instant('ALERT.LOGOUT'));
+    this.authService.logout().subscribe({
+      next: () => {
+        this.alertService.success(this.translateService.instant('ALERT.LOGOUT'));
+        this.router.navigate(["/login"]).then();
+      },
+      error: () => {
+        // Even if the backend call fails, clear local state
+        this.authService.currentUser.set(null);
+        this.router.navigate(["/login"]).then();
+      }
+    });
   }
 
   /**

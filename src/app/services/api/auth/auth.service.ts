@@ -8,45 +8,48 @@ import {API_URL, AuthUser, LoginResponse} from "../../../types/API";
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly STORAGE_KEY = 'auth_user';
+  currentUser: WritableSignal<AuthUser | null> = signal(null);
 
-  currentUser: WritableSignal<AuthUser | null> = signal(this.loadFromStorage());
-
-  constructor(@Inject(PLATFORM_ID) private platformId: Object, private http: HttpClient) {}
+  constructor(@Inject(PLATFORM_ID) private platformId: Object, private http: HttpClient) {
+    // Restore session from cookie on startup (browser only)
+    if (isPlatformBrowser(this.platformId)) {
+      this.restoreSession();
+    }
+  }
 
   /**
-   * Sends login credentials to the backend and persists the authenticated user on success.
+   * Sends login credentials to the backend. The backend sets a session cookie (24h).
    *
-   * @param {string} username - The username of the user attempting to log in.
-   * @param {string} password - The plaintext password of the user.
+   * @param {string} username - The username of the user.
+   * @param {string} password - The plaintext password.
    * @returns {Observable<LoginResponse>} that emits the server's login response.
    */
   login(username: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${API_URL}/auth/login`, {username, password}).pipe(
-      tap(response => this.persistUser(response, password))
+    return this.http.post<LoginResponse>(`${API_URL}/auth/login`, {username, password}, {withCredentials: true}).pipe(
+      tap(response => this.persistUser(response))
     );
   }
 
   /**
-   * Sends a registration request to the backend and persists the authenticated user on success.
+   * Sends a registration request to the backend.
    *
-   * @param {string} username - The desired username for the new account.
-   * @param {string} password - The plaintext password for the new account.
+   * @param {string} username - The desired username.
+   * @param {string} password - The plaintext password.
    * @returns {Observable<LoginResponse>} Observable that emits the server's registration response.
    */
   register(username: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${API_URL}/auth/register`, {username, password}).pipe(
-      tap(response => this.persistUser(response, password))
+    return this.http.post<LoginResponse>(`${API_URL}/auth/register`, {username, password}, {withCredentials: true}).pipe(
+      tap(response => this.persistUser(response))
     );
   }
 
   /**
-   * Returns the Basic Auth header value for the current user.
+   * Logs out the current user by invalidating the session on the backend.
    */
-  getBasicAuthHeader(): string | null {
-    const user: AuthUser | null = this.currentUser();
-    if (!user) return null;
-    return 'Basic ' + btoa(`${user.username}:${user.password}`);
+  logout(): Observable<void> {
+    return this.http.post<void>(`${API_URL}/auth/logout`, {}, {withCredentials: true}).pipe(
+      tap(() => this.currentUser.set(null))
+    );
   }
 
   /**
@@ -57,27 +60,28 @@ export class AuthService {
   }
 
   /**
-   * Persists the authenticated user in local storage and updates the current user signal.
-   *
-   * @param {LoginResponse} response The login or registration response containing user data.
-   * @param {string} password The plaintext password used during authentication.
+   * Restores the authenticated user from an existing session cookie by calling /api/auth/me.
+   * Clears any stale localStorage auth data from the previous Basic Auth approach.
    */
-  private persistUser(response: LoginResponse, password: string): void {
-    const user: AuthUser = {id: response.id, username: response.username, role: response.role, password};
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
-    this.currentUser.set(user);
+  private restoreSession(): void {
+    // Clean up old localStorage data from the previous Basic Auth approach
+    localStorage.removeItem('auth_user');
+
+    this.http.get<LoginResponse>(`${API_URL}/auth/me`, {withCredentials: true}).subscribe({
+      next: (response) => this.persistUser(response),
+      error: () => this.currentUser.set(null)
+    });
   }
 
   /**
-   * Loads the authenticated user from `localStorage` if running in a browser environment.
-   * If the platform is not a browser, it returns `null` to avoid accessing `localStorage`.
+   * Updates the current user signal with the data from the login/register response.
    *
-   * @returns {AuthUser | null} The deserialized `AuthUser` object if present, otherwise `null`.
+   * @param {LoginResponse} response The login or registration response.
    */
-  private loadFromStorage(): AuthUser | null {
-    if (!isPlatformBrowser(this.platformId)) { return null; }
-
-    const stored: string | null = localStorage.getItem(this.STORAGE_KEY);
-    return stored ? JSON.parse(stored) : null;
+  private persistUser(response: LoginResponse): void {
+    const user: AuthUser = {id: response.id, username: response.username, role: response.role};
+    this.currentUser.set(user);
   }
 }
+
+

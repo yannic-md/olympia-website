@@ -4,7 +4,6 @@ export interface AuthUser {
   id: number;
   username: string;
   role: string;
-  password: string;
 }
 
 export interface LoginResponse {
