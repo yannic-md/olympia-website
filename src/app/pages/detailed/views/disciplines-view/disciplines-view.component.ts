@@ -6,10 +6,9 @@ import {HttpErrorResponse} from '@angular/common/http';
 import {DisciplineWinnerRowComponent} from '../../../../layout/elements/discipline-winner-row/discipline-winner-row.component';
 import {DataHolderService} from '../../../../services/data-holder/data-holder.service';
 import {AuthService} from '../../../../services/api/auth/auth.service';
-import {AthleteService} from '../../../../services/api/athlete/athlete.service';
 import {AlertService} from '../../../../services/api/alert/alert.service';
 import {ResultService} from '../../../../services/api/result/result.service';
-import {AthleteForm, V2Athlete} from '../../../../types/Athlete';
+import {Athlete, AthleteForm} from '../../../../types/Athlete';
 import {CountryStats} from '../../../../types/Country';
 import {DisciplineCard, DisciplineParticipant,
   DisciplineResultForm,
@@ -49,8 +48,8 @@ export class DisciplinesViewComponent {
   protected suspendedAthleteForm: WritableSignal<AthleteForm | null> = signal(null);
 
   constructor(protected dataService: DataHolderService, protected authService: AuthService,
-              private athleteService: AthleteService, private alertService: AlertService,
-              private translateService: TranslateService, private resultService: ResultService) {}
+              private alertService: AlertService, private translateService: TranslateService,
+              private resultService: ResultService) {}
 
   /**
    * Marks a sport card image as failed so the fallback placeholder is rendered instead.
@@ -272,52 +271,22 @@ export class DisciplinesViewComponent {
   }
 
   /**
-   * Handles adding a new athlete from within the discipline flow.
-  /**
-   * Handles adding a new athlete from within the discipline flow.
-   * Patches all local data stores without triggering a full reload.
+   * Handles the `athleteCreated` event from the athlete sub-modal.
+   * The modal has already called the API, patched all data stores and shown the success alert.
+   * Here we only pre-select the new athlete in the suspended discipline form and re-open the discipline modal.
    *
-   * @param {AthleteForm} form - The new athlete form data.
+   * @param {Athlete} athlete - The newly created athlete.
    */
-  protected onAddAthleteFromDiscipline(form: AthleteForm): void {
-    const { firstName, lastName, countryId } = this.splitNameAndCountry(form);
-    const country: CountryStats | undefined = this.dataService.countriesData().find(c => c.countryName === form.countryName);
+  protected onAthleteCreated(athlete: Athlete): void {
+    this.suspendedDisciplineForm.update(f => f ? { ...f, athleteId: athlete.id, athleteName: athlete.name } : f);
 
-    this.athleteService.createAthlete({ firstName, lastName, countryId }).subscribe({
-      next: (api: V2Athlete): void => {
-        // Pre-select the new athlete in the suspended discipline form
-        this.suspendedDisciplineForm.update(f => f && api.id
-          ? { ...f, athleteId: api.id, athleteName: form.name }
-          : f
-        );
+    this.isAthleteModalOpen.set(false);
+    this.suspendedAthleteForm.set(null);
 
-        // Patch local stores — no full reload needed
-        const mapped = {
-          id: api.id, name: `${api.firstName} ${api.lastName}`,
-          countryId: api.country?.id ?? countryId,
-          countryCode: api.country?.code ?? country?.countryCode ?? '',
-          // form.countryName is the translated display name chosen by the user — always prefer it over the raw API name
-          countryName: form.countryName,
-          sport: '', sportRawName: '', scoreType: null, bestTime: null,
-          medals: { gold: 0, silver: 0, bronze: 0 },
-        };
-        this.athleteService.patchAthleteAdd(api, mapped);
-
-        this.isAthleteModalOpen.set(false);
-        this.suspendedAthleteForm.set(null);
-        this.alertService.success(
-          this.translateService.instant('ALERT.ATHLETE.ADD').replace('[name]', form.name));
-
-        // Re-open discipline modal after a short delay so signals propagate
-        setTimeout((): void => {
-          this.isDisciplineModalOpen.set(true);
-        }, 50);
-      },
-      error: (error: HttpErrorResponse): void => {
-        console.error('Error creating athlete:', error);
-        this.alertService.error(this.translateService.instant('ALERT.ATHLETE.ADD.ERROR'));
-      }
-    });
+    // Re-open discipline modal after a short delay so signals propagate
+    setTimeout((): void => {
+      this.isDisciplineModalOpen.set(true);
+    }, 50);
   }
 
   /**
@@ -372,17 +341,5 @@ export class DisciplinesViewComponent {
     if (this.suspendedAthleteForm() !== null) {
       this.isAthleteModalOpen.set(true);
     }
-  }
-
-  /**
-   * Splits a full name and resolves the countryId from the countries data.
-   */
-  private splitNameAndCountry(form: AthleteForm): { firstName: string; lastName: string; countryId: number } {
-    const parts: string[] = form.name.trim().split(/\s+/);
-    const country: CountryStats | undefined =
-      this.dataService.countriesData().find(c => c.countryName === form.countryName);
-
-    return { firstName: parts[0] || '', lastName: parts.slice(1).join(' ') || '',
-             countryId: country ? country.countryId : 0 };
   }
 }

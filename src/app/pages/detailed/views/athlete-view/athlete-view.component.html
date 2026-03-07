@@ -157,7 +157,7 @@
 
 <!-- Athlete modal -->
 <app-modal-athlete [isOpen]="isAthleteModalOpen()" [athletes]="dataService.athletes()" [countries]="dataService.countries()"
-                   [editData]="athleteEditData()" [resumeData]="suspendedAthleteForm()" (addAthlete)="onAddAthlete($event)"
+                   [editData]="athleteEditData()" [resumeData]="suspendedAthleteForm()" (athleteCreated)="onAthleteCreated($event)"
                    (updateAthlete)="onUpdateAthlete($event)" (openCountryModal)="onOpenCountryModalFromAthlete($event)"
                    (closeModal)="isAthleteModalOpen.set(false); editingAthlete.set(null); suspendedAthleteForm.set(null)" />
 

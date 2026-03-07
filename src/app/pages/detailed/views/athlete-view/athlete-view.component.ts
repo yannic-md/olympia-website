@@ -131,35 +131,15 @@ export class AthleteViewComponent {
   }
 
   /**
-   * Handles adding a new athlete via the modal form & patches all local data stores.
+   * Handles the `athleteCreated` event emitted by the athlete modal after a successful API call.
+   * The modal has already patched all data stores and emitted the alert — here we only clean up local state.
    *
-   * @param {AthleteForm} form - The form data for the new athlete.
+   * @param {Athlete} _athlete - The newly created athlete (unused here, consumed by the modal internally).
    */
-  protected onAddAthlete(form: AthleteForm): void {
-    const { firstName, lastName, countryId, country } = this.splitNameAndCountry(form);
-
-    this.athleteService.createAthlete({firstName, lastName, countryId}).subscribe({
-      next: (api: V2Athlete): void => {
-        const mapped: Athlete = { id: api.id, name: `${api.firstName} ${api.lastName}`,
-                                  countryId: api.country?.id ?? countryId,
-                                  countryCode: api.country?.code ?? country?.countryCode ?? '',
-                                  countryName: form.countryName,  // the translated display name chosen by the user
-                                  sport: '', sportRawName: '', scoreType: null, bestTime: null,
-                                  medals: { gold: 0, silver: 0, bronze: 0 } };
-        this.athleteService.patchAthleteAdd(api, mapped);
-
-        this.isAthleteModalOpen.set(false);
-        this.editingAthlete.set(null);
-        this.suspendedAthleteForm.set(null);
-        this.alertService.success(
-          this.translateService.instant('ALERT.ATHLETE.ADD').replace('[name]', mapped.name));
-      },
-      error: (error: HttpErrorResponse): void => {
-        console.error('Error creating athlete:', error);
-        this.alertService.error(
-          this.translateService.instant('ALERT.ATHLETE.ADD.ERROR').replace('[name]', form.name));
-      }
-    });
+  protected onAthleteCreated(_athlete: Athlete): void {
+    this.isAthleteModalOpen.set(false);
+    this.editingAthlete.set(null);
+    this.suspendedAthleteForm.set(null);
   }
 
   /**

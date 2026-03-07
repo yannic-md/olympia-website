@@ -100,7 +100,7 @@
 <!-- Athlete sub-modal (opened from within the discipline modal) -->
 <app-modal-athlete [isOpen]="isAthleteModalOpen()" [athletes]="dataService.athletes()" [countries]="dataService.countries()"
                    [editData]="null" [resumeData]="suspendedAthleteForm()" (closeModal)="onCloseAthleteModal()"
-                   (addAthlete)="onAddAthleteFromDiscipline($event)"
+                   (athleteCreated)="onAthleteCreated($event)"
                    (openCountryModal)="onOpenCountryModalFromAthlete($event)" />
 
 <!-- Country sub-modal (opened from within the athlete sub-modal) -->

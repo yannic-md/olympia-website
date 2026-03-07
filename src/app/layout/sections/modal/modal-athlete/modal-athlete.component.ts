@@ -12,9 +12,14 @@ import {
 import {FormsModule} from "@angular/forms";
 import {NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
+import {HttpErrorResponse} from "@angular/common/http";
 import {MiscService} from "../../../../services/misc/misc.service";
-import {Athlete, AthleteForm} from "../../../../types/Athlete";
+import {Athlete, AthleteForm, V2Athlete} from "../../../../types/Athlete";
+import {CountryStats} from "../../../../types/Country";
 import {TranslatePipe, TranslateService} from "@ngx-translate/core";
+import {AthleteService} from "../../../../services/api/athlete/athlete.service";
+import {DataHolderService} from "../../../../services/data-holder/data-holder.service";
+import {AlertService} from "../../../../services/api/alert/alert.service";
 
 @Component({
   selector: 'app-modal-athlete',
@@ -50,16 +55,17 @@ export class ModalAthleteComponent {
   openCountryModal: OutputEmitterRef<AthleteForm> = output<AthleteForm>();
 
   editData: InputSignal<AthleteForm | null> = input<AthleteForm | null>(null);
-  /** Restores a previously suspended form state (e.g. after returning from country creation). Does not activate edit mode. */
   resumeData: InputSignal<AthleteForm | null> = input<AthleteForm | null>(null);
-  addAthlete: OutputEmitterRef<AthleteForm> = output<AthleteForm>();
+  athleteCreated: OutputEmitterRef<Athlete> = output<Athlete>();
   updateAthlete: OutputEmitterRef<AthleteForm> = output<AthleteForm>();
 
   protected formData: WritableSignal<AthleteForm> = signal(this.getEmptyForm());
   protected nameError: WritableSignal<string> = signal('');
   protected isEditMode: Signal<boolean> = computed((): boolean => this.editData() !== null);
 
-  constructor(protected miscService: MiscService, private translateService: TranslateService) {
+  constructor(protected miscService: MiscService, private translateService: TranslateService,
+              private athleteService: AthleteService, private dataService: DataHolderService,
+              private alertService: AlertService) {
     // set data if user wants to edit instead of add
     effect((): void => {
       const data: AthleteForm | null = this.editData();
@@ -142,17 +148,62 @@ export class ModalAthleteComponent {
   }
 
   /**
-   * Submits the athlete form and emits to the parent.
+   * Submits the athlete form.
    */
   protected onSubmit(): void {
     if (!this.isFormValid()) { return; }
 
     if (this.isEditMode()) {
       this.updateAthlete.emit({ ...this.formData() });
-    } else {
-      this.addAthlete.emit({ ...this.formData() });
+      this.close();
+      return;
     }
 
-    this.close();
+    this._submitCreate({ ...this.formData() });
+  }
+
+  /**
+   * Calls the athlete creation API, patches all local stores and emits `athleteCreated`.
+   *
+   * @param {AthleteForm} form - The validated form data.
+   */
+  private _submitCreate(form: AthleteForm): void {
+    const { firstName, lastName, countryId } = this._splitNameAndCountry(form);
+
+    this.athleteService.createAthlete({ firstName, lastName, countryId }).subscribe({
+      next: (api: V2Athlete): void => {
+        const country: CountryStats | undefined =
+          this.dataService.countriesData().find(c => c.countryName === form.countryName);
+
+        const mapped: Athlete = { id: api.id, name: `${api.firstName} ${api.lastName}`, countryId: api.country?.id ?? countryId,
+                                  countryCode: api.country?.code ?? country?.countryCode ?? '', countryName: form.countryName,
+                                  sport: '', sportRawName: '', scoreType: null, bestTime: null,
+                                  medals: { gold: 0, silver: 0, bronze: 0 } };
+
+        this.athleteService.patchAthleteAdd(api, mapped);
+        this.alertService.success(
+          this.translateService.instant('ALERT.ATHLETE.ADD').replace('[name]', mapped.name));
+
+        this.close();
+        this.athleteCreated.emit(mapped);
+      },
+      error: (error: HttpErrorResponse): void => {
+        console.error('Error creating athlete:', error);
+        this.alertService.error(
+          this.translateService.instant('ALERT.ATHLETE.ADD.ERROR').replace('[name]', form.name));
+      }
+    });
+  }
+
+  /**
+   * Splits a full name and resolves the countryId from the countries data.
+   */
+  private _splitNameAndCountry(form: AthleteForm): { firstName: string; lastName: string; countryId: number } {
+    const parts: string[] = form.name.trim().split(/\s+/);
+    const country: CountryStats | undefined =
+      this.dataService.countriesData().find(c => c.countryName === form.countryName);
+
+    return { firstName: parts[0] || '', lastName: parts.slice(1).join(' ') || '',
+             countryId: country?.countryId ?? 0 };
   }
 }
