@@ -239,7 +239,7 @@ export class AthleteViewComponent {
     return athlete.results.filter(r => r.medal !== null)
       .map((r: V2SportResult): AthleteResult => ({
         sport: r.sportName,
-        result: (r.result ?? '').replace(/\s*(pts|wins)$/i, '').trim(), // TODO: Remove this annoying suffix everywhere
+        result: (r.result ?? '').replace(/\s*(pts|wins)$/i, '').trim(),
         scoreType: r.scoreType ?? null,
         medal: r.medal!.toLowerCase() as 'gold' | 'silver' | 'bronze'
       }))
