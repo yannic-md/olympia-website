@@ -60,4 +60,29 @@ export interface DisciplineParticipant {
   medal: 'GOLD' | 'SILVER' | 'BRONZE' | null;
   result: string | null;
   rank: number | null;
+  resultId: number | null;
+}
+
+/** Payload sent to POST /api/results */
+export interface ResultPayload {
+  athleteId: number;
+  sportId: number;
+  medal: 'GOLD' | 'SILVER' | 'BRONZE';
+  timeOrPoints: string;
+  scoreType: string | null;
+  rank?: number | null;
+}
+
+/** Response from POST /api/results */
+export interface ResultResponse {
+  id: number;
+  athleteId: number;
+  athleteFirstName: string;
+  athleteLastName: string;
+  sportId: number;
+  sportRawName: string;
+  medal: string;
+  timeOrPoints: string;
+  scoreType: string;
+  rank: number | null;
 }

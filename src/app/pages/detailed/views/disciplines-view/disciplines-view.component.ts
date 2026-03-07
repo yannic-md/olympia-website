@@ -7,13 +7,13 @@ import {DisciplineWinnerRowComponent} from '../../../../layout/elements/discipli
 import {DataHolderService} from '../../../../services/data-holder/data-holder.service';
 import {AuthService} from '../../../../services/api/auth/auth.service';
 import {AthleteService} from '../../../../services/api/athlete/athlete.service';
-import {CountryService} from '../../../../services/api/country/country.service';
 import {AlertService} from '../../../../services/api/alert/alert.service';
+import {ResultService} from '../../../../services/api/result/result.service';
 import {AthleteForm, V2Athlete} from '../../../../types/Athlete';
-import {CountryForm, CountryStats} from '../../../../types/Country';
+import {CountryStats} from '../../../../types/Country';
 import {DisciplineCard, DisciplineParticipant,
   DisciplineResultForm,
-  DisciplineWinner, V2Sport,
+  DisciplineWinner, ResultPayload, ResultResponse, V2Sport,
 } from '../../../../types/Disciplines';
 import {ModalDisciplineComponent} from '../../../../layout/sections/modal/modal-discipline/modal-discipline.component';
 import {ModalAthleteComponent} from '../../../../layout/sections/modal/modal-athlete/modal-athlete.component';
@@ -49,8 +49,8 @@ export class DisciplinesViewComponent {
   protected suspendedAthleteForm: WritableSignal<AthleteForm | null> = signal(null);
 
   constructor(protected dataService: DataHolderService, protected authService: AuthService,
-              private athleteService: AthleteService, private countryService: CountryService,
-              private alertService: AlertService, private translateService: TranslateService) {}
+              private athleteService: AthleteService, private alertService: AlertService,
+              private translateService: TranslateService, private resultService: ResultService) {}
 
   /**
    * Marks a sport card image as failed so the fallback placeholder is rendered instead.
@@ -181,23 +181,73 @@ export class DisciplinesViewComponent {
 
   /**
    * Handles a submitted discipline result from the modal.
+   * Resolves the sport ID from the raw name, calls the upsert endpoint and
+   * patches all local stores on success.
    *
    * @param {DisciplineResultForm} form - The submitted discipline result form data.
    */
   protected onSubmitDisciplineResult(form: DisciplineResultForm): void {
-    console.log('Discipline result submitted:', form);
-    // TODO: call backend service, reload data, show alert
+    const sport: V2Sport | undefined = this.dataService.sports().find(s => s.rawName === form.sportRawName);
+    if (!sport) {
+      this.alertService.error(this.translateService.instant('ALERT.RESULT.ADD.ERROR'));
+      return;
+    }
+
+    const medalUpper = form.medal.toUpperCase() as 'GOLD' | 'SILVER' | 'BRONZE';
+    const payload: ResultPayload = { athleteId: form.athleteId, sportId: sport.id, medal: medalUpper,
+                                     timeOrPoints: form.resultValue, scoreType: sport.scoreType ?? null };
+
+    this.resultService.upsertResult(payload).subscribe({
+      next: (res: ResultResponse): void => {
+        const athleteName: string = form.athleteName ||
+          (this.dataService.athletes().find(a => a.id === form.athleteId)?.name ?? `#${form.athleteId}`);
+
+        this.resultService.patchResultUpsert(form.sportRawName, medalUpper, form.athleteId, res.athleteFirstName,
+                                             res.athleteLastName, res.id, res.timeOrPoints, sport.id, sport.name,
+                                             res.scoreType ?? sport.scoreType ?? null);
+
+        this.alertService.success(this.translateService.instant('ALERT.RESULT.ADD').replace('[name]', athleteName)
+                                                                                        .replace('[sport]', sport.name));
+      },
+      error: (error: HttpErrorResponse): void => {
+        console.error('Error upserting result:', error);
+        this.alertService.error(this.translateService.instant('ALERT.RESULT.ADD.ERROR'));
+      }
+    });
   }
 
   /**
-   * Marks a medal slot as locally deleted so it disappears from the grid immediately.
-   * The actual API call will be added later.
+   * Looks up the result ID for the given sport + medal slot, calls the delete
+   * endpoint, and patches the local stores on success.
    *
    * @param {string} rawName - The raw sport identifier of the discipline card.
    * @param {'gold' | 'silver' | 'bronze'} medal - The medal rank to remove.
    */
   protected onDeleteWinner(rawName: string, medal: 'gold' | 'silver' | 'bronze'): void {
-    // TODO: call backend delete endpoint
+    const upperMedal = medal.toUpperCase() as 'GOLD' | 'SILVER' | 'BRONZE';
+    const sport: V2Sport | undefined = this.dataService.sports().find(s => s.rawName === rawName);
+    const participant: DisciplineParticipant | undefined =
+      sport?.participants.find(p => p.medal === upperMedal);
+
+    if (!participant?.resultId) {
+      this.alertService.error(this.translateService.instant('ALERT.RESULT.DELETE.ERROR'));
+      return;
+    }
+
+    this.resultService.deleteResult(participant.resultId).subscribe({
+      next: (): void => {
+        this.resultService.patchResultDelete(rawName, upperMedal, participant.athleteId);
+        const athleteName: string = `${participant.firstName} ${participant.lastName}`.trim();
+        const sportName: string = sport?.name ?? rawName;
+
+        this.alertService.success(this.translateService.instant('ALERT.RESULT.DELETE').replace('[name]', athleteName)
+                                                                                           .replace('[sport]', sportName));
+      },
+      error: (error: HttpErrorResponse): void => {
+        console.error('Error deleting result:', error);
+        this.alertService.error(this.translateService.instant('ALERT.RESULT.DELETE.ERROR'));
+      }
+    });
   }
 
   /**
@@ -292,38 +342,25 @@ export class DisciplinesViewComponent {
   }
 
   /**
-   * Handles adding a new country from within the discipline → athlete → country chain.
+   * Handles the countryCreated event from the country sub-modal.
+   * The modal-country component already called the API and patched countriesData,
+   * so we only need to close the country modal and resume the athlete sub-modal
+   * with the newly created country pre-selected.
    *
-   * @param {CountryForm} form - The country form data.
+   * @param {CountryStats} created - The country that was just created.
    */
-  protected onAddCountryFromDiscipline(form: CountryForm): void {
-    this.countryService.createCountry({ code: form.countryCode.toUpperCase(), name: form.countryName }).subscribe({
-      next: (): void => {
-        this.dataService.load(); // TODO: Avoid loading all data again, only countries
-        this.isCountryModalOpen.set(false);
-        this.alertService.success(
-          this.translateService.instant('ALERT.COUNTRY.ADD').replace('[name]', form.countryName));
+  protected onAddCountryFromDiscipline(created: CountryStats): void {
+    this.isCountryModalOpen.set(false);
 
-        const suspended: AthleteForm | null = this.suspendedAthleteForm();
-        if (!suspended) { this.suspendedAthleteForm.set(null); return; }
+    const suspended: AthleteForm | null = this.suspendedAthleteForm();
+    if (!suspended) { return; }
 
-        const resumeForm: AthleteForm = {
-          ...suspended, countryName: form.countryName, countryCode: form.countryCode.toUpperCase()
-        };
+    const resumeForm: AthleteForm = { ...suspended,  countryName: created.countryName,  countryCode: created.countryCode };
 
-        setTimeout((): void => {
-          this.suspendedAthleteForm.set(resumeForm);
-          this.isAthleteModalOpen.set(true);
-        }, 150);
-      },
-      error: (error: HttpErrorResponse): void => {
-        console.error('Error creating country:', error);
-        if (error.status !== 409) {
-          this.alertService.error(
-            this.translateService.instant('ALERT.COUNTRY.ADD.ERROR').replace('[name]', form.countryName));
-        }
-      }
-    });
+    setTimeout((): void => {  // wait until data is ready
+      this.suspendedAthleteForm.set(resumeForm);
+      this.isAthleteModalOpen.set(true);
+    }, 150);
   }
 
   /**

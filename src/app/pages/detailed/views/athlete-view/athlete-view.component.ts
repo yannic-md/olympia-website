@@ -70,17 +70,13 @@ export class AthleteViewComponent {
     const athlete: Athlete | null = this.editingAthlete();
     if (!athlete) return null;
 
-    const rawBestTime: string = (athlete.bestTime || '')
-      .replace(/\s*pts$/i, '')
-      .replace(/\s*wins$/i, '')
-      .replace(/\s*(Siege|Punkte|Victoires|Points)$/i, '')
-      .trim();
+    const rawBestTime: string = (athlete.bestTime || '').replace(/\s*pts$/i, '').replace(/\s*wins$/i, '')
+                                                        .replace(/\s*(Siege|Punkte|Victoires|Points)$/i, '').trim();
 
-    return {
-      id: athlete.id, name: athlete.name, countryCode: athlete.countryCode,
-      countryName: athlete.countryName, sport: athlete.sport, sportRawName: athlete.sportRawName,
-      scoreType: athlete.scoreType, goldMedals: athlete.medals.gold, silverMedals: athlete.medals.silver,
-      bronzeMedals: athlete.medals.bronze, bestTime: rawBestTime,
+    return { id: athlete.id, name: athlete.name, countryCode: athlete.countryCode,
+             countryName: athlete.countryName, sport: athlete.sport, sportRawName: athlete.sportRawName,
+             scoreType: athlete.scoreType, goldMedals: athlete.medals.gold, silverMedals: athlete.medals.silver,
+             bronzeMedals: athlete.medals.bronze, bestTime: rawBestTime,
     };
   });
 
@@ -263,7 +259,7 @@ export class AthleteViewComponent {
     return athlete.results.filter(r => r.medal !== null)
       .map((r: V2SportResult): AthleteResult => ({ sport: r.sportName, result: r.result ?? '',
                                                    medal: r.medal!.toLowerCase() as 'gold' | 'silver' | 'bronze' }))
-      .sort((a, b) => medalOrder[a.medal] - medalOrder[b.medal]);
+      .sort((a, b) => (medalOrder[a.medal] - medalOrder[b.medal]) || a.sport.localeCompare(b.sport));
   }
 
   /**

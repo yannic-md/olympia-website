@@ -16,8 +16,7 @@ import {animate, style, transition, trigger} from '@angular/animations';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
 import {MiscService} from '../../../../services/misc/misc.service';
 import {Athlete, ScoreType} from '../../../../types/Athlete';
-import {SportEntry} from '../../../../services/api/sports/sports.service';
-import {DisciplineResultForm} from "../../../../types/Disciplines";
+import {DisciplineResultForm, V2Sport} from '../../../../types/Disciplines';
 
 @Component({
   selector: 'app-modal-discipline',
@@ -48,7 +47,7 @@ import {DisciplineResultForm} from "../../../../types/Disciplines";
 export class ModalDisciplineComponent {
   isOpen: InputSignal<boolean> = input.required<boolean>();
   athletes: InputSignal<Athlete[]> = input.required<Athlete[]>();
-  sports: InputSignal<SportEntry[]> = input.required<SportEntry[]>();
+  sports: InputSignal<V2Sport[]> = input.required<V2Sport[]>();
   countries: InputSignal<string[]> = input.required<string[]>();
   resumeData: InputSignal<DisciplineResultForm | null> = input<DisciplineResultForm | null>(null);
 
@@ -81,7 +80,7 @@ export class ModalDisciplineComponent {
     const rawName: string = this.formData().sportRawName;
     if (!rawName) return null;
 
-    const match: SportEntry | undefined = this.sports().find(s => s.rawName === rawName);
+    const match: V2Sport | undefined = this.sports().find(s => s.rawName === rawName);
     return match?.scoreType ?? null;
   });
 
@@ -150,6 +149,81 @@ export class ModalDisciplineComponent {
   }
 
   /**
+   * Validates that the entered result value is not worse than existing medal results
+   * for the currently selected sport.
+   *
+   * Rules per score type:
+   *  - TIME:  lower is better  → new value must be ≤ existing values for lower-ranked medals
+   *  - PTS:   higher is better → new value must be ≥ existing values for lower-ranked medals
+   *  - WINS:  higher is better → same as PTS
+   *
+   * @returns an i18n key string when invalid, or '' when valid.
+   */
+  protected rankingError: Signal<string> = computed((): string => {
+    const form: DisciplineResultForm = this.formData();
+    if (!form.sportRawName || !form.resultValue.trim() || !form.medal) return '';
+
+    const type: "TIME" | "PTS" | "WINS" | null = this.selectedScoreType();
+    if (!type) return '';
+
+    const numericValue: number | null = this.parseScore(form.resultValue.trim(), type);
+    if (numericValue === null) return ''; // format error handled separately
+
+    const sport: V2Sport | undefined = this.sports().find(s => s.rawName === form.sportRawName);
+    if (!sport) return '';
+
+    // Medal rank order: gold=1 is best, bronze=3 is worst
+    const medalRank: Record<string, number> = { gold: 1, silver: 2, bronze: 3 };
+    const currentRank: number = medalRank[form.medal];
+
+    for (const participant of sport.participants) {
+      if (!participant.medal || !participant.result) continue;
+      const otherMedal = participant.medal.toLowerCase() as 'gold' | 'silver' | 'bronze';
+      const otherRank: number = medalRank[otherMedal];
+      if (otherRank <= currentRank) continue;  // Only compare against medals that are worse (higher rank number).
+
+      const otherValue: number | null = this.parseScore(participant.result, type);
+      if (otherValue === null) continue;
+
+      if (type === 'TIME') {
+        // Lower time is better — my time must be ≤ the worse medal's time
+        if (numericValue > otherValue) return 'MODAL.DISCIPLINE.ERROR.RANKING';
+      } else {
+        // Higher score is better (PTS / WINS) — my score must be ≥ the worse medal's score
+        if (numericValue < otherValue) return 'MODAL.DISCIPLINE.ERROR.RANKING';
+      }
+    }
+    return '';
+  });
+
+  /**
+   * Parses a score string into a comparable number.
+   * TIME format "[[h:]mm:]ss[.ms]" is converted to total seconds.
+   * PTS and WINS are parsed as plain floats / integers.
+   * Strips trailing unit suffixes (" pts", " wins") before parsing.
+   *
+   * @param value The raw result string.
+   * @param type  The score type.
+   * @returns A comparable number, or null when parsing fails.
+   */
+  private parseScore(value: string, type: 'TIME' | 'PTS' | 'WINS'): number | null {
+    const formattedValue: string = value.trim().replace(/\s*(pts|wins)$/i, '');
+    if (!formattedValue) return null;
+
+    if (type === 'TIME') {
+      const parts: number[] = formattedValue.split(':').map(Number);
+      if (parts.some(isNaN)) return null;
+      if (parts.length === 1) return parts[0];
+      if (parts.length === 2) return parts[0] * 60 + parts[1];
+      if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      return null;
+    }
+
+    const numberValue: number = parseFloat(formattedValue);
+    return isNaN(numberValue) ? null : numberValue;
+  }
+
+  /**
    * Updates the selected athlete by ID, carrying over the athlete's name for display.
    *
    * @param {number} athleteId - The ID of the selected athlete.
@@ -157,7 +231,6 @@ export class ModalDisciplineComponent {
   protected onAthleteChange(athleteId: number): void {
     const id: number = Number(athleteId);
     const athlete: Athlete | undefined = this.athletes().find(a => a.id === id);
-
     this.formData.update(f => ({ ...f, athleteId: id, athleteName: athlete?.name ?? '' }));
   }
 
@@ -168,8 +241,9 @@ export class ModalDisciplineComponent {
     const f: DisciplineResultForm = this.formData();
     if (!f.athleteId || !f.sportRawName || !f.medal) return false;
     if (!f.resultValue.trim()) return false;
+    if (this.resultError() !== '') return false;
 
-    return this.resultError() === '';
+    return this.rankingError() === '';
   });
 
   /**
