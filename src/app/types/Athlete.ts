@@ -45,6 +45,7 @@ export interface AthleteResult {
   sport: string;
   medal: 'gold' | 'silver' | 'bronze';
   result: string;
+  scoreType: ScoreType | null;
 }
 
 // athlete object for sublist items of a country

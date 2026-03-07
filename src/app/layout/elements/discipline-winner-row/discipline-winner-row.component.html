@@ -8,7 +8,7 @@
 
         <app-table-country-badge [code]="winner()!.countryCode" [name]="winner()!.countryName" [smallVersion]="true" />
       </div>
-      <span class="text-xs font-mono text-gray-500 shrink-0">{{ winner()!.result }}</span>
+      <span class="text-xs font-mono text-gray-500 shrink-0">{{ formatResult(winner()!) }}</span>
 
       @if (this.authService.isLoggedIn()) {
         <button (click)="deleteWinner.emit(medalType())" class="p-1 rounded-full hover:bg-gray-100 transition-colors">

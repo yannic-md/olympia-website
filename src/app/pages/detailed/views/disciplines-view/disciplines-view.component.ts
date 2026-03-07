@@ -176,7 +176,8 @@ export class DisciplinesViewComponent {
     if (!sportNameMatches && !this.participantMatchesQuery(participant, query)) { return null; }
 
     return { name: fullName, countryCode: (participant.countryCode ?? '').toLowerCase(),
-             countryName: countryName, result: participant.result ?? ''};
+             countryName: countryName, result: (participant.result ?? '').replace(/\s*(pts|wins)$/i, '').trim(),
+             scoreType: sport.scoreType ?? null };
   }
 
   /**

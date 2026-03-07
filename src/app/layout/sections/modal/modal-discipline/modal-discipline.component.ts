@@ -180,17 +180,21 @@ export class ModalDisciplineComponent {
       if (!participant.medal || !participant.result) continue;
       const otherMedal = participant.medal.toLowerCase() as 'gold' | 'silver' | 'bronze';
       const otherRank: number = medalRank[otherMedal];
-      if (otherRank <= currentRank) continue;  // Only compare against medals that are worse (higher rank number).
+      if (otherRank === currentRank) continue; // Skip same medal (own entry being edited)
 
       const otherValue: number | null = this.parseScore(participant.result, type);
       if (otherValue === null) continue;
 
       if (type === 'TIME') {
-        // Lower time is better — my time must be ≤ the worse medal's time
-        if (numericValue > otherValue) return 'MODAL.DISCIPLINE.ERROR.RANKING';
+        // - My time must be ≤ a worse medal's time  (otherRank > currentRank → I should be faster)
+        // - My time must be ≥ a better medal's time (otherRank < currentRank → I should be slower)
+        if (otherRank > currentRank && numericValue > otherValue) return 'MODAL.DISCIPLINE.ERROR.RANKING';
+        if (otherRank < currentRank && numericValue < otherValue) return 'MODAL.DISCIPLINE.ERROR.RANKING';
       } else {
-        // Higher score is better (PTS / WINS) — my score must be ≥ the worse medal's score
-        if (numericValue < otherValue) return 'MODAL.DISCIPLINE.ERROR.RANKING';
+        // - My score must be ≥ a worse medal's score  (otherRank > currentRank → I should score more)
+        // - My score must be ≤ a better medal's score (otherRank < currentRank → I should score less)
+        if (otherRank > currentRank && numericValue < otherValue) return 'MODAL.DISCIPLINE.ERROR.RANKING';
+        if (otherRank < currentRank && numericValue > otherValue) return 'MODAL.DISCIPLINE.ERROR.RANKING';
       }
     }
     return '';

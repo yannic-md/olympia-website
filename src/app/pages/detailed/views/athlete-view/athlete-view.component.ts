@@ -257,8 +257,12 @@ export class AthleteViewComponent {
 
     // return the list of sport results ONLY if there's a medal & convert it to AthleteResult
     return athlete.results.filter(r => r.medal !== null)
-      .map((r: V2SportResult): AthleteResult => ({ sport: r.sportName, result: r.result ?? '',
-                                                   medal: r.medal!.toLowerCase() as 'gold' | 'silver' | 'bronze' }))
+      .map((r: V2SportResult): AthleteResult => ({
+        sport: r.sportName,
+        result: (r.result ?? '').replace(/\s*(pts|wins)$/i, '').trim(), // TODO: Remove this annoying suffix everywhere
+        scoreType: r.scoreType ?? null,
+        medal: r.medal!.toLowerCase() as 'gold' | 'silver' | 'bronze'
+      }))
       .sort((a, b) => (medalOrder[a.medal] - medalOrder[b.medal]) || a.sport.localeCompare(b.sport));
   }
 

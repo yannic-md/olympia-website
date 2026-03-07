@@ -105,7 +105,15 @@
               </td>
 
               <!-- Result -->
-              <td class="py-2.5 pr-4 font-mono text-sm text-gray-600">{{ result.result }}</td>
+              <td class="py-2.5 pr-4 font-mono text-sm text-gray-600">
+                @if (result.scoreType === 'PTS') {
+                  {{ result.result }} {{ 'MODAL.ATHLETE.POINTS' | translate }}
+                } @else if (result.scoreType === 'WINS') {
+                  {{ result.result }} {{ 'MODAL.ATHLETE.WINS' | translate }}
+                } @else {
+                  {{ result.result }}
+                }
+              </td>
 
               <!-- Medal: three pill-aligned slots matching TableMedalPills layout -->
               <td class="py-2.5 pr-4">

@@ -5,7 +5,7 @@ import { API_URL } from '../../../types/API';
 import { DataHolderService } from '../../data-holder/data-holder.service';
 import { MiscService } from '../../misc/misc.service';
 import {DisciplineParticipant, ResultPayload, ResultResponse, V2Sport, V2SportResult} from '../../../types/Disciplines';
-import { Athlete } from '../../../types/Athlete';
+import { Athlete, ScoreType } from '../../../types/Athlete';
 
 @Injectable({ providedIn: 'root' })
 export class ResultService {
@@ -108,7 +108,8 @@ export class ResultService {
 
           // Replace existing result for the same sport, or append a new one
           const existingResults: V2SportResult[] = (a.results ?? []).filter(r => r.sportRawName !== sportRawName);
-          const newResult: V2SportResult = { sportId,  sportName: sportDisplayName, sportRawName, scoreType: scoreType as any,
+          const newResult: V2SportResult = { sportId,  sportName: sportDisplayName, sportRawName,
+                                             scoreType: (scoreType ?? null) as ScoreType | null,
                                              result: timeOrPoints, rank: null, medal: upperMedal };
           return { ...a, results: [...existingResults, newResult] };
         }),

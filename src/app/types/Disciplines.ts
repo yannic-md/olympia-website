@@ -28,6 +28,7 @@ export interface DisciplineWinner {
   countryCode: string;
   countryName: string;
   result: string;
+  scoreType: ScoreType | null;
 }
 
 /** Aggregated discipline card data shown in the grid. */
