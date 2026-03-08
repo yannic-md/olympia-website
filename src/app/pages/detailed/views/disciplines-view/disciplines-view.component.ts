@@ -8,7 +8,7 @@ import {DataHolderService} from '../../../../services/data-holder/data-holder.se
 import {AuthService} from '../../../../services/api/auth/auth.service';
 import {AlertService} from '../../../../services/api/alert/alert.service';
 import {ResultService} from '../../../../services/api/result/result.service';
-import {Athlete, AthleteForm} from '../../../../types/Athlete';
+import {V2Athlete, AthleteForm} from '../../../../types/Athlete';
 import {CountryStats} from '../../../../types/Country';
 import {DisciplineCard, DisciplineParticipant,
   DisciplineResultForm,
@@ -199,8 +199,9 @@ export class DisciplinesViewComponent {
 
     this.resultService.upsertResult(payload).subscribe({
       next: (res: ResultResponse): void => {
+        const localAthlete = this.dataService.athletes().find(a => a.id === form.athleteId);
         const athleteName: string = form.athleteName ||
-          (this.dataService.athletes().find(a => a.id === form.athleteId)?.name ?? `#${form.athleteId}`);
+          (localAthlete ? `${localAthlete.firstName} ${localAthlete.lastName}` : `#${form.athleteId}`);
 
         this.resultService.patchResultUpsert(form.sportRawName, medalUpper, form.athleteId, res.athleteFirstName,
                                              res.athleteLastName, res.id, res.timeOrPoints, sport.id, sport.name,
@@ -275,10 +276,12 @@ export class DisciplinesViewComponent {
    * The modal has already called the API, patched all data stores and shown the success alert.
    * Here we only pre-select the new athlete in the suspended discipline form and re-open the discipline modal.
    *
-   * @param {Athlete} athlete - The newly created athlete.
+   * @param {V2Athlete} athlete - The newly created athlete.
    */
-  protected onAthleteCreated(athlete: Athlete): void {
-    this.suspendedDisciplineForm.update(f => f ? { ...f, athleteId: athlete.id, athleteName: athlete.name } : f);
+  protected onAthleteCreated(athlete: V2Athlete): void {
+    this.suspendedDisciplineForm.update(f =>
+      f ? { ...f, athleteId: athlete.id, athleteName: `${athlete.firstName} ${athlete.lastName}` } : f
+    );
 
     this.isAthleteModalOpen.set(false);
     this.suspendedAthleteForm.set(null);

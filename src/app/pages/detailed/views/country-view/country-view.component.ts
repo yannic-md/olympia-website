@@ -3,7 +3,7 @@ import {Component, computed, input, InputSignal, Signal, signal, WritableSignal}
 import {NgOptimizedImage} from '@angular/common';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
 import {HttpErrorResponse} from '@angular/common/http';
-import {Athlete} from '../../../../types/Athlete';
+import {V2Athlete} from '../../../../types/Athlete';
 import {CountryForm, CountryStats} from '../../../../types/Country';
 import {TableCountryBadgeComponent} from '../../../../layout/elements/table-country-badge/table-country-badge.component';
 import {TableMedalPillsComponent} from '../../../../layout/elements/table-medal-pills/table-medal-pills.component';
@@ -91,7 +91,7 @@ export class CountryViewComponent {
 
       // Also include the country if any of its athletes match the search query
       return this.dataService.athletes().some(
-        a => a.countryId === country.countryId && a.name.toLowerCase().includes(query)
+        a => a.country?.id === country.countryId && `${a.firstName} ${a.lastName}`.toLowerCase().includes(query)
       );
     });
   });
@@ -101,9 +101,9 @@ export class CountryViewComponent {
    * (only when the search does not match the country name itself) and sorted by total medals descending.
    *
    * @param {number} countryId - The ID of the country.
-   * @returns {Athlete[]} Filtered and sorted athletes.
+   * @returns {V2Athlete[]} Filtered and sorted athletes.
    */
-  protected athletesForCountry(countryId: number): Athlete[] {
+  protected athletesForCountry(countryId: number): V2Athlete[] {
     const query: string = this.searchQuery().toLowerCase();
     const country: CountryStats | undefined = this.dataService.countriesData()
       .find(c => c.countryId === countryId);
@@ -113,13 +113,15 @@ export class CountryViewComponent {
 
     return this.dataService.athletes()
       .filter(a => {
-        if (a.countryId !== countryId) return false;
+        if (a.country?.id !== countryId) return false;
 
         // Only filter athletes by name when the country itself doesn't match the search
-        if (!countryMatchesSearch) return a.name.toLowerCase().includes(query);
+        if (!countryMatchesSearch) return `${a.firstName} ${a.lastName}`.toLowerCase().includes(query);
         return true;
       })
-      .sort((a, b): number => sortByMedals(a, b, a.name, b.name, this.filterMedal()));
+      .sort((a, b): number =>
+        sortByMedals(a, b, `${a.firstName} ${a.lastName}`, `${b.firstName} ${b.lastName}`, this.filterMedal())
+      );
   }
 
   /**
@@ -156,7 +158,7 @@ export class CountryViewComponent {
 
     // Auto-expand if search matches an athlete but not the country name
     return !countryMatchesSearch && this.dataService.athletes()
-      .some(a => a.countryId === countryId && a.name.toLowerCase().includes(query));
+      .some(a => a.country?.id === countryId && `${a.firstName} ${a.lastName}`.toLowerCase().includes(query));
   }
 
   /**
@@ -182,7 +184,7 @@ export class CountryViewComponent {
       next: (): void => {
         // update all lists
         this.dataService.countriesData.update(current => current.filter(c => c.countryId !== countryId));
-        this.dataService.athletes.update(current => current.filter(a => a.countryId !== countryId));
+        this.dataService.athletes.update(current => current.filter(a => a.country?.id !== countryId));
         this.dataService.sports.update(current => current.map(s => ({
           ...s, participants: s.participants.filter(p => p.countryId !== countryId)
         })));

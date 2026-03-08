@@ -32,7 +32,7 @@
                         class="w-full appearance-none px-4 py-2 pr-8 border border-gray-300 rounded-lg cursor-pointer bg-white">
                   <option [value]="0" disabled>{{ 'MODAL.DISCIPLINES.ATHLETE.PLACEHOLDER' | translate }}</option>
                   @for (athlete of sortedAthletes(); track athlete.id) {
-                    <option [value]="athlete.id">{{ athlete.name }}</option>
+                    <option [value]="athlete.id">{{ athlete.firstName }} {{ athlete.lastName }}</option>
                   }
                 </select>
                 <img ngSrc="/assets/images/icons/chevron-down.svg" width="8" height="8" alt="Chevron Down"

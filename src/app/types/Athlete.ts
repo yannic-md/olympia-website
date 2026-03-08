@@ -19,20 +19,6 @@ export interface AthleteForm {
   bestTime: string;
 }
 
-// used to show statistics about the athlete (inside a table)
-export interface Athlete {
-  id: number;
-  name: string;
-  countryId: number;
-  countryCode: string;
-  countryName: string;
-  sport: string;
-  sportRawName: string;
-  scoreType: ScoreType | null;
-  medals: { gold: number; silver: number; bronze: number };
-  bestTime: string | null;
-}
-
 // used for CRUD operations (new)
 export interface AthletePayload {
   firstName: string;

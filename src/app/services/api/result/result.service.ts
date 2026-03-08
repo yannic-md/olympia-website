@@ -5,7 +5,7 @@ import { API_URL } from '../../../types/API';
 import { DataHolderService } from '../../data-holder/data-holder.service';
 import { MiscService } from '../../misc/misc.service';
 import {DisciplineParticipant, ResultPayload, ResultResponse, V2Sport, V2SportResult} from '../../../types/Disciplines';
-import { Athlete, ScoreType } from '../../../types/Athlete';
+import { ScoreType, V2Athlete } from '../../../types/Athlete';
 
 @Injectable({ providedIn: 'root' })
 export class ResultService {
@@ -56,7 +56,7 @@ export class ResultService {
   patchResultUpsert(sportRawName: string, medal: 'GOLD' | 'SILVER' | 'BRONZE', athleteId: number,
                     athleteFirstName: string, athleteLastName: string, resultId: number, timeOrPoints: string,
                     sportId: number, sportDisplayName: string, scoreType: string | null): void {
-    const localAthlete: Athlete | undefined = this.dataService.athletes().find(a => a.id === athleteId);
+    const localAthlete: V2Athlete | undefined = this.dataService.athletes().find(a => a.id === athleteId);
     const upperMedal = medal.toUpperCase() as 'GOLD' | 'SILVER' | 'BRONZE';
 
     // clean up previous holder of the medal slot
@@ -76,9 +76,9 @@ export class ResultService {
 
       const newParticipant: DisciplineParticipant = { athleteId, firstName: athleteFirstName, lastName: athleteLastName,
                                                       medal: upperMedal, result: timeOrPoints, rank: null, resultId,
-                                                      countryId: localAthlete?.countryId ?? null,
-                                                      countryCode: localAthlete?.countryCode ?? null,
-                                                      countryName: localAthlete?.countryName ?? null };
+                                                      countryId: localAthlete?.country?.id ?? null,
+                                                      countryCode: localAthlete?.country?.code ?? null,
+                                                      countryName: localAthlete?.country?.name ?? null };
 
       return { ...s, participants: [...filtered, newParticipant] };
     }));
@@ -166,11 +166,11 @@ export class ResultService {
    */
   private _patchAthleteMedals(athleteId: number, medal: 'GOLD' | 'SILVER' | 'BRONZE', operation: 'add' | 'remove'): void {
     const delta: 1 | -1 = operation === 'add' ? 1 : -1;
-    let affectedCountryId = 0;
+    let affectedCountryId: number = 0;
 
     this.dataService.athletes.update(list => list.map(a => {
       if (a.id !== athleteId) return a;
-      affectedCountryId = a.countryId;
+      affectedCountryId = a.country?.id ?? 0;
       const medals = { ...a.medals };
 
       if (medal === 'GOLD')   medals.gold   = Math.max(0, medals.gold   + delta);

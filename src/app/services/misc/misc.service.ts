@@ -57,7 +57,7 @@ export class MiscService {
    */
   recalcCountryMedals(countryId: number): void {
     if (!countryId) return;
-    const totals = this.dataService.athletes().filter(a => a.countryId === countryId)
+    const totals = this.dataService.athletes().filter(a => a.country?.id === countryId)
       .reduce((acc, a) => ({
         gold:   acc.gold   + (a.medals.gold   ?? 0),
         silver: acc.silver + (a.medals.silver ?? 0),

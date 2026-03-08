@@ -1,19 +1,19 @@
 import {computed, Injectable, Signal, signal, WritableSignal} from '@angular/core';
 import {HttpErrorResponse} from "@angular/common/http";
-import {Athlete, V2Athlete} from "../../types/Athlete";
+import {V2Athlete} from "../../types/Athlete";
 import {CountryStats, V2Country} from "../../types/Country";
 import {ApiService} from "../api/api.service";
 import {AlertService} from "../api/alert/alert.service";
 import {TranslateService} from "@ngx-translate/core";
 import {LeaderboardResponse} from "../../types/API";
-import {V2Sport, V2SportResult} from "../../types/Disciplines";
+import {V2Sport} from "../../types/Disciplines";
 
 @Injectable({ providedIn: 'root' })
 export class DataHolderService {
   readonly leaderboardData: WritableSignal<LeaderboardResponse | null> = signal<LeaderboardResponse | null>(null);
   readonly countriesData: WritableSignal<CountryStats[]> = signal<CountryStats[]>([]);
   readonly sports: WritableSignal<V2Sport[]> = signal<V2Sport[]>([]);
-  readonly athletes: WritableSignal<Athlete[]> = signal<Athlete[]>([]);
+  readonly athletes: WritableSignal<V2Athlete[]> = signal<V2Athlete[]>([]);
 
   readonly isLoading: WritableSignal<boolean> = signal<boolean>(false);
 
@@ -27,7 +27,7 @@ export class DataHolderService {
 
   /**
    * Loads the full leaderboard in a single request and maps the response
-   * into the existing Athlete / CountryStats signals so all views keep working.
+   * into the existing V2Athlete / CountryStats signals so all views keep working.
    * Prevents duplicate in-flight requests via the isLoading guard.
    */
   load(): void {
@@ -41,7 +41,7 @@ export class DataHolderService {
 
         this.leaderboardData.set(data);
         this.sports.set(data.sports);
-        this.athletes.set(this._mapAthletes(data.athletes));
+        this.athletes.set(data.athletes);
         this.countriesData.set(this._mapCountries(data.countries));
       },
       error: (error: HttpErrorResponse): void => {
@@ -52,25 +52,6 @@ export class DataHolderService {
     });
   }
 
-  /**
-   * Maps a list of `V2Athlete` objects to the legacy `Athlete` interface.
-   *
-   * The first sport result in `a.results` is used to populate the top-level
-   * sport-related fields for backward compatibility with existing views.
-   *
-   * @param {V2Athlete[]} v2Athletes List of athletes from the V2 API response.
-   * @returns {Athlete[]} An array of mapped athletes in the legacy `Athlete` format.
-   */
-  private _mapAthletes(v2Athletes: V2Athlete[]): Athlete[] {
-    return v2Athletes.map(a => {
-      const firstResult: V2SportResult = a.results?.[0];
-      return { id: a.id,  name: `${a.firstName} ${a.lastName}`,  countryId: a.country?.id ?? 0,
-               countryCode: a.country?.code ?? '', countryName: a.country?.name ?? '',
-               sport: firstResult?.sportName ?? '', sportRawName: firstResult?.sportRawName ?? '',
-               scoreType: firstResult?.scoreType ?? null, bestTime: firstResult?.result ?? null,
-               medals: { gold: a.medals.gold, silver: a.medals.silver, bronze: a.medals.bronze } };
-    });
-  }
 
   /**
    * Maps a list of `V2Country` objects from the V2 API to the legacy `CountryStats` interface.

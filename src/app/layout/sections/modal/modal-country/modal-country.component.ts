@@ -278,8 +278,8 @@ export class ModalCountryComponent {
         this.dataService.countriesData.update(current =>
           current.map(c => c.countryId !== existing.countryId ? c : updatedCountry));
         this.dataService.athletes.update(current =>
-          current.map(a => a.countryId !== existing.countryId ? a
-            : { ...a, countryCode: newCode, countryName: displayName }));
+          current.map(a => a.country?.id !== existing.countryId ? a
+            : { ...a, country: { ...a.country, code: newCode, name: displayName } }));
         this.dataService.sports.update(current => current.map(s => ({
           ...s, participants: s.participants.map(p => p.countryId !== existing.countryId ? p
             : { ...p, countryCode: newCode, countryName: displayName })

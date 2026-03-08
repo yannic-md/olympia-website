@@ -14,7 +14,7 @@ import {NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
 import {HttpErrorResponse} from "@angular/common/http";
 import {MiscService} from "../../../../services/misc/misc.service";
-import {Athlete, AthleteForm, V2Athlete} from "../../../../types/Athlete";
+import {AthleteForm, V2Athlete} from "../../../../types/Athlete";
 import {CountryStats} from "../../../../types/Country";
 import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {AthleteService} from "../../../../services/api/athlete/athlete.service";
@@ -49,14 +49,14 @@ import {AlertService} from "../../../../services/api/alert/alert.service";
 })
 export class ModalAthleteComponent {
   isOpen: InputSignal<boolean> = input.required<boolean>();
-  athletes: InputSignal<Athlete[]> = input.required<Athlete[]>();
+  athletes: InputSignal<V2Athlete[]> = input.required<V2Athlete[]>();
   countries: InputSignal<string[]> = input.required<string[]>();
   closeModal: OutputEmitterRef<void> = output<void>();
   openCountryModal: OutputEmitterRef<AthleteForm> = output<AthleteForm>();
 
   editData: InputSignal<AthleteForm | null> = input<AthleteForm | null>(null);
   resumeData: InputSignal<AthleteForm | null> = input<AthleteForm | null>(null);
-  athleteCreated: OutputEmitterRef<Athlete> = output<Athlete>();
+  athleteCreated: OutputEmitterRef<V2Athlete> = output<V2Athlete>();
   updateAthlete: OutputEmitterRef<AthleteForm> = output<AthleteForm>();
 
   protected formData: WritableSignal<AthleteForm> = signal(this.getEmptyForm());
@@ -107,9 +107,9 @@ export class ModalAthleteComponent {
   protected duplicateNameError: Signal<boolean> = computed((): boolean => {
     const currentName: string = this.formData().name.trim().toLowerCase();
     if (!currentName) return false;
-    return this.athletes().some((a: Athlete): boolean => {
+    return this.athletes().some((a: V2Athlete): boolean => {
       if (this.isEditMode() && a.id === this.editData()!.id) return false;
-      return a.name.trim().toLowerCase() === currentName;
+      return `${a.firstName} ${a.lastName}`.trim().toLowerCase() === currentName;
     });
   });
 
@@ -172,20 +172,12 @@ export class ModalAthleteComponent {
 
     this.athleteService.createAthlete({ firstName, lastName, countryId }).subscribe({
       next: (api: V2Athlete): void => {
-        const country: CountryStats | undefined =
-          this.dataService.countriesData().find(c => c.countryName === form.countryName);
-
-        const mapped: Athlete = { id: api.id, name: `${api.firstName} ${api.lastName}`, countryId: api.country?.id ?? countryId,
-                                  countryCode: api.country?.code ?? country?.countryCode ?? '', countryName: form.countryName,
-                                  sport: '', sportRawName: '', scoreType: null, bestTime: null,
-                                  medals: { gold: 0, silver: 0, bronze: 0 } };
-
-        this.athleteService.patchAthleteAdd(api, mapped);
+        this.athleteService.patchAthleteAdd(api);
         this.alertService.success(
-          this.translateService.instant('ALERT.ATHLETE.ADD').replace('[name]', mapped.name));
+          this.translateService.instant('ALERT.ATHLETE.ADD').replace('[name]', `${api.firstName} ${api.lastName}`));
 
         this.close();
-        this.athleteCreated.emit(mapped);
+        this.athleteCreated.emit(api);
       },
       error: (error: HttpErrorResponse): void => {
         console.error('Error creating athlete:', error);

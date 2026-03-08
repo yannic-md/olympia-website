@@ -2,16 +2,19 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_URL } from '../../../types/API';
-import {Athlete, AthletePayload, V2Athlete} from "../../../types/Athlete";
+import {AthletePayload, V2Athlete} from "../../../types/Athlete";
 import {DataHolderService} from "../../data-holder/data-holder.service";
 import {MiscService} from "../../misc/misc.service";
+import {TranslateService} from "@ngx-translate/core";
+import {V2CountryRef} from "../../../types/Country";
 
 @Injectable({
   providedIn: 'root'
 })
 export class AthleteService {
 
-  constructor(private http: HttpClient, private dataService: DataHolderService, private miscService: MiscService) {}
+  constructor(private http: HttpClient, private dataService: DataHolderService,
+              private miscService: MiscService, private translateService: TranslateService) {}
 
   /**
    * Creates a new athlete.
@@ -50,71 +53,55 @@ export class AthleteService {
 
   /**
    * Inserts a newly created athlete into all reactive stores.
-   * The `leaderboardData` raw store receives a minimal V2Athlete shell so that
-   * `resultsForAthlete()` in the athlete-view does not break.
    *
    * @param {V2Athlete} api - The API response returned after creation.
-   * @param {Athlete} mapped - Pre-built legacy Athlete object to push into `athletes`.
    */
-  patchAthleteAdd(api: V2Athlete, mapped: Athlete): void {
-    this.dataService.athletes.update(list => [...list, mapped]);
+  patchAthleteAdd(api: V2Athlete): void {
+    const normalised: V2Athlete = this._normalisedAthlete(api);
+    this.dataService.athletes.update(list => [...list, normalised]);
 
-    // Insert a minimal V2Athlete shell so resultsForAthlete() can find it
     this.dataService.leaderboardData.update(data => {
       if (!data) return data;
-      const shell: V2Athlete = {
-        id: api.id, firstName: api.firstName, lastName: api.lastName, leaderboardRank: 0, results: [],
-        country: api.country ? { id: api.country.id, code: api.country.code, name: api.country.name } : null,
-        medals: { gold: mapped.medals.gold, silver: mapped.medals.silver, bronze: mapped.medals.bronze, total: 0 } };
-      return { ...data, athletes: [...data.athletes, shell] };
+      return { ...data, athletes: [...data.athletes, normalised] };
     });
 
     // Update countryMedals if the athlete already has medals
-    if (mapped.medals.gold || mapped.medals.silver || mapped.medals.bronze) {
-      this.miscService.recalcCountryMedals(mapped.countryId);
+    if (normalised.medals.gold || normalised.medals.silver || normalised.medals.bronze) {
+      this.miscService.recalcCountryMedals(normalised.country?.id ?? 0);
     }
   }
 
   /**
    * Updates an existing athlete across all reactive stores.
-   * Only name, country and medal data are patched locally; sport/result details
-   * are kept from the previous state until the next full reload.
    *
    * @param {V2Athlete} api - The API response returned after the update.
-   * @param {Athlete} updated - The updated legacy Athlete object.
    * @param {number} previousCountryId - The country ID before the update (for medal recalc).
    */
-  patchAthleteUpdate(api: V2Athlete, updated: Athlete, previousCountryId: number): void {
+  patchAthleteUpdate(api: V2Athlete, previousCountryId: number): void {
+    const normalised: V2Athlete = this._normalisedAthlete(api);
+
     this.dataService.athletes.update(list =>
-      list.map(a => a.id === updated.id ? { ...a, ...updated } : a)
+      list.map(a => a.id === normalised.id ? { ...a, ...normalised } : a)
     );
 
     this.dataService.leaderboardData.update(data => {
       if (!data) return data;
-      return { ...data,
-        athletes: data.athletes.map(a => a.id === api.id ? {
-          ...a, firstName: api.firstName, lastName: api.lastName,
-          country: api.country ? { id: api.country.id, code: api.country.code, name: api.country.name } : null,
-          medals: { gold: updated.medals.gold, silver: updated.medals.silver,
-            bronze: updated.medals.bronze, total: updated.medals.gold + updated.medals.silver + updated.medals.bronze },
-        } : a),
-      };
+      return { ...data, athletes: data.athletes.map(a => a.id === normalised.id ? { ...a, ...normalised } : a) };
     });
 
     // Recalc medals for old and new country
-    if (previousCountryId !== updated.countryId) {
+    if (previousCountryId !== (normalised.country?.id ?? 0)) {
       this.miscService.recalcCountryMedals(previousCountryId);
     }
-    this.miscService.recalcCountryMedals(updated.countryId);
+    this.miscService.recalcCountryMedals(normalised.country?.id ?? 0);
 
-    // Patch participant name/country in sports store
     this.dataService.sports.update(list => list.map(s => ({
       ...s,
-      participants: s.participants.map(p => p.athleteId !== api.id ? p : {
-        ...p, firstName: api.firstName, lastName: api.lastName,
-        countryId: api.country?.id ?? p.countryId,
-        countryCode: api.country?.code ?? p.countryCode,
-        countryName: api.country?.name ?? p.countryName,
+      participants: s.participants.map(p => p.athleteId !== normalised.id ? p : {
+        ...p, firstName: normalised.firstName, lastName: normalised.lastName,
+        countryId: normalised.country?.id ?? p.countryId,
+        countryCode: normalised.country?.code ?? p.countryCode,
+        countryName: normalised.country?.name ?? p.countryName,
       }),
     })));
   }
@@ -139,5 +126,29 @@ export class AthleteService {
     })));
 
     this.miscService.recalcCountryMedals(countryId);
+  }
+
+  /**
+   * Resolves the localised display name for a country ref based on the active language.
+   * Falls back to the raw `name` if no translation is available.
+   */
+  private resolveCountryName(country: V2CountryRef): string {
+    const lang: string = this.translateService.getCurrentLang() || 'en';
+    if (lang === 'de') return country.nameDe || country.nameEn || country.name;
+    if (lang === 'fr') return country.nameFr || country.nameEn || country.name;
+    return country.nameEn || country.name;
+  }
+
+  /**
+   * Returns a copy of the athlete with the country name resolved to the active language
+   * and safe defaults for `medals` and `results` in case the API omits them.
+   */
+  private _normalisedAthlete(api: V2Athlete): V2Athlete {
+    return {
+      ...api,
+      medals: api.medals ?? { gold: 0, silver: 0, bronze: 0, total: 0 },
+      results: api.results ?? [],
+      country: api.country ? { ...api.country, name: this.resolveCountryName(api.country) } : null,
+    };
   }
 }

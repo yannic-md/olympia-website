@@ -58,7 +58,7 @@
           <!-- Athlete Name -->
           <td class="py-4 pl-2 pr-4 lg:pr-0 font-semibold text-gray-800 font-olympic-sans tracking-wide">
             <div class="flex items-center gap-2">
-              {{ athlete.name }}
+              {{ athlete.firstName }} {{ athlete.lastName }}
               @if (athleteResults.length > 0) {
                 <img ngSrc="/assets/images/icons/chevron-down.svg" width="8" height="8" alt="Chevron Down"
                      class="w-2 h-2 text-gray-400 shrink-0 transition-transform duration-200"
@@ -69,7 +69,7 @@
 
           <!-- Country Flag & Name -->
           <td class="py-4 pr-4 lg:pr-0">
-            <app-table-country-badge [code]="athlete.countryCode" [name]="athlete.countryName" />
+            <app-table-country-badge [code]="athlete.country?.code ?? ''" [name]="athlete.country?.name ?? ''" />
           </td>
 
           <!-- Medal Count of the athlete -->

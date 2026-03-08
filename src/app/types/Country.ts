@@ -52,4 +52,7 @@ export interface V2CountryRef {
   id: number;
   code: string;
   name: string;
+  nameEn?: string;
+  nameDe?: string;
+  nameFr?: string;
 }

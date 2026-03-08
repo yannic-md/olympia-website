@@ -15,7 +15,7 @@ import {NgOptimizedImage} from '@angular/common';
 import {animate, style, transition, trigger} from '@angular/animations';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
 import {MiscService} from '../../../../services/misc/misc.service';
-import {Athlete, ScoreType} from '../../../../types/Athlete';
+import {ScoreType, V2Athlete} from '../../../../types/Athlete';
 import {DisciplineResultForm, V2Sport} from '../../../../types/Disciplines';
 
 @Component({
@@ -46,7 +46,7 @@ import {DisciplineResultForm, V2Sport} from '../../../../types/Disciplines';
 })
 export class ModalDisciplineComponent {
   isOpen: InputSignal<boolean> = input.required<boolean>();
-  athletes: InputSignal<Athlete[]> = input.required<Athlete[]>();
+  athletes: InputSignal<V2Athlete[]> = input.required<V2Athlete[]>();
   sports: InputSignal<V2Sport[]> = input.required<V2Sport[]>();
   countries: InputSignal<string[]> = input.required<string[]>();
   resumeData: InputSignal<DisciplineResultForm | null> = input<DisciplineResultForm | null>(null);
@@ -58,8 +58,10 @@ export class ModalDisciplineComponent {
   protected formData: WritableSignal<DisciplineResultForm> = signal(this.getEmptyForm());
 
   /** Athletes sorted alphabetically by name for the dropdown. */
-  protected sortedAthletes: Signal<Athlete[]> = computed((): Athlete[] =>
-    [...this.athletes()].sort((a, b) => a.name.localeCompare(b.name))
+  protected sortedAthletes: Signal<V2Athlete[]> = computed((): V2Athlete[] =>
+    [...this.athletes()].sort((a, b) =>
+      `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
+    )
   );
 
   constructor(protected miscService: MiscService, private translateService: TranslateService) {
@@ -234,8 +236,9 @@ export class ModalDisciplineComponent {
    */
   protected onAthleteChange(athleteId: number): void {
     const id: number = Number(athleteId);
-    const athlete: Athlete | undefined = this.athletes().find(a => a.id === id);
-    this.formData.update(f => ({ ...f, athleteId: id, athleteName: athlete?.name ?? '' }));
+    const athlete: V2Athlete | undefined = this.athletes().find(a => a.id === id);
+    this.formData.update(f => ({ ...f, athleteId: id,
+      athleteName: athlete ? `${athlete.firstName} ${athlete.lastName}` : '' }));
   }
 
   /**
