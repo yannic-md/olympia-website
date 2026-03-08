@@ -1,0 +1,108 @@
+<!-- Header row: title + action buttons -->
+<div class="mb-8 flex flex-col items-start justify-between lg:flex-row md:items-center">
+  <h2 class="text-4xl tracking-wide font-normal text-gray-900 mx-auto lg:mx-0 mb-4 lg:mb-0">
+    {{ 'PAGE.DETAILED.DISCIPLINES.TITLE' | translate }}
+  </h2>
+
+  @if (authService.isLoggedIn()) {
+    <div class="flex w-full justify-center gap-x-4 lg:w-auto lg:mx-0">
+      <button class="flex items-center gap-2 rounded bg-purple-500 px-4 py-2 text-sm font-semibold text-white
+                     transition hover:bg-purple-600 shadow-sm cursor-pointer">
+        <img ngSrc="/assets/images/icons/upload.svg" width="16" height="16" alt="Upload Icon" class="invert" />
+        {{ 'BUTTON.IMPORT' | translate }} <!-- TODO -->
+      </button>
+      <button (click)="suspendedDisciplineForm.set(null); isDisciplineModalOpen.set(true)"
+              class="flex items-center gap-2 rounded bg-green-500 px-4 py-2 text-sm font-semibold text-white
+                     transition hover:bg-green-600 shadow-sm cursor-pointer">
+        <img ngSrc="/assets/images/icons/plus.svg" width="16" height="16" alt="Plus Icon" class="invert" />
+        {{ 'MODAL.DISCIPLINES.ADD.TITLE' | translate }}
+      </button>
+    </div>
+  }
+</div>
+
+<!-- Data is still loading: Show spinning Image -->
+@if (dataService.isLoading()) {
+  <div class="flex justify-center items-center py-16 text-gray-400">
+    <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    </svg>
+  </div>
+
+<!-- Disciplines is empty.. Something is wrong here -->
+} @else if (disciplineCards().length === 0) {
+  <div class="w-full border border-gray-200 rounded-lg shadow-sm p-12 flex items-center justify-center">
+    <span class="text-sm text-gray-400">{{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}</span>
+  </div>
+
+<!-- Show all Sport disciplines -->
+} @else {
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    @for (card of disciplineCards(); track card.rawName) {
+      <div class="flex flex-col rounded-xl overflow-hidden border border-gray-200 shadow-sm
+                  bg-white hover:shadow-md transition-shadow duration-200">
+
+        <!-- Sport image / fallback placeholder -->
+        <div class="relative w-full h-44 overflow-hidden bg-gray-200">
+          @if (!imageErrors().has(card.rawName)) {
+            <img [ngSrc]="'/assets/images/disciplines/' + card.rawName.toLowerCase().replaceAll(' ', '-') + '-398w.jpg'"
+                 [alt]="card.displayName" height="398" width="176" (error)="onImageError(card.rawName)"
+                 class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" />
+          } @else {
+            <!-- Fallback placeholder with sport icon -->
+            <div class="w-full h-full flex flex-col items-center justify-center gap-2 bg-linear-to-br
+                        from-gray-100 to-gray-300">
+              <span class="text-5xl opacity-50">🏅</span>
+              <span class="text-base text-gray-400 font-medium">{{ card.displayName }}</span>
+            </div>
+          }
+
+          <!-- Dark gradient overlay (only when image loaded) -->
+          @if (!imageErrors().has(card.rawName)) {
+            <div class="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent"></div>
+            <span class="absolute bottom-3 left-4 text-white font-semibold text-base tracking-wide drop-shadow">
+              {{ card.displayName }}
+            </span>
+          }
+        </div>
+
+        <!-- Winners section -->
+        <div class="flex flex-col divide-y divide-gray-200 flex-1">
+          @if (!card.gold && !card.silver && !card.bronze) {
+            <!-- Single "no winner" row if no medal data was found for a discipline -->
+            <div class="flex items-center gap-3 px-4 py-2 text-gray-400">
+              <span class="text-lg shrink-0">🏅</span>
+              <span class="text-sm italic">{{ 'PAGE.DETAILED.DISCIPLINES.NO_WINNER' | translate }}</span>
+            </div>
+          } @else {
+
+            <!-- Show correct medal(s) based on Winner and result -->
+            <app-discipline-winner-row medal="🥇" medalType="gold"   [winner]="card.gold"   [activeFilter]="filterMedal()"
+                                       (deleteWinner)="onDeleteWinner(card.rawName, $event)" />
+            <app-discipline-winner-row medal="🥈" medalType="silver" [winner]="card.silver" [activeFilter]="filterMedal()"
+                                       (deleteWinner)="onDeleteWinner(card.rawName, $event)" />
+            <app-discipline-winner-row medal="🥉" medalType="bronze" [winner]="card.bronze" [activeFilter]="filterMedal()"
+                                       (deleteWinner)="onDeleteWinner(card.rawName, $event)" />
+          }
+        </div>
+      </div>
+    }
+  </div>
+}
+
+<!-- Discipline result modal -->
+<app-modal-discipline [isOpen]="isDisciplineModalOpen()" [athletes]="dataService.athletes()" [sports]="dataService.sports()"
+                      [countries]="dataService.countries()" [resumeData]="suspendedDisciplineForm()"
+                      (closeModal)="onCloseDisciplineModal()" (submitResult)="onSubmitDisciplineResult($event)"
+                      (openAthleteModal)="onOpenAthleteModalFromDiscipline($event)" />
+
+<!-- Athlete sub-modal (opened from within the discipline modal) -->
+<app-modal-athlete [isOpen]="isAthleteModalOpen()" [athletes]="dataService.athletes()" [countries]="dataService.countries()"
+                   [editData]="null" [resumeData]="suspendedAthleteForm()" (closeModal)="onCloseAthleteModal()"
+                   (athleteCreated)="onAthleteCreated($event)"
+                   (openCountryModal)="onOpenCountryModalFromAthlete($event)" />
+
+<!-- Country sub-modal (opened from within the athlete sub-modal) -->
+<app-modal-country [isOpen]="isCountryModalOpen()" [existingCountries]="dataService.countriesData()"
+                   (closeModal)="onCloseCountryModal()" (countryCreated)="onAddCountryFromDiscipline($any($event))" />

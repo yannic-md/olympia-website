@@ -9,6 +9,21 @@ import {authInterceptor} from "./interceptors/auth.interceptor";
 import {provideTranslateService} from "@ngx-translate/core";
 import {provideTranslateHttpLoader} from "@ngx-translate/http-loader";
 
+/** Resolves the correct locale synchronously before the app starts. */
+function resolveInitialLang(): string {
+  if (typeof localStorage !== 'undefined') {
+    switch (localStorage.getItem('lang')) {
+      case 'French':  return 'fr';
+      case 'English': return 'en';
+      case 'German':  return 'de';
+    }
+  }
+
+  // Fall back to browser language
+  const browserLang = (navigator?.language ?? 'de').split('-')[0];
+  return ['de', 'en', 'fr'].includes(browserLang) ? browserLang : 'de';
+}
+
 export const appConfig: ApplicationConfig = {
   providers: [provideRouter(routes), provideClientHydration(withNoHttpTransferCache()), provideAnimationsAsync(),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
@@ -18,6 +33,6 @@ export const appConfig: ApplicationConfig = {
         suffix: '.json'
       }),
       fallbackLang: 'de',
-      lang: 'de'
+      lang: resolveInitialLang()
     })]
 };

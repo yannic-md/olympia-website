@@ -1,3 +1,7 @@
+import {MedalSummary} from "./API";
+import {V2CountryRef} from "./Country";
+import {V2SportResult} from "./Disciplines";
+
 export type ScoreType = 'TIME' | 'PTS' | 'WINS';
 
 // used in forms
@@ -27,4 +31,38 @@ export interface Athlete {
   scoreType: ScoreType | null;
   medals: { gold: number; silver: number; bronze: number };
   bestTime: string | null;
+}
+
+// used for CRUD operations (new)
+export interface AthletePayload {
+  firstName: string;
+  lastName: string;
+  countryId: number;
+}
+
+// Sorted list of sport results with translated names.
+export interface AthleteResult {
+  sport: string;
+  medal: 'gold' | 'silver' | 'bronze';
+  result: string;
+  scoreType: ScoreType | null;
+}
+
+// athlete object for sublist items of a country
+export interface V2AthleteRef {
+  id: number;
+  firstName: string;
+  lastName: string;
+  medals: MedalSummary;
+}
+
+// raw api data to get the athlete object
+export interface V2Athlete {
+  id: number;
+  firstName: string;
+  lastName: string;
+  country: V2CountryRef | null;
+  medals: MedalSummary;
+  leaderboardRank: number;
+  results: V2SportResult[];
 }

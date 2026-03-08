@@ -12,9 +12,14 @@ import {
 import {FormsModule} from "@angular/forms";
 import {NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
+import {HttpErrorResponse} from "@angular/common/http";
 import {MiscService} from "../../../../services/misc/misc.service";
-import {AthleteForm, ScoreType} from "../../../../types/Athlete";
+import {Athlete, AthleteForm, V2Athlete} from "../../../../types/Athlete";
+import {CountryStats} from "../../../../types/Country";
 import {TranslatePipe, TranslateService} from "@ngx-translate/core";
+import {AthleteService} from "../../../../services/api/athlete/athlete.service";
+import {DataHolderService} from "../../../../services/data-holder/data-holder.service";
+import {AlertService} from "../../../../services/api/alert/alert.service";
 
 @Component({
   selector: 'app-modal-athlete',
@@ -44,35 +49,37 @@ import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 })
 export class ModalAthleteComponent {
   isOpen: InputSignal<boolean> = input.required<boolean>();
+  athletes: InputSignal<Athlete[]> = input.required<Athlete[]>();
   countries: InputSignal<string[]> = input.required<string[]>();
-  sports: InputSignal<{ name: string; rawName: string; scoreType: ScoreType }[]> = input.required<{ name: string; rawName: string; scoreType: ScoreType }[]>();
   closeModal: OutputEmitterRef<void> = output<void>();
+  openCountryModal: OutputEmitterRef<AthleteForm> = output<AthleteForm>();
 
   editData: InputSignal<AthleteForm | null> = input<AthleteForm | null>(null);
-  addAthlete: OutputEmitterRef<AthleteForm> = output<AthleteForm>();
+  resumeData: InputSignal<AthleteForm | null> = input<AthleteForm | null>(null);
+  athleteCreated: OutputEmitterRef<Athlete> = output<Athlete>();
   updateAthlete: OutputEmitterRef<AthleteForm> = output<AthleteForm>();
 
   protected formData: WritableSignal<AthleteForm> = signal(this.getEmptyForm());
-  protected scoreError: WritableSignal<string> = signal('');
   protected nameError: WritableSignal<string> = signal('');
   protected isEditMode: Signal<boolean> = computed((): boolean => this.editData() !== null);
 
-  /** The active scoreType based on the currently selected sport */
-  protected activeScoreType: Signal<ScoreType | null> = computed((): ScoreType | null => this.formData().scoreType);
-
-  protected readonly scoreTypeLabels: Record<ScoreType, string> = {
-    TIME: 'MODAL.ATHLETE.BESTTIME', PTS: 'MODAL.ATHLETE.POINTS', WINS: 'MODAL.ATHLETE.WINS'};
-
-  protected readonly scoreTypePlaceholders: Record<ScoreType, string> = {
-    TIME: '3:24.56', PTS:  '335.30', WINS: '12'};
-
-  constructor(protected miscService: MiscService, private translateService: TranslateService) {
+  constructor(protected miscService: MiscService, private translateService: TranslateService,
+              private athleteService: AthleteService, private dataService: DataHolderService,
+              private alertService: AlertService) {
     // set data if user wants to edit instead of add
     effect((): void => {
       const data: AthleteForm | null = this.editData();
       if (data) {
         this.formData.set({ ...data });
-        this.scoreError.set('');
+        this.nameError.set('');
+      }
+    });
+
+    // restore suspended form state when returning from country creation
+    effect((): void => {
+      const data: AthleteForm | null = this.resumeData();
+      if (data) {
+        this.formData.set({ ...data });
         this.nameError.set('');
       }
     });
@@ -94,28 +101,26 @@ export class ModalAthleteComponent {
   }
 
   /**
-   * Updates the selected sport and derives the scoreType from the sports input list.
-   * Resets the score input field to avoid stale validation state.
+   * Returns true when the entered athlete name already exists in the athletes list.
+   * In edit mode the athlete's own current name is excluded from the check.
    */
-  protected onSportChange(sport: string): void {
-    const entry = this.sports().find(s => s.name === sport);
-    const scoreType: ScoreType | null = entry?.scoreType ?? null;
-    const sportRawName: string = entry?.rawName ?? sport;
-
-    this.formData.update(current => ({ ...current, sport, sportRawName, scoreType, bestTime: '' }));
-    this.scoreError.set('');
-  }
+  protected duplicateNameError: Signal<boolean> = computed((): boolean => {
+    const currentName: string = this.formData().name.trim().toLowerCase();
+    if (!currentName) return false;
+    return this.athletes().some((a: Athlete): boolean => {
+      if (this.isEditMode() && a.id === this.editData()!.id) return false;
+      return a.name.trim().toLowerCase() === currentName;
+    });
+  });
 
   /**
-   * Computed signal — true when all required fields are filled and the score input is valid.
+   * Computed signal — true when all required fields are filled and no validation errors exist.
    */
   protected isFormValid: Signal<boolean> = computed((): boolean => {
     const data: AthleteForm = this.formData();
-    if (!data.name.trim() || !data.countryName || !data.sport) return false;
-    if (this.scoreError() !== '' || this.nameError() !== '') return false;
-
-    // Score field is required only when a scoreType is known
-    return !(data.scoreType !== null && data.bestTime.trim() === '');
+    if (!data.name.trim() || !data.countryName) return false;
+    if (this.nameError() !== '') return false;
+    return !this.duplicateNameError();
   });
 
   /**
@@ -134,80 +139,71 @@ export class ModalAthleteComponent {
   }
 
   /**
-   * Validates the score input field based on the active scoreType.
-   * TIME: MM:SS.mm / SS.mm / SS
-   * PTS:  positive decimal number
-   * WINS: non-negative integer
-   *
-   * @param {string} value - The value to set
-   */
-  protected onScoreInputChange(value: string): void {
-    this.miscService.updateField(this.formData, 'bestTime', value);
-    if (!value.trim()) {
-      this.scoreError.set('');
-      return;
-    }
-
-    const scoreType: ScoreType | null = this.formData().scoreType;
-
-    if (scoreType === 'TIME') {
-      const valid: boolean = /^(?:\d{1,2}:)?\d{1,2}(?:\.\d{1,2})?$/.test(value);
-      this.scoreError.set(valid ? '' : this.translateService.instant('MODAL.ATHLETE.ERROR.BESTTIME'));
-    } else if (scoreType === 'PTS') {
-      const valid: boolean = /^\d+(\.\d+)?$/.test(value);
-      this.scoreError.set(valid ? '' : this.translateService.instant('MODAL.ATHLETE.ERROR.POINTS'));
-    } else if (scoreType === 'WINS') {
-      const valid: boolean = /^\d+$/.test(value);
-      this.scoreError.set(valid ? '' : this.translateService.instant('MODAL.ATHLETE.ERROR.WINS'));
-    } else {
-      this.scoreError.set('');
-    }
-  }
-
-  /**
-   * Formats the best time to a canonical "M:SS.mm" or "SS.mm" format before submission.
-   *
-   * @param {string} value - The input time value to format
-   * @returns {string} The formatted time string
-   */
-  private formatBestTime(value: string): string {
-    if (!value.trim()) return '';
-    const match: RegExpMatchArray | null = value.match(/^(?:(\d{1,2}):)?(\d{1,2})(?:\.(\d{1,2}))?$/);
-    if (!match) return value;
-
-    const minutes: string = match[1] ?? '';
-    const seconds: string = match[2].padStart(2, '0');
-    const ms: string = match[3] ? match[3].padEnd(2, '0') : '00';
-    return minutes ? `${minutes}:${seconds}.${ms}` : `${seconds}.${ms}`;
-  }
-
-  /**
    * Closes the modal, resets the form data to initial state, and emits the close event.
    */
   protected close(): void {
     this.formData.set(this.getEmptyForm());
-    this.scoreError.set('');
     this.nameError.set('');
     this.closeModal.emit();
   }
 
   /**
-   * Submits the athlete form, formats TIME values and emits to the parent.
+   * Submits the athlete form.
    */
   protected onSubmit(): void {
     if (!this.isFormValid()) { return; }
-    const submissionData = { ...this.formData() };
-
-    if (submissionData.scoreType === 'TIME' && submissionData.bestTime) {
-      submissionData.bestTime = this.formatBestTime(submissionData.bestTime);
-    }
 
     if (this.isEditMode()) {
-      this.updateAthlete.emit(submissionData);
-    } else {
-      this.addAthlete.emit(submissionData);
+      this.updateAthlete.emit({ ...this.formData() });
+      this.close();
+      return;
     }
 
-    this.close();
+    this._submitCreate({ ...this.formData() });
+  }
+
+  /**
+   * Calls the athlete creation API, patches all local stores and emits `athleteCreated`.
+   *
+   * @param {AthleteForm} form - The validated form data.
+   */
+  private _submitCreate(form: AthleteForm): void {
+    const { firstName, lastName, countryId } = this._splitNameAndCountry(form);
+
+    this.athleteService.createAthlete({ firstName, lastName, countryId }).subscribe({
+      next: (api: V2Athlete): void => {
+        const country: CountryStats | undefined =
+          this.dataService.countriesData().find(c => c.countryName === form.countryName);
+
+        const mapped: Athlete = { id: api.id, name: `${api.firstName} ${api.lastName}`, countryId: api.country?.id ?? countryId,
+                                  countryCode: api.country?.code ?? country?.countryCode ?? '', countryName: form.countryName,
+                                  sport: '', sportRawName: '', scoreType: null, bestTime: null,
+                                  medals: { gold: 0, silver: 0, bronze: 0 } };
+
+        this.athleteService.patchAthleteAdd(api, mapped);
+        this.alertService.success(
+          this.translateService.instant('ALERT.ATHLETE.ADD').replace('[name]', mapped.name));
+
+        this.close();
+        this.athleteCreated.emit(mapped);
+      },
+      error: (error: HttpErrorResponse): void => {
+        console.error('Error creating athlete:', error);
+        this.alertService.error(
+          this.translateService.instant('ALERT.ATHLETE.ADD.ERROR').replace('[name]', form.name));
+      }
+    });
+  }
+
+  /**
+   * Splits a full name and resolves the countryId from the countries data.
+   */
+  private _splitNameAndCountry(form: AthleteForm): { firstName: string; lastName: string; countryId: number } {
+    const parts: string[] = form.name.trim().split(/\s+/);
+    const country: CountryStats | undefined =
+      this.dataService.countriesData().find(c => c.countryName === form.countryName);
+
+    return { firstName: parts[0] || '', lastName: parts.slice(1).join(' ') || '',
+             countryId: country?.countryId ?? 0 };
   }
 }

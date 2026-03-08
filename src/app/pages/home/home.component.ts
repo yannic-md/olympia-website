@@ -1,4 +1,4 @@
-import {Component, OnDestroy, signal, WritableSignal} from '@angular/core';
+import {Component, computed, OnDestroy, Signal, signal, WritableSignal} from '@angular/core';
 import {HeaderComponent} from "../../layout/sections/header/header.component";
 import {BreadcrumbComponent} from "../../layout/sections/breadcrumb/breadcrumb.component";
 import {NgClass, NgOptimizedImage} from "@angular/common";
@@ -6,13 +6,16 @@ import {FooterComponent} from "../../layout/sections/footer/footer.component";
 import {RouterLink} from "@angular/router";
 import {MiscService} from "../../services/misc/misc.service";
 import {AlertBoxComponent} from "../../layout/sections/alert-box/alert-box.component";
-import {Athlete} from "../../types/Athlete";
 import {HttpErrorResponse} from "@angular/common/http";
 import {AlertService} from "../../services/api/alert/alert.service";
-import {LeaderboardService} from "../../services/api/leaderboard/leaderboard.service";
 import {TableMedalPillsComponent} from "../../layout/elements/table-medal-pills/table-medal-pills.component";
+import {FilterSelectComponent} from "../../layout/elements/filter-select/filter-select.component";
 import {TranslatePipe, TranslateService} from "@ngx-translate/core";
-import {Subscription} from "rxjs";
+import {Subscription} from 'rxjs';
+import {ApiService} from "../../services/api/api.service";
+import {V2Sport} from "../../types/Disciplines";
+import {V2Country} from "../../types/Country";
+import {LeaderboardResponse} from "../../types/API";
 
 interface MedalWinner {
   rank: number;
@@ -35,77 +38,154 @@ interface MedalWinner {
     AlertBoxComponent,
     TableMedalPillsComponent,
     NgClass,
-    TranslatePipe
+    TranslatePipe,
+    FilterSelectComponent
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
 export class HomeComponent implements OnDestroy {
-  protected topCountries: MedalWinner[] = [];
-  private readonly translateSub: Subscription;
-  private isLoading: WritableSignal<boolean> = signal(false);
+  protected filterSport: WritableSignal<string> = signal('all');
+  protected isLoading: WritableSignal<boolean> = signal(false);
+  private allCountries: WritableSignal<V2Country[]> = signal<V2Country[]>([]);
+  protected allSports: WritableSignal<V2Sport[]> = signal<V2Sport[]>([]);
+  private readonly translateSub: Subscription | undefined;
+  private dataSub: Subscription | undefined;
 
-  constructor(protected miscService: MiscService, private leaderboardService: LeaderboardService,
+  constructor(protected miscService: MiscService, private apiService: ApiService,
               private alertService: AlertService, private translateService: TranslateService) {
+    this.loadData();
+
     this.translateSub = this.translateService.onLangChange.subscribe((): void => {
-      this.loadTopCountries();
+      this.loadData();
     });
   }
 
   /**
-   * Unsubscribes from the translation language change observable to prevent memory leaks on component destruction.
-   * */
+   * Lifecycle hook that is called when the component is destroyed.
+   * Unsubscribes from the translation language change stream to prevent memory leaks.
+   */
   ngOnDestroy(): void {
     if (this.translateSub) { this.translateSub.unsubscribe(); }
+    if (this.dataSub) { this.dataSub.unsubscribe(); }
   }
 
   /**
-   * Fetches leaderboard data and computes the top 6 countries by total medal count.
-   * Countries are sorted by gold, silver, then bronze medals descending.
+   * Reactive computed signal that produces the top-10 {@link MedalWinner} list
+   * displayed in the home page grid.
+   *
+   * When no sport filter is active (`'all'`), the pre-aggregated, backend-ranked
+   * country data is used directly. When a specific sport is selected, medals are
+   * counted from that sport's participant list and countries are ranked on the fly.
+   *
+   * Re-evaluates automatically whenever {@link filterSport}, {@link allCountries}
+   * or {@link allSports} change.
    */
-  private loadTopCountries(): void {
-    if (this.isLoading()) { return; } // avoid duplicate requests
+  protected topCountries: Signal<MedalWinner[]> = computed<MedalWinner[]>(() => {
+    const sport: string = this.filterSport();
+    return sport === 'all' ? this.buildOverallTop10() : this.buildTop10ForSport(sport);
+  });
+
+  /**
+   * Builds the top-10 list using the pre-aggregated medal totals from the V2
+   * country endpoint. The backend already applies the correct GOLD → SILVER →
+   * BRONZE tiebreaker and assigns `leaderboardRank`.
+   *
+   * @returns Up to 10 {@link MedalWinner} entries sorted by `leaderboardRank` ascending.
+   */
+  private buildOverallTop10(): MedalWinner[] {
+    return this.allCountries().slice(0, 10)
+      .map((c: V2Country, i: number): MedalWinner => ({
+        rank:        c.leaderboardRank ?? i + 1,
+        countryName: c.name,
+        countryCode: c.code.toLowerCase(),
+        gold:        c.medals.gold,
+        silver:      c.medals.silver,
+        bronze:      c.medals.bronze,
+        errorFlag:   false,
+      })).sort((a: MedalWinner, b: MedalWinner): number => a.rank - b.rank);
+  }
+
+  /**
+   * Builds a top-10 list scoped to a single sport by iterating over the sport's
+   * participant list and accumulating medal counts per country code.
+   *
+   * Countries that won no medal in the selected sport are excluded. The result
+   * is sorted GOLD → SILVER → BRONZE descending and ranked from 1.
+   *
+   * @param sportRawName - The `rawName` of the sport to filter by.
+   * @returns Up to 10 {@link MedalWinner} entries, or an empty array when the
+   *          sport is not found or no medalists exist.
+   */
+  private buildTop10ForSport(sportRawName: string): MedalWinner[] {
+    const selectedSport: V2Sport | undefined =
+      this.allSports().find((s: V2Sport): boolean => s.rawName === sportRawName);
+
+    if (!selectedSport) { return []; }
+    const countryMedals: Map<string, MedalWinner> = this.aggregateMedalsByCountry(selectedSport);
+
+    return Array.from(countryMedals.values())
+      .filter((c: MedalWinner): boolean => c.gold + c.silver + c.bronze > 0)
+      .sort((a: MedalWinner, b: MedalWinner): number =>
+        b.gold - a.gold || b.silver - a.silver || b.bronze - a.bronze
+      ).slice(0, 10)
+      .map((entry: MedalWinner, index: number): MedalWinner => ({ ...entry, rank: index + 1 }));
+  }
+
+  /**
+   * Iterates over all participants of a sport and accumulates their medal
+   * counts into a `Map` keyed by lower-cased country code.
+   *
+   * Participants without a medal or without a country code are skipped.
+   *
+   * @param sport - The V2 sport whose participant list is to be aggregated.
+   * @returns A `Map<countryCode, MedalWinner>` with running medal totals.
+   */
+  private aggregateMedalsByCountry(sport: V2Sport): Map<string, MedalWinner> {
+    const countryMedals = new Map<string, MedalWinner>();
+
+    sport.participants.forEach((p): void => {
+      if (!p.medal || !p.countryCode) { return; }
+
+      const key: string = p.countryCode.toLowerCase();
+
+      if (!countryMedals.has(key)) {
+        countryMedals.set(key, { rank: 0, countryName: p.countryName ?? p.countryCode, countryCode: key,
+                                 gold: 0, silver: 0, bronze: 0, errorFlag: false });
+      }
+
+      const entry: MedalWinner = countryMedals.get(key)!;
+      switch (p.medal) {
+        case 'GOLD':   entry.gold++;   break;
+        case 'SILVER': entry.silver++; break;
+        case 'BRONZE': entry.bronze++; break;
+      }
+    });
+
+    return countryMedals;
+  }
+
+  /**
+   * Fetches countries and sports from the V2 API.
+   * Countries carry pre-aggregated medals; sports carry per-participant medal info for filtering.
+   */
+  private loadData(): void {
+    if (this.isLoading()) { return; }
     this.isLoading.set(true);
 
-    this.leaderboardService.getLeaderboard().subscribe({
-      next: (athletes: Athlete[]): void => {
-        this.topCountries = this.buildTopCountries(athletes);
+    this.dataSub = this.apiService.getLeaderboard(this.translateService.getCurrentLang() || 'en').subscribe({
+      next: (data: LeaderboardResponse): void => {
+        this.allCountries.set(data.countries);
+        this.allSports.set(data.sports);
+
         this.isLoading.set(false);
       },
       error: (error: HttpErrorResponse): void => {
-        console.error('Error loading leaderboard data:', error);
+        console.error('Error loading home data:', error);
         this.alertService.error(this.translateService.instant('ALERT.ERROR'));
         this.isLoading.set(false);
       }
     });
-  }
-
-  /**
-   * Aggregates medal counts per country from athlete data and returns the top 10 entries.
-   *
-   * @param {Athlete[]} athletes - List of athletes from the leaderboard API.
-   * @returns {MedalWinner[]} Top 10 countries sorted by gold, silver, bronze descending.
-   */
-  private buildTopCountries(athletes: Athlete[]): MedalWinner[] {
-    const countryMap = new Map<string, MedalWinner>();
-
-    athletes.forEach((athlete: Athlete): void => {
-      if (!countryMap.has(athlete.countryCode)) {
-        countryMap.set(athlete.countryCode, { rank: 0, countryName: athlete.countryName, errorFlag: false,
-                                              countryCode: athlete.countryCode.toLowerCase(),
-                                              gold: 0, silver: 0, bronze: 0 });
-      }
-
-      const entry: MedalWinner = countryMap.get(athlete.countryCode)!;
-      entry.gold += athlete.medals.gold;
-      entry.silver += athlete.medals.silver;
-      entry.bronze += athlete.medals.bronze;
-    });
-
-    return Array.from(countryMap.values())
-      .sort((a, b) => b.gold - a.gold || b.silver - a.silver || b.bronze - a.bronze)
-      .slice(0, 10)
-      .map((entry, index) => ({ ...entry, rank: index + 1 }));
   }
 
 }

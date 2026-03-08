@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_URL } from '../../../types/API';
+import {FormCountryPayload, V2Country} from "../../../types/Country";
 
 @Injectable({
   providedIn: 'root'
@@ -11,33 +12,24 @@ export class CountryService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Fetches all countries from the backend.
-   *
-   * @returns {Observable<any[]>} Observable with the list of all countries.
-   */
-  getAllCountries(): Observable<any[]> {
-    return this.http.get<any[]>(`${API_URL}/countries`);
-  }
-
-  /**
    * Creates a new country.
    *
-   * @param {Object} data - The creation payload with code and name.
-   * @returns {Observable<any>} Observable with the created country.
+   * @param {FormCountryPayload} data - The creation payload with code, name and optional translations.
+   * @returns {Observable<V2Country>} Observable with the created country.
    */
-  createCountry(data: { code: string; name: string }): Observable<any> {
-    return this.http.post(`${API_URL}/countries`, data);
+  createCountry(data: FormCountryPayload): Observable<V2Country> {
+    return this.http.post<V2Country>(`${API_URL}/countries`, data);
   }
 
   /**
    * Updates an existing country by their ID.
    *
    * @param {number} id - The unique ID of the country to update.
-   * @param {Object} data - The update payload with code and name.
-   * @returns {Observable<any>} Observable with the updated country.
+   * @param {FormCountryPayload} data - The update payload with code, name and optional translations.
+   * @returns {Observable<V2Country>} Observable with the updated country.
    */
-  updateCountry(id: number, data: { code: string; name: string }): Observable<any> {
-    return this.http.put(`${API_URL}/countries/${id}`, data);
+  updateCountry(id: number, data: FormCountryPayload): Observable<V2Country> {
+    return this.http.put<V2Country>(`${API_URL}/countries/${id}`, data);
   }
 
   /**

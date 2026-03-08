@@ -1,7 +1,9 @@
 <div class="md:col-span-3">
-  <label [for]="id()" class="mb-1 block text-xs font-medium text-gray-500">
-    {{ label() }}
-  </label>
+  @if (label()) {
+    <label [for]="id()" class="mb-1 block text-xs font-medium text-gray-500">
+      {{ label() }}
+    </label>
+  }
   <div class="relative">
     <select [id]="id()" [ngModel]="value()" (ngModelChange)="value.set($event)"
             class="w-full appearance-none bg-transparent py-2 pr-8 pl-0 text-gray-900 focus:outline-none border-b

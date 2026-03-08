@@ -1,0 +1,167 @@
+<!-- Header row: title + action buttons -->
+<div class="mb-8 flex flex-col items-start justify-between lg:flex-row md:items-center">
+  <h2 class="text-4xl tracking-wide font-normal text-gray-900 mx-auto lg:mx-0 mb-4 lg:mb-0">
+    {{ 'PAGE.DETAILED.ATHLETES.TITLE' | translate }}
+  </h2>
+
+  @if (authService.isLoggedIn()) {
+    <div class="flex justify-center gap-x-4 mx-auto lg:mx-0">
+      <button class="flex items-center gap-2 rounded bg-purple-500 px-4 py-2 text-sm font-semibold text-white
+                     transition hover:bg-purple-600 shadow-sm cursor-pointer">
+        <img ngSrc="/assets/images/icons/upload.svg" width="16" height="16" alt="Upload Icon" class="invert" />
+        {{ 'BUTTON.IMPORT' | translate }} <!-- Todo: Functionality -->
+      </button>
+      <button class="flex items-center gap-2 rounded bg-green-500 px-4 py-2 text-sm font-semibold text-white
+                     transition hover:bg-green-600 shadow-sm cursor-pointer"
+              (click)="isAthleteModalOpen.set(true)">
+        <img ngSrc="/assets/images/icons/plus.svg" width="16" height="16" alt="Plus Icon" class="invert" />
+        {{ 'MODAL.ATHLETE.ADD.TITLE' | translate }}
+      </button>
+    </div>
+  }
+</div>
+
+<!-- Table -->
+<div class="w-full overflow-y-auto max-h-150 border border-gray-200 rounded-lg shadow-sm relative">
+  <table class="w-full min-w-150 table-auto text-left">
+    <!-- Header -->
+    <thead class="sticky top-0 z-10 bg-neutral-100 shadow-sm">
+      <tr class="text-left text-xs text-gray-500 border-b border-gray-300">
+        <th class="pl-2 w-12 text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.RANK' | translate }}</th>
+        <th class="pl-2 text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.ATHLETE' | translate }}</th>
+        <th class="pl-2 text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.COUNTRY' | translate }}</th>
+        <th class="text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.MEDAL' | translate }}</th>
+        @if (authService.isLoggedIn()) {
+          <th class="text-sm leading-8 font-medium">{{ 'PAGE.DETAILED.TABLE.ACTIONS' | translate }}</th>
+        }
+      </tr>
+    </thead>
+
+    <!-- Content -->
+    <tbody class="text-sm">
+      @for (athlete of filteredAthletes(); track athlete.id) {
+        @let athleteResults = resultsForAthlete(athlete.id);
+        @let rank = miscService.getRankOf(sortedAthletes(), athlete.id, 'id');
+
+        <!-- Athlete row (clickable to expand if results exist) -->
+        <tr class="group border-b border-gray-200/50 hover:bg-black/5 odd:bg-neutral-200/50
+                   transition-colors select-none" (click)="toggleAthlete(athlete)"
+            [class.cursor-pointer]="athleteResults.length > 0" [class.border-neutral-300]="isAthleteExpanded(athlete.id)">
+          <!-- Position / Rank -->
+          <td class="py-4 pl-2 pr-2 text-center">
+            @if (rank === 0) { <span class="text-2xl" title="1">🏆</span> }
+            @else if (rank === 1) { <span class="text-2xl" title="2">🥈</span> }
+            @else if (rank === 2) { <span class="text-2xl" title="3">🥉</span> }
+            @else { <span class="text-sm font-medium text-gray-500">{{ '#' + (rank + 1) }}</span> }
+          </td>
+
+          <!-- Athlete Name -->
+          <td class="py-4 pl-2 pr-4 lg:pr-0 font-semibold text-gray-800 font-olympic-sans tracking-wide">
+            <div class="flex items-center gap-2">
+              {{ athlete.name }}
+              @if (athleteResults.length > 0) {
+                <img ngSrc="/assets/images/icons/chevron-down.svg" width="8" height="8" alt="Chevron Down"
+                     class="w-2 h-2 text-gray-400 shrink-0 transition-transform duration-200"
+                     [class.rotate-180]="isAthleteExpanded(athlete.id)" />
+              }
+            </div>
+          </td>
+
+          <!-- Country Flag & Name -->
+          <td class="py-4 pr-4 lg:pr-0">
+            <app-table-country-badge [code]="athlete.countryCode" [name]="athlete.countryName" />
+          </td>
+
+          <!-- Medal Count of the athlete -->
+          <td class="py-4 pr-4 lg:pr-0">
+            <app-table-medal-pills [medals]="athlete.medals" [activeFilter]="filterMedal()" />
+          </td>
+
+          <!-- Actions -->
+          @if (authService.isLoggedIn()) {
+            <td class="py-4 pr-4 lg:pr-0" (click)="$event.stopPropagation()">
+              <app-table-actions (edit)="this.editingAthlete.set(athlete); this.isAthleteModalOpen.set(true);"
+                                 (delete)="onDeleteAthlete(athlete.id)" />
+            </td>
+          }
+        </tr>
+
+        <!-- Expanded sport result sub-rows -->
+        @if (isAthleteExpanded(athlete.id)) {
+          @for (result of athleteResults; track result.sport; let last = $last) {
+            <tr class="bg-neutral-250 border-b hover:bg-neutral-100/80 transition-colors"
+                [class.border-neutral-200]="!last" [class.border-neutral-300]="last">
+
+              <!-- Spacer -->
+              <td class="py-2.5 pl-2 pr-2 text-center">
+                <span class="text-xs text-gray-400 font-medium pl-2">-</span>
+              </td>
+
+              <!-- Sport Name -->
+              <td class="py-2.5 pl-2 pr-0">
+                <span class="text-sm font-medium text-gray-700 font-olympic-sans tracking-wide">
+                  {{ result.sport }}
+                </span>
+              </td>
+
+              <!-- Result -->
+              <td class="py-2.5 pr-4 font-mono text-sm text-gray-600">
+                @if (result.scoreType === 'PTS') {
+                  {{ result.result }} {{ 'MODAL.ATHLETE.POINTS' | translate }}
+                } @else if (result.scoreType === 'WINS') {
+                  {{ result.result }} {{ 'MODAL.ATHLETE.WINS' | translate }}
+                } @else {
+                  {{ result.result }}
+                }
+              </td>
+
+              <!-- Medal: three pill-aligned slots matching TableMedalPills layout -->
+              <td class="py-2.5 pr-4">
+                <div class="flex items-center gap-2">
+                  <span class="flex items-center justify-center w-6 py-0.5 text-lg rounded-full"
+                        [class.opacity-0]="result.medal !== 'gold'">🥇</span>
+                  <span class="flex items-center justify-center w-6 py-0.5 text-lg rounded-full"
+                        [class.opacity-0]="result.medal !== 'silver'">🥈</span>
+                  <span class="flex items-center justify-center w-6 py-0.5 text-lg rounded-full"
+                        [class.opacity-0]="result.medal !== 'bronze'">🥉</span>
+                </div>
+              </td>
+
+              @if (authService.isLoggedIn()) { <td></td> }
+            </tr>
+          }
+        }
+
+      }
+
+      <!-- Empty List Info / Loading Icon -->
+      @if (filteredAthletes().length === 0) {
+        <tr>
+          <td colspan="7" class="py-8 text-center">
+            @if (dataService.isLoading()) {
+              <div class="flex pl-36 justify-start sm:justify-center sm:pl-0 items-center gap-2 text-gray-400">
+                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+              </div>
+            } @else {
+              <span class="text-sm text-gray-400">{{ 'PAGE.DETAILED.TABLE.EMPTY' | translate }}</span>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<!-- Athlete modal -->
+<app-modal-athlete [isOpen]="isAthleteModalOpen()" [athletes]="dataService.athletes()" [countries]="dataService.countries()"
+                   [editData]="athleteEditData()" [resumeData]="suspendedAthleteForm()" (athleteCreated)="onAthleteCreated($event)"
+                   (updateAthlete)="onUpdateAthlete($event)" (openCountryModal)="onOpenCountryModalFromAthlete($event)"
+                   (closeModal)="isAthleteModalOpen.set(false); editingAthlete.set(null); suspendedAthleteForm.set(null)" />
+
+<!-- Inline country creation modal (triggered from within the athlete modal) -->
+<app-modal-country [isOpen]="isCountryModalOpen()" [editData]="null" [existingCountries]="dataService.countriesData()"
+                   (closeModal)="onCloseCountryModal()" (countryCreated)="onCountryCreated($event)" />
+

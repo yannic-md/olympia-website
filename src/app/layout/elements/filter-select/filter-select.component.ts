@@ -12,7 +12,7 @@ import {NgOptimizedImage} from "@angular/common";
   styleUrl: './filter-select.component.css',
 })
 export class FilterSelectComponent {
-  label: InputSignal<string> = input.required<string>();
+  label: InputSignal<string | undefined> = input<string>();
   id: InputSignal<string> = input.required<string>();
   value: ModelSignal<string> = model.required<string>();
   bold: InputSignal<boolean> = input<boolean>(false);
