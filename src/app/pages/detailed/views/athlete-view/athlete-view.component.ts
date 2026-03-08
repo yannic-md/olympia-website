@@ -164,6 +164,7 @@ export class AthleteViewComponent {
         this.athleteService.patchAthleteUpdate(api, previousCountryId);
 
         this.editingAthlete.set(null);
+        this.suspendedAthleteForm.set(null);
         this.isAthleteModalOpen.set(false);
         this.alertService.success(
           this.translateService.instant('ALERT.ATHLETE.EDIT').replace('[name]', `${api.firstName} ${api.lastName}`));
@@ -201,7 +202,6 @@ export class AthleteViewComponent {
     if (!suspended) { this.suspendedAthleteForm.set(null); return; }
     const resumeForm: AthleteForm = { ...suspended, countryName: country.countryName,
                                       countryCode: country.countryCode };
-    this.editingAthlete.set(null);
 
     // Use a minimal timeout so that the data reload has been queued first
     setTimeout((): void => {
