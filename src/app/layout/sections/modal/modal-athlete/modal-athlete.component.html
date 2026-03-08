@@ -19,88 +19,46 @@
         <form (ngSubmit)="onSubmit()" class="space-y-4">
 
           <!-- First Row (Name + Country) -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 gap-4">
             <div>
               <label for="athlete-name" class="block text-sm font-medium text-gray-700 mb-1">
                 {{ 'MODAL.ATHLETE.NAME' | translate }} <span class="text-red-500">*</span>
               </label>
               <input [ngModel]="formData().name" [maxLength]="25" name="name" id="athlete-name" type="text" required
                      (ngModelChange)="onNameChange($event)" placeholder="Yanic Doepner, Nils Sievers, .."
-                     [class.border-red-500]="nameError()"
+                     [class.border-red-500]="nameError() || duplicateNameError()"
                      class="w-full px-4 py-2 border border-gray-300 rounded-lg placeholder-neutral-400">
               @if (nameError()) {
                 <p class="mt-1 text-sm text-red-600">{{ nameError() }}</p>
+              } @else if (duplicateNameError()) {
+                <p class="mt-1 text-sm text-red-600">{{ 'MODAL.ATHLETE.ERROR.DUPLICATE.NAME' | translate }}</p>
               }
             </div>
-            <div>
+            <div class="min-w-0 overflow-hidden">
               <label for="athlete-country-name" class="block text-sm font-medium text-gray-700 mb-1">
                 {{ 'MODAL.ATHLETE.COUNTRY' | translate }} <span class="text-red-500">*</span>
               </label>
-              <select [ngModel]="formData().countryName" (ngModelChange)="onCountryChange($event)"
-                      name="countryName" id="athlete-country-name" required
-                      class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                <option value="" disabled>{{ 'MODAL.ATHLETE.COUNTRY.PLACEHOLDER' | translate }}</option>
-                @for (country of countries(); track country) {
-                  <option [value]="country">{{ country }}</option>
-                }
-              </select>
-            </div>
-          </div>
+              <div class="flex gap-2">
+                <div class="relative flex-1 min-w-0">
+                  <select [ngModel]="formData().countryName" (ngModelChange)="onCountryChange($event)"
+                          name="countryName" id="athlete-country-name" required
+                          class="w-full appearance-none px-4 py-2 pr-8 border border-gray-300 rounded-lg cursor-pointer">
+                    <option value="" disabled>{{ 'MODAL.ATHLETE.COUNTRY.PLACEHOLDER' | translate }}</option>
+                    @for (country of countries(); track country) {
+                      <option [value]="country">{{ country }}</option>
+                    }
+                  </select>
+                  <img ngSrc="/assets/images/icons/chevron-down.svg" width="8" height="8" alt="Chevron Down"
+                       class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 text-gray-400"/>
+                </div>
 
-          <!-- Second Row (Sport discipline & score input) -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label for="athlete-sport" class="block text-sm font-medium text-gray-700 mb-1">
-                {{ 'MODAL.ATHLETE.SPORTS' | translate }} <span class="text-red-500">*</span>
-              </label>
-              <select [ngModel]="formData().sport" name="sport" id="athlete-sport" required
-                      (ngModelChange)="onSportChange($event)"
-                      class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                <option value="" disabled>{{ 'MODAL.ATHLETE.SPORTS.PLACEHOLDER' | translate }}</option>
-                @for (sport of sports(); track sport.name) {
-                  <option [value]="sport.name">{{ sport.name }}</option>
-                }
-              </select>
-            </div>
-
-            <div>
-              <label for="best-time" class="block text-sm font-medium text-gray-700 mb-1">
-                @if (activeScoreType()) {
-                  {{ scoreTypeLabels[activeScoreType()!] | translate }} <span class="text-red-500">*</span>
-                } @else {
-                  {{ 'MODAL.ATHLETE.BESTTIME' | translate }}
-                }
-              </label>
-              <input [ngModel]="formData().bestTime" (ngModelChange)="onScoreInputChange($event)"
-                     name="bestTime" id="best-time" type="text" [disabled]="!activeScoreType()"
-                     [placeholder]="activeScoreType() ? scoreTypePlaceholders[activeScoreType()!] : '—'"
-                     [class.border-red-500]="scoreError()" [class.opacity-40]="!activeScoreType()"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg placeholder-neutral-400">
-              @if (scoreError()) {
-                <p class="mt-1 text-sm text-red-600">{{ scoreError() }}</p>
-              }
-            </div>
-          </div>
-
-          <!-- Third Row (Medal Counts) -->
-          <div class="grid grid-cols-3 gap-4">
-            <div>
-              <label for="gold" class="block text-sm font-medium text-gray-700 mb-1">🥇 {{ 'MODAL.GOLD' | translate }}</label>
-              <input [ngModel]="formData().goldMedals" name="gold" id="gold" type="number" min="0" required
-                     (ngModelChange)="miscService.updateField(this.formData, 'goldMedals', +$event)"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-            </div>
-            <div>
-              <label for="silver" class="block text-sm font-medium text-gray-700 mb-1">🥈 {{ 'MODAL.SILVER' | translate }}</label>
-              <input [ngModel]="formData().silverMedals" name="silver" id="silver" type="number" min="0" required
-                     (ngModelChange)="miscService.updateField(this.formData, 'silverMedals', +$event)"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-            </div>
-            <div>
-              <label for="bronze" class="block text-sm font-medium text-gray-700 mb-1">🥉 {{ 'MODAL.BRONZE' | translate }}</label>
-              <input [ngModel]="formData().bronzeMedals" name="bronze" id="bronze" type="number" min="0" required
-                     (ngModelChange)="miscService.updateField(this.formData, 'bronzeMedals', +$event)"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                <button type="button" (click)="openCountryModal.emit(formData())"
+                        title="{{ 'MODAL.ATHLETE.COUNTRY.ADD' | translate }}"
+                        class="shrink-0 flex items-center justify-center w-10.5 h-10.5 text-neutral-600 hover:text-green-600
+                               transition-colors duration-200 cursor-pointer border border-gray-300 rounded-lg">
+                  <span class="text-xl leading-none">+</span>
+                </button>
+              </div>
             </div>
           </div>
 
