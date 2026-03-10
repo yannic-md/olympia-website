@@ -42,6 +42,7 @@
   "PAGE.LOGIN.INPUT.NAME": "Mein Name..",
   "PAGE.LOGIN.INPUT.PASSWORD": "Mein Passwort..",
   "PAGE.LOGIN.ERROR.INCOMPLETE": "Du musst alle Felder ausfüllen!",
+  "PAGE.LOGIN.ERROR.COOKIES": "Du musst Cookies für den Login aktivieren!",
 
   "PAGE.HOME.TITLE": "Die besten Teilnehmer",
   "PAGE.HOME.SUBTITLE": "Gesamtergebnisse anzeigen",
@@ -53,6 +54,10 @@
   "BUTTON.REGISTER.LONG": "Noch kein Mitglied? Hier registrieren!",
   "BUTTON.IMPORT": "Daten Importieren",
   "BUTTON.SAVE": "Änderungen speichern",
+  "BUTTON.COOKIES": "Akzeptieren - ich mag Kekse.",
+
+  "COOKIES.TITLE": "Wir nutzen Cookies.",
+  "COOKIES.DESCRIPTION": "Wir verwenden Cookies ausschließlich für die Funktionalität der Anmeldung auf dieser Webseite – ohne dein Einverständnis ist dieses Feature nicht verfügbar.",
 
   "ALERT.LOGOUT": "Du wurdest erfolgreich abgemeldet.",
   "ALERT.ERROR": "Fehler beim Laden der Daten!",

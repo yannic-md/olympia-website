@@ -53,6 +53,12 @@ export class LoginComponent {
     const {username, password} = this.loginData();
     this.loginError.set('');
 
+    const allowCookies: string | null = localStorage.getItem('allow_cookies');
+    if (!allowCookies || (allowCookies && allowCookies != 'true')) {
+      this.loginError.set(this.translateService.instant('PAGE.LOGIN.ERROR.COOKIES'));
+      return;
+    }
+
     if (!username.trim() || !password) {
       this.loginError.set(this.translateService.instant('PAGE.LOGIN.ERROR.INCOMPLETE'));
       return;
@@ -71,6 +77,21 @@ export class LoginComponent {
         this.loginError.set(this.translateService.instant('ALERT.LOGIN.ERROR'));
       }
     });
+  }
+
+  /**
+   * Opens the registration modal after performing cookie-consent validation.
+   */
+  protected onRegisterModalOpen(): void {
+    this.loginError.set('');
+
+    const allowCookies: string | null = localStorage.getItem('allow_cookies');
+    if (!allowCookies || (allowCookies && allowCookies != 'true')) {
+      this.alertService.error(this.translateService.instant('PAGE.LOGIN.ERROR.COOKIES'));
+      return;
+    }
+
+    this.isRegisterModalOpen.set(true);
   }
 
   /**

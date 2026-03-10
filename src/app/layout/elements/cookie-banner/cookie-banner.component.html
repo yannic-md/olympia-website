@@ -1,0 +1,32 @@
+@if (this.isVisible()) {
+  <div class="fixed bottom-4 left-4 z-50 flex w-[calc(100%-2rem)] max-w-md flex-col gap-3 rounded-sm
+              bg-[#f0f0f0] px-5 py-4 shadow-2xl border border-neutral-200 border-l-4 border-l-[#c8ac44]
+              md:bottom-6 md:left-6 cookies" [class.animation-leaving]="isLeaving()">
+
+    <!-- Header row: title + close button -->
+    <div class="flex items-center justify-start gap-1">
+      <span class="text-2xl">🍪</span>
+      <p class="font-olympic-headline text-3xl text-gray-900">
+        {{ 'COOKIES.TITLE' | translate }}
+      </p>
+    </div>
+
+    <!-- Divider -->
+    <div class="border-t border-neutral-200"></div>
+
+    <!-- Description -->
+    <p class="text-sm leading-relaxed text-gray-700">
+      {{ 'COOKIES.DESCRIPTION' | translate }}
+    </p>
+
+    <!-- Actions -->
+    <div class="flex">
+      <button (click)="accept()" type="button" class="flex-1 rounded bg-[#c8ac44] px-3 py-2 text-sm font-medium
+                                                    text-white shadow-sm text-shadow-xs text-shadow-neutral-400
+                                                    transition-colors hover:bg-[#b59a36] focus:outline-none
+                                                    cursor-pointer">
+        {{ 'BUTTON.COOKIES' | translate }}
+      </button>
+    </div>
+  </div>
+}

@@ -42,6 +42,7 @@
   "PAGE.LOGIN.INPUT.NAME": "Mon nom...",
   "PAGE.LOGIN.INPUT.PASSWORD": "Mon mot de passe...",
   "PAGE.LOGIN.ERROR.INCOMPLETE": "Vous devez remplir tous les champs !",
+  "PAGE.LOGIN.ERROR.COOKIES": "Vous devez activer les cookies pour la connexion !",
 
   "PAGE.HOME.TITLE": "Les meilleurs participants",
   "PAGE.HOME.SUBTITLE": "Afficher les résultats globaux",
@@ -53,6 +54,10 @@
   "BUTTON.REGISTER.LONG": "Pas encore membre ? Inscrivez-vous ici !",
   "BUTTON.IMPORT": "Importer des données",
   "BUTTON.SAVE": "Enregistrer les modifications",
+  "BUTTON.COOKIES": "Accepter - j'aime les cookies.",
+
+  "COOKIES.TITLE": "Nous utilisons des cookies.",
+  "COOKIES.DESCRIPTION": "Nous utilisons des cookies uniquement pour la fonctionnalité de connexion sur ce site web – sans votre consentement, cette fonctionnalité n'est pas disponible.",
 
   "ALERT.LOGOUT": "Vous avez été déconnecté avec succès.",
   "ALERT.ERROR": "Erreur lors du chargement des données !",
