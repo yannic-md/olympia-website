@@ -34,6 +34,15 @@
   <!-- Fonts -->
   <link rel="preload" href="/assets/fonts/OlympicHeadline-Condensed.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/OlympicSans-Regular-400.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Pause all animations until the page is fully loaded to prevent SSR/hydration flicker.
+       This script runs synchronously before the first paint — only in the browser. -->
+  <script>
+    document.documentElement.classList.add('paused');
+    window.addEventListener('load', function () {
+      setTimeout(() => {document.documentElement.classList.remove('paused'); }, 10);
+    }, { once: true });
+  </script>
 </head>
 <body>
   <app-root></app-root>

@@ -1,4 +1,4 @@
-<header class="fixed top-0 left-0 right-0 font-olympic-sans w-full z-50"
+<header class="fixed top-0 left-0 right-0 font-olympic-sans w-full z-50 transition-all duration-300"
         [ngClass]="!showUpperPart && !isHoveringHeader ? '-translate-y-16.25' : ''"
         [class.animation-slideIn]="!skipEntryAnimation"
         (mouseenter)="isHoveringHeader = true" (mouseleave)="isHoveringHeader = false">

@@ -1,7 +1,6 @@
 import {Component, HostListener, Inject, OnInit, PLATFORM_ID} from '@angular/core';
-import {NavigationStart, Router, RouterLink, RouterLinkActive} from "@angular/router";
+import {Router, RouterLink, RouterLinkActive} from "@angular/router";
 import {isPlatformBrowser, NgClass, NgOptimizedImage} from "@angular/common";
-import {animate, style, transition, trigger} from "@angular/animations";
 import {MiscService} from "../../../services/misc/misc.service";
 import {AuthService} from "../../../services/api/auth/auth.service";
 import {AlertService} from "../../../services/api/alert/alert.service";
@@ -18,17 +17,6 @@ import {TranslatePipe, TranslateService} from "@ngx-translate/core";
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
-  animations: [
-    trigger('fadeInOut', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('150ms ease-in', style({ opacity: 1 }))
-      ]),
-      transition(':leave', [
-        animate('150ms ease-out', style({ opacity: 0 }))
-      ])
-    ])
-  ]
 })
 export class HeaderComponent implements OnInit {
   protected isLanguageMenuOpen: boolean = false;
@@ -46,16 +34,14 @@ export class HeaderComponent implements OnInit {
   constructor(@Inject(PLATFORM_ID) private platformId: Object, protected miscService: MiscService,
               protected authService: AuthService, private alertService: AlertService, private router: Router,
               private translateService: TranslateService) {
-    if (isPlatformBrowser(this.platformId) && localStorage.getItem('lang') != null) {
-      this.currentLanguage = localStorage.getItem('lang') as string;
-    }
-
-    // show animation NOT after router navigation
-    this.router.events.subscribe(event => {
-      if (event instanceof NavigationStart) {
-        this.skipEntryAnimation = true;
+    if (isPlatformBrowser(this.platformId)) {
+      if (localStorage.getItem('lang') != null) {
+        this.currentLanguage = localStorage.getItem('lang') as string;
       }
-    });
+
+      // don't play animation again after route change
+      this.skipEntryAnimation = document.readyState === 'complete';
+    }
   }
 
   /**

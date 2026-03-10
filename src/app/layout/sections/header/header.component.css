@@ -1,12 +1,3 @@
-.animation-slideIn {
-  @starting-style {
-    transform: translateY(-100%);
-  }
-
-  transform: translateY(0);
-  transition: all 400ms ease-out;
-}
-
 /* Mobile Navigation Menu slide-down / slide-up */
 .mobile-nav-menu {
   @starting-style {

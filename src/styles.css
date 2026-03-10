@@ -36,17 +36,9 @@
   font-family: OlympicHeadline, Arial, sans-serif;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+html.paused *,
+html.paused *::before,
+html.paused *::after {
+  animation-play-state: paused !important;
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.15s ease-out;
-}
