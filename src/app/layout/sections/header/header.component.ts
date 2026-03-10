@@ -62,7 +62,7 @@ export class HeaderComponent implements OnInit {
    * Initializes the component and stores the current scroll position.
    * This is used as a baseline for detecting scroll direction changes.
    */
-  public ngOnInit(): void {
+  ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.lastScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
     }
@@ -83,8 +83,7 @@ export class HeaderComponent implements OnInit {
     if (this.isMobileMenuOpen) {
       this.isMenuLeaving = true;
 
-      // wait for animation
-      setTimeout((): void => { this.isMobileMenuOpen = false; this.isMenuLeaving = false; }, 150);
+      setTimeout((): void => { this.isMobileMenuOpen = false; this.isMenuLeaving = false; }, 300);
     } else {
       this.isMobileMenuOpen = true;
     }
