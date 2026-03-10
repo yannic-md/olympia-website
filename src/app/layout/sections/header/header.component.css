@@ -1,0 +1,33 @@
+.animation-slideIn {
+  @starting-style {
+    transform: translateY(-100%);
+  }
+  transform: translateY(0);
+  transition: transform 400ms ease-out;
+}
+
+.mobile-menu-container {
+  opacity: 1;
+  transition: opacity 150ms ease-in;
+
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+.mobile-menu-container.animation-leaving {
+  opacity: 0;
+}
+
+.mobile-backdrop {
+  opacity: 1;
+  transition: opacity 150ms ease-in;
+
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+.mobile-backdrop.animation-leaving {
+  opacity: 0;
+}

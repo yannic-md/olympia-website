@@ -1,5 +1,5 @@
 import {Component, HostListener, Inject, OnInit, PLATFORM_ID} from '@angular/core';
-import {Router, RouterLink, RouterLinkActive} from "@angular/router";
+import {NavigationStart, Router, RouterLink, RouterLinkActive} from "@angular/router";
 import {isPlatformBrowser, NgClass, NgOptimizedImage} from "@angular/common";
 import {animate, style, transition, trigger} from "@angular/animations";
 import {MiscService} from "../../../services/misc/misc.service";
@@ -40,6 +40,8 @@ export class HeaderComponent implements OnInit {
   protected lastScrollPosition: number = 0;
   protected scrollThreshold: number = 50;
   protected isHoveringHeader: boolean = false;
+  protected isMenuLeaving: boolean = false;
+  protected skipEntryAnimation: boolean = false;
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object, protected miscService: MiscService,
               protected authService: AuthService, private alertService: AlertService, private router: Router,
@@ -47,6 +49,13 @@ export class HeaderComponent implements OnInit {
     if (isPlatformBrowser(this.platformId) && localStorage.getItem('lang') != null) {
       this.currentLanguage = localStorage.getItem('lang') as string;
     }
+
+    // show animation NOT after router navigation
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationStart) {
+        this.skipEntryAnimation = true;
+      }
+    });
   }
 
   /**
@@ -71,7 +80,14 @@ export class HeaderComponent implements OnInit {
    * Toggles the mobile navigation menu.
    */
   protected toggleMobileMenu(): void {
-    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    if (this.isMobileMenuOpen) {
+      this.isMenuLeaving = true;
+
+      // wait for animation
+      setTimeout((): void => { this.isMobileMenuOpen = false; this.isMenuLeaving = false; }, 150);
+    } else {
+      this.isMobileMenuOpen = true;
+    }
   }
 
   /**
@@ -95,6 +111,7 @@ export class HeaderComponent implements OnInit {
     }
 
     localStorage.setItem('lang', this.currentLanguage);
+    document.cookie = `lang=${this.currentLanguage};path=/;max-age=31536000`;
     this.isLanguageMenuOpen = false;
   }
 
@@ -125,15 +142,11 @@ export class HeaderComponent implements OnInit {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    const languageMenu: HTMLDivElement | null = target.closest('.language-menu-container');
-    const mobileMenu: HTMLDivElement | null = target.closest('.mobile-menu-container');
-
-    if (!languageMenu && this.isLanguageMenuOpen) {
+    if (!target.closest('.language-menu-container') && this.isLanguageMenuOpen) {
       this.isLanguageMenuOpen = false;
     }
-
-    if (!mobileMenu && this.isMobileMenuOpen) {
-      this.isMobileMenuOpen = false;
+    if (!target.closest('.mobile-menu-container') && this.isMobileMenuOpen) {
+      this.toggleMobileMenu();
     }
   }
 
