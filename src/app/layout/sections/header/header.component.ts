@@ -111,7 +111,6 @@ export class HeaderComponent implements OnInit {
     }
 
     localStorage.setItem('lang', this.currentLanguage);
-    document.cookie = `lang=${this.currentLanguage};path=/;max-age=31536000`;
     this.isLanguageMenuOpen = false;
   }
 
