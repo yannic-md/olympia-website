@@ -9,7 +9,6 @@ export interface AuthUser {
   id: number;
   username: string;
   role: string;
-  password: string;
 }
 
 // Raw API response after a succesful login
