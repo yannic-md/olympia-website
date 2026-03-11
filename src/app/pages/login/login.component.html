@@ -1,7 +1,7 @@
 <div class="min-h-screen w-full flex bg-[#1e2d58] font-sans text-white">
 
   <!-- Left Side (Content Image) -->
-  <div class="hidden lg:block w-1/2 relative overflow-hidden">
+  <div class="hidden lg:block w-1/2 relative overflow-hidden" [class.animation-slideInLeftToRight]="!skipEntryAnimation">
     <img ngSrc="/assets/images/bg-athlete.jpg" alt="Login Screen Image"
          class="object-cover w-full h-full" height="917" width="960" priority />
 
@@ -10,7 +10,8 @@
   </div>
 
   <!-- Right Side (Login Content) -->
-  <div class="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-16 lg:px-24 py-12">
+  <div class="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-16 lg:px-24 py-12"
+       [class.animation-slideInRightToLeft]="!skipEntryAnimation">
 
     <!-- Logo -->
     <div class="mb-8">
