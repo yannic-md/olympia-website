@@ -1,8 +1,8 @@
 <section class="flex flex-col sm:flex-row justify-center items-center lg:items-start lg:flex-nowrap pt-8 lg:pt-14 mb-6
-                lg:mb-10 gap-6 lg:gap-x-14 pb-12 lg:pb-24 border-b border-neutral-200 px-4 lg:px-0">
+                lg:mb-10 gap-6 lg:gap-x-14 pb-12 lg:pb-24 border-b border-neutral-200 px-4 lg:px-0 overflow-x-hidden">
   <!-- Left side of the section -->
   <div class="flex justify-center lg:items-end flex-col w-full lg:w-auto xl:w-118 2xl:min-h-100 sm:border-r-[0.01rem]
-              sm:border-gray-200 lg:pr-24 -me-6 lg:me-0">
+              sm:border-gray-200 lg:pr-24 -me-6 lg:me-0" [class.animation-slideInLeftToRight]="!skipEntryAnimation">
     <h2 class="font-olympic-sans text-xl leading-8 font-bold mb-3 lg:mr-10 lg:mt-6 pl-8 lg:pl-0">
       {{ 'BREADCRUMB.NAVIGATION.TITLE' | translate }}
     </h2>
@@ -28,7 +28,8 @@
 
   <!-- Right side of the section -->
   <h1 class="font-olympic-headline w-full lg:w-fit uppercase text-5xl md:text-6xl lg:text-[5rem] 2xl:text-[100px]
-             leading-tight 2xl:leading-26 my-0 lg:pl-[1.9rem] xl:max-w-216 text-center lg:text-left lg:self-center">
+             leading-tight 2xl:leading-26 my-0 lg:pl-[1.9rem] xl:max-w-216 text-center lg:text-left lg:self-center"
+      [class.animation-slideInRightToLeft]="!skipEntryAnimation">
 
     <span class="font-olympic-headline text-[rgb(215,195,120)] block">{{ 'BREADCRUMB.CONTENT.TITLE' | translate }}</span>
     @if (router.url === '/detailed') {
