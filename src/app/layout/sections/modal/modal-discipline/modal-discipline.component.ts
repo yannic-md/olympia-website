@@ -12,7 +12,6 @@ import {
 } from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {NgOptimizedImage} from '@angular/common';
-import {animate, style, transition, trigger} from '@angular/animations';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
 import {MiscService} from '../../../../services/misc/misc.service';
 import {ScoreType, V2Athlete} from '../../../../types/Athlete';
@@ -22,27 +21,7 @@ import {DisciplineResultForm, V2Sport} from '../../../../types/Disciplines';
   selector: 'app-modal-discipline',
   imports: [FormsModule, NgOptimizedImage, TranslatePipe],
   templateUrl: './modal-discipline.component.html',
-  styleUrl: './modal-discipline.component.css',
-  animations: [
-    trigger('backdropFade', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('200ms ease-out', style({ opacity: 1 }))
-      ]),
-      transition(':leave', [
-        animate('150ms ease-in', style({ opacity: 0 }))
-      ])
-    ]),
-    trigger('modalSlideIn', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'scale(0.95) translateY(-20px)' }),
-        animate('250ms ease-out', style({ opacity: 1, transform: 'scale(1) translateY(0)' }))
-      ]),
-      transition(':leave', [
-        animate('200ms ease-in', style({ opacity: 0, transform: 'scale(0.95) translateY(-20px)' }))
-      ])
-    ])
-  ]
+  styleUrl: './modal-discipline.component.css'
 })
 export class ModalDisciplineComponent {
   isOpen: InputSignal<boolean> = input.required<boolean>();
@@ -56,6 +35,7 @@ export class ModalDisciplineComponent {
   openAthleteModal: OutputEmitterRef<DisciplineResultForm> = output<DisciplineResultForm>();
   protected resultError: WritableSignal<string> = signal('');
   protected formData: WritableSignal<DisciplineResultForm> = signal(this.getEmptyForm());
+  protected isClosing: WritableSignal<boolean> = signal(false);
 
   /** Athletes sorted alphabetically by name for the dropdown. */
   protected sortedAthletes: Signal<V2Athlete[]> = computed((): V2Athlete[] =>
@@ -265,9 +245,14 @@ export class ModalDisciplineComponent {
    * Closes the modal and resets the form to its empty default state.
    */
   protected close(): void {
-    this.formData.set(this.getEmptyForm());
-    this.resultError.set('');
-    this.closeModal.emit();
+    this.isClosing.set(true);
+
+    setTimeout((): void => {
+      this.isClosing.set(false);
+      this.formData.set(this.getEmptyForm());
+      this.resultError.set('');
+      this.closeModal.emit();
+    }, 200);
   }
 
   /**

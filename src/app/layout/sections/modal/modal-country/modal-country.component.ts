@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 import {FormsModule} from "@angular/forms";
 import {NgOptimizedImage} from "@angular/common";
-import {animate, style, transition, trigger} from "@angular/animations";
 import {HttpErrorResponse} from "@angular/common/http";
 import {MiscService} from "../../../../services/misc/misc.service";
 import {CountryForm, CountryStats, FormCountryPayload, V2Country} from "../../../../types/Country";
@@ -28,37 +27,7 @@ import {DataHolderService} from "../../../../services/data-holder/data-holder.se
     TranslatePipe
   ],
   templateUrl: './modal-country.component.html',
-  styleUrl: './modal-country.component.css',
-  animations: [
-    trigger('backdropFade', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('200ms ease-out', style({ opacity: 1 }))
-      ]),
-      transition(':leave', [
-        animate('150ms ease-in', style({ opacity: 0 }))
-      ])
-    ]),
-    trigger('modalSlideIn', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'scale(0.95) translateY(-20px)' }),
-        animate('250ms ease-out', style({ opacity: 1, transform: 'scale(1) translateY(0)' }))
-      ]),
-      transition(':leave', [
-        animate('200ms ease-in', style({ opacity: 0, transform: 'scale(0.95) translateY(-20px)' }))
-      ])
-    ]),
-    trigger('slideDown', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(-8px)', maxHeight: '0', overflow: 'hidden' }),
-        animate('220ms ease-out', style({ opacity: 1, transform: 'translateY(0)', maxHeight: '200px', overflow: 'hidden' }))
-      ]),
-      transition(':leave', [
-        style({ opacity: 1, transform: 'translateY(0)', maxHeight: '200px', overflow: 'hidden' }),
-        animate('180ms ease-in', style({ opacity: 0, transform: 'translateY(-8px)', maxHeight: '0', overflow: 'hidden' }))
-      ])
-    ])
-  ]
+  styleUrl: './modal-country.component.css'
 })
 export class ModalCountryComponent {
   isOpen: InputSignal<boolean> = input.required<boolean>();
@@ -74,6 +43,8 @@ export class ModalCountryComponent {
   protected isEditMode: Signal<boolean> = computed(() => this.editData() !== null);
   protected translateMode: WritableSignal<boolean> = signal(false);
   protected isSaving: WritableSignal<boolean> = signal(false);
+  protected isClosing: WritableSignal<boolean> = signal(false);
+  protected isTranslateClosing: WritableSignal<boolean> = signal(false);
 
   constructor(protected miscService: MiscService, private translateService: TranslateService,
               private countryService: CountryService, private alertService: AlertService,
@@ -105,14 +76,18 @@ export class ModalCountryComponent {
         } else if (lang === 'fr') {
           this.formData.update(f => ({ ...f, countryName: '', nameFr: currentName }));
         }
-
         // For 'en' the value already belongs in countryName (the EN/base field), so no move needed.
       }
+      this.translateMode.set(true);
     } else {
-      this.formData.update(f => ({ ...f, nameDe: '', nameFr: '' }));
-    }
 
-    this.translateMode.set(enabled);
+      this.isTranslateClosing.set(true);
+      setTimeout((): void => {
+        this.isTranslateClosing.set(false);
+        this.translateMode.set(false);
+        this.formData.update(f => ({ ...f, nameDe: '', nameFr: '' }));
+      }, 250); // matches slideDownOut duration
+    }
   }
 
   /**
@@ -168,9 +143,14 @@ export class ModalCountryComponent {
    * Closes the modal, resets the form data to initial state, and emits the close event.
    */
   protected close(): void {
-    this.formData.set(this.getEmptyForm());
-    this.translateMode.set(false);
-    this.closeModal.emit();
+    this.isClosing.set(true);
+
+    setTimeout((): void => {
+      this.isClosing.set(false);
+      this.formData.set(this.getEmptyForm());
+      this.translateMode.set(false);
+      this.closeModal.emit();
+    }, 200); // matches the longest leave duration (backdrop: 150ms, modal: 200ms)
   }
 
   /**
