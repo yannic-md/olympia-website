@@ -1,7 +1,7 @@
-import {Component, computed, OnDestroy, Signal, signal, WritableSignal} from '@angular/core';
+import {Component, computed, Inject, OnDestroy, PLATFORM_ID, Signal, signal, WritableSignal} from '@angular/core';
 import {HeaderComponent} from "../../layout/sections/header/header.component";
 import {BreadcrumbComponent} from "../../layout/sections/breadcrumb/breadcrumb.component";
-import {NgClass, NgOptimizedImage} from "@angular/common";
+import {isPlatformBrowser, NgClass, NgOptimizedImage} from "@angular/common";
 import {FooterComponent} from "../../layout/sections/footer/footer.component";
 import {RouterLink} from "@angular/router";
 import {MiscService} from "../../services/misc/misc.service";
@@ -47,15 +47,21 @@ interface MedalWinner {
 export class HomeComponent implements OnDestroy {
   protected filterSport: WritableSignal<string> = signal('all');
   protected isLoading: WritableSignal<boolean> = signal(false);
+  protected skipEntryAnimation: boolean = false;
   private allCountries: WritableSignal<V2Country[]> = signal<V2Country[]>([]);
   protected allSports: WritableSignal<V2Sport[]> = signal<V2Sport[]>([]);
   private readonly translateSub: Subscription | undefined;
   private dataSub: Subscription | undefined;
 
-  constructor(protected miscService: MiscService, private apiService: ApiService,
+  constructor(@Inject(PLATFORM_ID) private platformId: Object,
+              protected miscService: MiscService, private apiService: ApiService,
               private alertService: AlertService, private translateService: TranslateService) {
-    this.loadData();
+    if (isPlatformBrowser(this.platformId)) {
+      // Don't replay the animation after an in-app route change – only on the initial page load.
+      this.skipEntryAnimation = document.readyState === 'complete';
+    }
 
+    this.loadData();
     this.translateSub = this.translateService.onLangChange.subscribe((): void => {
       this.loadData();
     });

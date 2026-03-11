@@ -1,9 +1,9 @@
-import {Component, OnDestroy, signal, WritableSignal} from '@angular/core';
+import {Component, Inject, OnDestroy, PLATFORM_ID, signal, WritableSignal} from '@angular/core';
 import {HeaderComponent} from '../../layout/sections/header/header.component';
 import {BreadcrumbComponent} from '../../layout/sections/breadcrumb/breadcrumb.component';
 import {FormsModule} from '@angular/forms';
 import {FooterComponent} from '../../layout/sections/footer/footer.component';
-import {NgOptimizedImage} from '@angular/common';
+import {isPlatformBrowser, NgOptimizedImage} from '@angular/common';
 import {FilterSelectComponent} from '../../layout/elements/filter-select/filter-select.component';
 import {AlertBoxComponent} from '../../layout/sections/alert-box/alert-box.component';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
@@ -39,11 +39,17 @@ export class DetailedComponent implements OnDestroy {
   protected filterMedal: WritableSignal<'all' | 'gold' | 'silver' | 'bronze'> =
     signal<'all' | 'gold' | 'silver' | 'bronze'>('all');
   protected searchQuery: WritableSignal<string> = signal<string>('');
+  protected skipEntryAnimation: boolean = false;
   private readonly translateSub: Subscription;
 
-  constructor(protected dataService: DataHolderService, protected translateService: TranslateService) {
-    this.dataService.load();
+  constructor(@Inject(PLATFORM_ID) private platformId: Object,
+              protected dataService: DataHolderService, protected translateService: TranslateService) {
+    if (isPlatformBrowser(this.platformId)) {
+      // Don't replay the animation after an in-app route change – only on the initial page load.
+      this.skipEntryAnimation = document.readyState === 'complete';
+    }
 
+    this.dataService.load();
     this.translateSub = this.translateService.onLangChange.subscribe((): void => {
       this.dataService.load();
     });

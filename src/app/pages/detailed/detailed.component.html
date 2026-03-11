@@ -6,7 +6,8 @@
 <section class="w-full md:max-w-3/4 mx-auto mb-6 lg:mb-10 p-6 lg:p-0">
 
   <!-- Filter Actions - Result Container -->
-  <div class="bg-neutral-100 mb-8 md:mb-12 p-4 md:p-10 md:px-23 md:pb-6 border-neutral-200 border-t">
+  <div class="bg-neutral-100 mb-8 md:mb-12 p-4 md:p-10 md:px-23 md:pb-6 border-neutral-200 border-t"
+       [class.animation-slideInLeftToRight]="!skipEntryAnimation">
     <h2 class="text-4xl text-center lg:text-start tracking-wide font-normal text-gray-900 mb-8">
       {{ 'PAGE.DETAILED.FILTER.TITLE' | translate }}
     </h2>
@@ -73,20 +74,21 @@
   </div>
 
   <!-- View Content -->
-  <div class="bg-neutral-100 mb-8 md:mb-12 p-4 md:p-10 md:px-23 md:pb-6 border-neutral-200 border-t">
-    @switch (selectedView()) {
-      @case ('athletes') {
-        <app-athlete-view [filterCountry]="filterCountry()" [filterSport]="filterSport()" [filterMedal]="filterMedal()"
-                          [searchQuery]="searchQuery()" />
+  <div class="bg-neutral-100 mb-8 md:mb-12 p-4 md:p-10 md:px-23 md:pb-6 border-neutral-200 border-t"
+       [class.animation-fadeInOpacity]="!skipEntryAnimation">
+      @switch (selectedView()) {
+        @case ('athletes') {
+          <app-athlete-view [filterCountry]="filterCountry()" [filterSport]="filterSport()" [filterMedal]="filterMedal()"
+                            [searchQuery]="searchQuery()" />
+        }
+        @case ('countries') {
+          <app-country-view [filterCountry]="filterCountry()" [filterMedal]="filterMedal()" [searchQuery]="searchQuery()" />
+        }
+        @case ('disciplines') {
+          <app-disciplines-view [filterCountry]="filterCountry()" [filterSport]="filterSport()"
+                                [filterMedal]="filterMedal()" [searchQuery]="searchQuery()" />
+        }
       }
-      @case ('countries') {
-        <app-country-view [filterCountry]="filterCountry()" [filterMedal]="filterMedal()" [searchQuery]="searchQuery()" />
-      }
-      @case ('disciplines') {
-        <app-disciplines-view [filterCountry]="filterCountry()" [filterSport]="filterSport()"
-                              [filterMedal]="filterMedal()" [searchQuery]="searchQuery()" />
-      }
-    }
   </div>
 
 </section>
