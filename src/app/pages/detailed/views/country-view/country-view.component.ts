@@ -1,4 +1,3 @@
-import {animate, style, transition, trigger} from '@angular/animations';
 import {Component, computed, input, InputSignal, Signal, signal, WritableSignal} from '@angular/core';
 import {NgOptimizedImage} from '@angular/common';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
@@ -27,16 +26,7 @@ import {sortByMedals} from '../../utils/medal-sort.util';
     ModalCountryComponent,
   ],
   templateUrl: './country-view.component.html',
-  styleUrl: './country-view.component.css',
-  animations: [
-    trigger('viewEnter', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(14px)' }),
-        animate('280ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1, transform: 'translateY(0)' })),
-      ]),
-    ]),
-  ],
-  host: { '[@viewEnter]': '' },
+  styleUrl: './country-view.component.css'
 })
 export class CountryViewComponent {
   filterCountry: InputSignal<string> = input.required<string>();

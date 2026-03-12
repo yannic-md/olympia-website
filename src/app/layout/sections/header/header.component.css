@@ -1,0 +1,27 @@
+/* Mobile Navigation Menu slide-down / slide-up */
+.mobile-nav-menu {
+  @starting-style {
+    max-height: 0;
+  }
+
+  overflow: hidden;
+  max-height: 200px;
+  transition: all 300ms ease-in-out;
+}
+
+.mobile-nav-menu.animation-leaving {
+  max-height: 0;
+}
+
+.mobile-backdrop {
+  @starting-style {
+    opacity: 0;
+  }
+
+  opacity: 1;
+  transition: all 300ms ease-in;
+}
+
+.mobile-backdrop.animation-leaving {
+  opacity: 0;
+}

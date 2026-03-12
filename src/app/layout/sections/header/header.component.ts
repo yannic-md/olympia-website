@@ -1,7 +1,6 @@
 import {Component, HostListener, Inject, OnInit, PLATFORM_ID} from '@angular/core';
 import {Router, RouterLink, RouterLinkActive} from "@angular/router";
 import {isPlatformBrowser, NgClass, NgOptimizedImage} from "@angular/common";
-import {animate, style, transition, trigger} from "@angular/animations";
 import {MiscService} from "../../../services/misc/misc.service";
 import {AuthService} from "../../../services/api/auth/auth.service";
 import {AlertService} from "../../../services/api/alert/alert.service";
@@ -18,17 +17,6 @@ import {TranslatePipe, TranslateService} from "@ngx-translate/core";
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
-  animations: [
-    trigger('fadeInOut', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('150ms ease-in', style({ opacity: 1 }))
-      ]),
-      transition(':leave', [
-        animate('150ms ease-out', style({ opacity: 0 }))
-      ])
-    ])
-  ]
 })
 export class HeaderComponent implements OnInit {
   protected isLanguageMenuOpen: boolean = false;
@@ -40,12 +28,19 @@ export class HeaderComponent implements OnInit {
   protected lastScrollPosition: number = 0;
   protected scrollThreshold: number = 50;
   protected isHoveringHeader: boolean = false;
+  protected isMenuLeaving: boolean = false;
+  protected skipEntryAnimation: boolean = false;
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object, protected miscService: MiscService,
               protected authService: AuthService, private alertService: AlertService, private router: Router,
               private translateService: TranslateService) {
-    if (isPlatformBrowser(this.platformId) && localStorage.getItem('lang') != null) {
-      this.currentLanguage = localStorage.getItem('lang') as string;
+    if (isPlatformBrowser(this.platformId)) {
+      if (localStorage.getItem('lang') != null) {
+        this.currentLanguage = localStorage.getItem('lang') as string;
+      }
+
+      // don't play animation again after route change
+      this.skipEntryAnimation = document.readyState === 'complete';
     }
   }
 
@@ -53,7 +48,7 @@ export class HeaderComponent implements OnInit {
    * Initializes the component and stores the current scroll position.
    * This is used as a baseline for detecting scroll direction changes.
    */
-  public ngOnInit(): void {
+  ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.lastScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
     }
@@ -71,7 +66,13 @@ export class HeaderComponent implements OnInit {
    * Toggles the mobile navigation menu.
    */
   protected toggleMobileMenu(): void {
-    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    if (this.isMobileMenuOpen) {
+      this.isMenuLeaving = true;
+
+      setTimeout((): void => { this.isMobileMenuOpen = false; this.isMenuLeaving = false; }, 300);
+    } else {
+      this.isMobileMenuOpen = true;
+    }
   }
 
   /**
@@ -125,15 +126,11 @@ export class HeaderComponent implements OnInit {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    const languageMenu: HTMLDivElement | null = target.closest('.language-menu-container');
-    const mobileMenu: HTMLDivElement | null = target.closest('.mobile-menu-container');
-
-    if (!languageMenu && this.isLanguageMenuOpen) {
+    if (!target.closest('.language-menu-container') && this.isLanguageMenuOpen) {
       this.isLanguageMenuOpen = false;
     }
-
-    if (!mobileMenu && this.isMobileMenuOpen) {
-      this.isMobileMenuOpen = false;
+    if (!target.closest('.mobile-menu-container') && this.isMobileMenuOpen) {
+      this.toggleMobileMenu();
     }
   }
 

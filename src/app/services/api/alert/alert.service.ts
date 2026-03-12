@@ -6,6 +6,7 @@ export interface AlertMessage {
   message: string;
   type: AlertType;
   id: number;
+  leaving?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -35,7 +36,10 @@ export class AlertService {
    * @param {number} id - The ID of the alert to remove
    */
   dismiss(id: number): void {
-    this.alerts.update(current => current.filter(a => a.id !== id));
+    this.alerts.update(current => current.map(a => a.id === id ? { ...a, leaving: true } : a));
+    setTimeout(() => {
+      this.alerts.update(current => current.filter(a => a.id !== id));
+    }, 200);
   }
 
   success(message: string, duration?: number): void { this.show(message, 'success', duration); }

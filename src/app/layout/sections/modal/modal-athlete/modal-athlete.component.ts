@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 import {FormsModule} from "@angular/forms";
 import {NgOptimizedImage} from "@angular/common";
-import {animate, style, transition, trigger} from "@angular/animations";
 import {HttpErrorResponse} from "@angular/common/http";
 import {MiscService} from "../../../../services/misc/misc.service";
 import {AthleteForm, V2Athlete} from "../../../../types/Athlete";
@@ -25,27 +24,7 @@ import {AlertService} from "../../../../services/api/alert/alert.service";
   selector: 'app-modal-athlete',
   imports: [FormsModule, NgOptimizedImage, TranslatePipe],
   templateUrl: './modal-athlete.component.html',
-  styleUrl: './modal-athlete.component.css',
-  animations: [
-    trigger('backdropFade', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('200ms ease-out', style({ opacity: 1 }))
-      ]),
-      transition(':leave', [
-        animate('150ms ease-in', style({ opacity: 0 }))
-      ])
-    ]),
-    trigger('modalSlideIn', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'scale(0.95) translateY(-20px)' }),
-        animate('250ms ease-out', style({ opacity: 1, transform: 'scale(1) translateY(0)' }))
-      ]),
-      transition(':leave', [
-        animate('200ms ease-in', style({ opacity: 0, transform: 'scale(0.95) translateY(-20px)' }))
-      ])
-    ])
-  ]
+  styleUrl: './modal-athlete.component.css'
 })
 export class ModalAthleteComponent {
   isOpen: InputSignal<boolean> = input.required<boolean>();
@@ -62,6 +41,7 @@ export class ModalAthleteComponent {
   protected formData: WritableSignal<AthleteForm> = signal(this.getEmptyForm());
   protected nameError: WritableSignal<string> = signal('');
   protected isEditMode: Signal<boolean> = computed((): boolean => this.editData() !== null);
+  protected isClosing: WritableSignal<boolean> = signal(false);
 
   constructor(protected miscService: MiscService, private translateService: TranslateService,
               private athleteService: AthleteService, private dataService: DataHolderService,
@@ -142,9 +122,14 @@ export class ModalAthleteComponent {
    * Closes the modal, resets the form data to initial state, and emits the close event.
    */
   protected close(): void {
-    this.formData.set(this.getEmptyForm());
-    this.nameError.set('');
-    this.closeModal.emit();
+    this.isClosing.set(true);
+
+    setTimeout((): void => {
+      this.isClosing.set(false);
+      this.formData.set(this.getEmptyForm());
+      this.nameError.set('');
+      this.closeModal.emit();
+    }, 200);
   }
 
   /**

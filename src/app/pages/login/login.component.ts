@@ -1,5 +1,5 @@
-import {Component, signal, WritableSignal} from '@angular/core';
-import {NgOptimizedImage} from "@angular/common";
+import {Component, Inject, PLATFORM_ID, signal, WritableSignal} from '@angular/core';
+import {isPlatformBrowser, NgOptimizedImage} from "@angular/common";
 import {Router, RouterLink} from "@angular/router";
 import {ModalRegisterComponent} from "../../layout/sections/modal/modal-register/modal-register.component";
 import {FormsModule} from "@angular/forms";
@@ -39,9 +39,16 @@ export class LoginComponent {
   protected isRegisterModalOpen: WritableSignal<boolean> = signal(false);
   protected loginError: WritableSignal<string> = signal('');
   protected isLoading: WritableSignal<boolean> = signal(false);
+  protected skipEntryAnimation: boolean = false;
 
-  constructor(private router: Router, protected miscService: MiscService, private authService: AuthService,
-              private alertService: AlertService, private translateService: TranslateService) {}
+  constructor(@Inject(PLATFORM_ID) private platformId: Object, private router: Router,
+              protected miscService: MiscService, private authService: AuthService,
+              private alertService: AlertService, private translateService: TranslateService) {
+    if (isPlatformBrowser(this.platformId)) {
+      // Don't replay the animation after an in-app route change – only on the initial page load.
+      this.skipEntryAnimation = document.readyState === 'complete';
+    }
+  }
 
   /**
    * Handles the user login process and navigates to the home page on success.

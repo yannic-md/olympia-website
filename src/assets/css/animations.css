@@ -1,0 +1,176 @@
+@keyframes fadeInDropDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeInDropDown 0.15s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animation-slideIn {
+  animation: slideIn 300ms ease-out forwards;
+}
+
+@keyframes slideInLeftToRight {
+  from {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animation-slideInLeftToRight {
+  animation: slideInLeftToRight 300ms ease-out;
+}
+
+@keyframes slideInRightToLeft {
+  from {
+    opacity: 0;
+    transform: translateX(60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animation-slideInRightToLeft {
+  animation: slideInRightToLeft 300ms ease-out forwards;
+}
+
+@keyframes slideInFromBottomToTop {
+  from {
+    opacity: 0;
+    transform: translateY(60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animation-slideInFromBottomToTop {
+  animation: slideInFromBottomToTop 300ms ease-out forwards;
+}
+
+@keyframes fadeInBottomTop {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOutBottomTop {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.animation-fadeInBottomTop {
+  animation: fadeInBottomTop 300ms ease-out forwards;
+}
+
+.animation-fadeOutBottomTop {
+  animation: fadeOutBottomTop 200ms ease-in forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animation-fadeInOpacity {
+  animation: fadeIn 300ms ease-out;
+}
+
+
+/*                              MODALS                                      */
+
+
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes backdropFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.animation-backdropFadeIn {
+  animation: backdropFadeIn 200ms ease-out forwards;
+}
+
+.animation-backdropFadeOut {
+  animation: backdropFadeOut 150ms ease-in forwards;
+}
+
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-20px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);     }
+}
+
+@keyframes modalSlideOut {
+  from { opacity: 1; transform: scale(1)    translateY(0);     }
+  to   { opacity: 0; transform: scale(0.95) translateY(-20px); }
+}
+
+.animation-modalSlideIn {
+  animation: modalSlideIn 250ms ease-out forwards;
+}
+
+.animation-modalSlideOut {
+  animation: modalSlideOut 200ms ease-in forwards;
+}
+
+@keyframes slideDownIn {
+  from { opacity: 0; transform: translateY(-8px); max-height: 0;     overflow: hidden; }
+  to   { opacity: 1; transform: translateY(0);    max-height: 200px; overflow: hidden; }
+}
+
+@keyframes slideDownOut {
+  from { opacity: 1; transform: translateY(0);    max-height: 200px; overflow: hidden; }
+  to   { opacity: 0; transform: translateY(-8px); max-height: 0;     overflow: hidden; }
+}
+
+.animation-slideDownIn {
+  animation: slideDownIn 400ms ease-out forwards;
+}
+
+.animation-slideDownOut {
+  animation: slideDownOut 250ms ease-in forwards;
+}
+
+
+

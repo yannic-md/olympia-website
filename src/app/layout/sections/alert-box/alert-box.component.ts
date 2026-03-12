@@ -1,5 +1,4 @@
 import {Component} from '@angular/core';
-import { animate, style, transition, trigger } from '@angular/animations';
 import {AlertMessage, AlertService} from "../../../services/api/alert/alert.service";
 
 @Component({
@@ -7,17 +6,6 @@ import {AlertMessage, AlertService} from "../../../services/api/alert/alert.serv
   imports: [],
   templateUrl: './alert-box.component.html',
   styleUrl: './alert-box.component.css',
-  animations: [
-    trigger('fadeInOut', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(10px)' }),
-        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ]),
-      transition(':leave', [
-        animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' }))
-      ])
-    ])
-  ]
 })
 export class AlertBoxComponent {
 
