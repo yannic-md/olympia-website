@@ -1,4 +1,4 @@
-import {Component, Inject, OnDestroy, PLATFORM_ID, signal, WritableSignal} from '@angular/core';
+import {Component, effect, Inject, OnDestroy, PLATFORM_ID, signal, WritableSignal} from '@angular/core';
 import {HeaderComponent} from '../../layout/sections/header/header.component';
 import {BreadcrumbComponent} from '../../layout/sections/breadcrumb/breadcrumb.component';
 import {FormsModule} from '@angular/forms';
@@ -40,6 +40,7 @@ export class DetailedComponent implements OnDestroy {
     signal<'all' | 'gold' | 'silver' | 'bronze'>('all');
   protected searchQuery: WritableSignal<string> = signal<string>('');
   protected skipEntryAnimation: boolean = false;
+  protected animationTrigger: WritableSignal<number> = signal<number>(0);
   private readonly translateSub: Subscription;
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object,
@@ -52,6 +53,12 @@ export class DetailedComponent implements OnDestroy {
     this.dataService.load();
     this.translateSub = this.translateService.onLangChange.subscribe((): void => {
       this.dataService.load();
+    });
+
+    // replay animation if selectedView changes its value
+    effect((): void => {
+      this.selectedView();
+      this.animationTrigger.update(v => v + 1);
     });
   }
 

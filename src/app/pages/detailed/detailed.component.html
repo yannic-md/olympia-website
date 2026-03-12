@@ -74,22 +74,24 @@
   </div>
 
   <!-- View Content -->
-  <div class="bg-neutral-100 mb-8 md:mb-12 p-4 md:p-10 md:px-23 md:pb-6 border-neutral-200 border-t"
-       [class.animation-fadeInOpacity]="!skipEntryAnimation">
-      @switch (selectedView()) {
-        @case ('athletes') {
-          <app-athlete-view [filterCountry]="filterCountry()" [filterSport]="filterSport()" [filterMedal]="filterMedal()"
-                            [searchQuery]="searchQuery()" />
+  @for (trigger of [animationTrigger()]; track trigger) {
+    <div class="bg-neutral-100 mb-8 md:mb-12 p-4 md:p-10 md:px-23 md:pb-6 border-neutral-200 border-t
+                animation-fadeInOpacity">
+        @switch (selectedView()) {
+          @case ('athletes') {
+            <app-athlete-view [filterCountry]="filterCountry()" [filterSport]="filterSport()" [filterMedal]="filterMedal()"
+                              [searchQuery]="searchQuery()" />
+          }
+          @case ('countries') {
+            <app-country-view [filterCountry]="filterCountry()" [filterMedal]="filterMedal()" [searchQuery]="searchQuery()" />
+          }
+          @case ('disciplines') {
+            <app-disciplines-view [filterCountry]="filterCountry()" [filterSport]="filterSport()"
+                                  [filterMedal]="filterMedal()" [searchQuery]="searchQuery()" />
+          }
         }
-        @case ('countries') {
-          <app-country-view [filterCountry]="filterCountry()" [filterMedal]="filterMedal()" [searchQuery]="searchQuery()" />
-        }
-        @case ('disciplines') {
-          <app-disciplines-view [filterCountry]="filterCountry()" [filterSport]="filterSport()"
-                                [filterMedal]="filterMedal()" [searchQuery]="searchQuery()" />
-        }
-      }
-  </div>
+    </div>
+  }
 
 </section>
 
