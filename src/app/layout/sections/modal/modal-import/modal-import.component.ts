@@ -43,6 +43,7 @@ import {AlertService} from "../../../../services/api/alert/alert.service";
 })
 export class ModalImportComponent {
   isOpen: InputSignal<boolean> = input.required<boolean>();
+  importTitle: InputSignal<string> = input<string>('MODAL.IMPORT.TITLE');
   closeModal: OutputEmitterRef<void> = output<void>();
   importComplete: OutputEmitterRef<void> = output<void>();
 
