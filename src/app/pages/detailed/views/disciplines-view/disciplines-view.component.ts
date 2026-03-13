@@ -195,7 +195,7 @@ export class DisciplinesViewComponent {
 
         this.resultService.patchResultUpsert(form.sportRawName, medalUpper, form.athleteId, res.athleteFirstName,
                                              res.athleteLastName, res.id, res.timeOrPoints, sport.id, sport.name,
-                                             res.scoreType ?? sport.scoreType ?? null);
+                                             res.scoreType || sport.scoreType || null);
 
         this.alertService.success(this.translateService.instant('ALERT.RESULT.ADD').replace('[name]', athleteName)
                                                                                         .replace('[sport]', sport.name));
