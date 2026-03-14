@@ -109,6 +109,6 @@
                    (closeModal)="onCloseCountryModal()" (countryCreated)="onAddCountryFromDiscipline($any($event))" />
 
 <!-- Import modal -->
-<app-modal-import [isOpen]="isImportModalOpen()" importTitle="MODAL.IMPORT.DISCIPLINES"
+<app-modal-import [isOpen]="isImportModalOpen()" importTitle="MODAL.IMPORT.DISCIPLINES" importType="results"
                   (closeModal)="onCloseImportModal()" (importComplete)="onCloseImportModal()" />
 

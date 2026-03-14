@@ -167,7 +167,7 @@
                    (closeModal)="onCloseCountryModal()" (countryCreated)="onCountryCreated($event)" />
 
 <!-- Import modal -->
-<app-modal-import [isOpen]="isImportModalOpen()" importTitle="MODAL.IMPORT.ATHLETES"
+<app-modal-import [isOpen]="isImportModalOpen()" importTitle="MODAL.IMPORT.ATHLETES" importType="athletes"
                   (importComplete)="onImportComplete()"
                   (closeModal)="isImportModalOpen.set(false)" />
 

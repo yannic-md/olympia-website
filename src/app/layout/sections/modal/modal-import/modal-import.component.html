@@ -50,6 +50,24 @@
             </p>
           </div>
 
+          <!-- Import Errors Display (if any) -->
+          @if (importErrors()) {
+            <div class="border border-red-200 bg-red-50 rounded-lg p-4">
+              <h4 class="font-semibold text-red-900 mb-3">{{ 'MODAL.IMPORT.ERRORS.TITLE' | translate }}</h4>
+              <div class="space-y-2 max-h-48 overflow-y-auto">
+                @for (error of importErrors(); track error.rowNumber) {
+                  <div class="text-sm text-red-800 border-l-2 border-red-400 pl-2">
+                    <strong>{{ 'MODAL.IMPORT.ERRORS.ROW' | translate }}: {{ error.rowNumber }}</strong>
+                    - {{ error.errorMessage }}
+                    @if (error.fieldName) {
+                      <br><span class="text-xs">{{ 'MODAL.IMPORT.ERRORS.FIELD' | translate }}: {{ error.fieldName }}</span>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
           <!-- Form Actions -->
           <div class="border-t border-neutral-200 w-full">
             <div class="flex flex-col-reverse sm:flex-row gap-3 pt-4 justify-center">
