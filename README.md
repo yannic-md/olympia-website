@@ -75,11 +75,11 @@
 › You need to have <strong><a href="https://www.docker.com/products/docker-desktop/" target="_blank">Docker Desktop</a></strong> installed and started.
 
 ### Start the project
-1. Clone the repository by using `git clone https://github.com/deinname/olympia-website-new.git`
-2. Switch to the correct folder: `cd olympia-website-new`
+1. Clone the repository by using `git clone https://github.com/yannic-md/olympia-website.git`
+2. Switch to the correct folder: `cd olympia-website`
 3. Run `docker compose up --build` and wait a few minutes.
    - You will probaly see a `Unknown Error`, but you can ignore it - docker will continue anyway.
-4. Run the Backend REST-API (More Details <strong><a href="https://github.com/yannic-md/olympia-website-api/blob/main/README.md#-how-can-i-use-the-project" target="_blank">here</a></strong>)
+4. Run the Backend REST-API (More Details <strong><a href="https://github.com/yannic-md/olympia-website-api/blob/main/README.md#-how-can-i-run-the-project" target="_blank">here</a></strong>)
 5. Visit the page in your browser: https://localhost:4000
 
 ## 📚 User Guide for Competition Judges
