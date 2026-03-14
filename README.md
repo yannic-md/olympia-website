@@ -75,13 +75,14 @@
 › You need to have <strong><a href="https://www.docker.com/products/docker-desktop/" target="_blank">Docker Desktop</a></strong> installed and started.
 
 ### Start the project
-1. Clone the repository by using `git clone https://github.com/yannic-md/olympia-website.git`
-2. Switch to the correct folder: `cd olympia-website`
-3. Run `docker compose up --build` and wait a few minutes.
+1. Run the Backend REST-API (More Details <strong><a href="https://github.com/yannic-md/olympia-website-api/blob/main/README.md#-how-can-i-run-the-project" target="_blank">here</a></strong>)
+2. Clone the repository by using `git clone https://github.com/yannic-md/olympia-website.git`
+3. Switch to the correct folder: `cd olympia-website`
+4. Run `docker compose up --build` and wait a few minutes.
    - You will probaly see a `Unknown Error`, but you can ignore it - docker will continue anyway.
-4. Run the Backend REST-API (More Details <strong><a href="https://github.com/yannic-md/olympia-website-api/blob/main/README.md#-how-can-i-run-the-project" target="_blank">here</a></strong>)
 5. Visit the page in your browser: https://localhost:4000
 
+<strong>You only need to do that once. From now on, you can start/stop the project in the "Docker Desktop" application.</strong>
 ## 📚 User Guide for Competition Judges
 › Competition judges can log in or register on this website to create, edit, or delete tournament data (athletes, countries, or competition results). Alternatively, an Excel import is also available.
 
