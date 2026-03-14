@@ -22,9 +22,9 @@
 </h4>
 
 ## 📑 Table of Contents
-- [🗯️ Introduction](#-introduction)
+- [🗯️ Introduction](#%EF%B8%8F-introduction)
 - [🪛 Features](#-features)
-- [🔨 How can I use the project?](#-how-can-i-use-the-project)
+- [🔨 How can I run the project?](#-how-can-i-run-the-project)
   - [Requirements](#requirements)
   - [Start the project](#start-the-project)
 - [📚 User Guide for Competition Judges](#-user-guide-for-competition-judges)
