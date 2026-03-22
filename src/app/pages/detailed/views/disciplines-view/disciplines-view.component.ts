@@ -16,11 +16,12 @@ import {DisciplineCard, DisciplineParticipant,
 import {ModalDisciplineComponent} from '../../../../layout/sections/modal/modal-discipline/modal-discipline.component';
 import {ModalAthleteComponent} from '../../../../layout/sections/modal/modal-athlete/modal-athlete.component';
 import {ModalCountryComponent} from '../../../../layout/sections/modal/modal-country/modal-country.component';
+import {ModalImportComponent} from '../../../../layout/sections/modal/modal-import/modal-import.component';
 
 @Component({
   selector: 'app-disciplines-view',
   imports: [TranslatePipe, NgOptimizedImage, DisciplineWinnerRowComponent,
-            ModalDisciplineComponent, ModalAthleteComponent, ModalCountryComponent],
+            ModalDisciplineComponent, ModalAthleteComponent, ModalCountryComponent, ModalImportComponent],
   templateUrl: './disciplines-view.component.html',
   styleUrls: ['./disciplines-view.component.css']
 })
@@ -34,6 +35,7 @@ export class DisciplinesViewComponent {
   protected isDisciplineModalOpen: WritableSignal<boolean> = signal(false);
   protected isAthleteModalOpen: WritableSignal<boolean> = signal(false);
   protected isCountryModalOpen: WritableSignal<boolean> = signal(false);
+  protected isImportModalOpen: WritableSignal<boolean> = signal(false);
   protected suspendedDisciplineForm: WritableSignal<DisciplineResultForm | null> = signal(null);
   protected suspendedAthleteForm: WritableSignal<AthleteForm | null> = signal(null);
 
@@ -334,5 +336,19 @@ export class DisciplinesViewComponent {
     if (this.suspendedAthleteForm() !== null) {
       this.isAthleteModalOpen.set(true);
     }
+  }
+
+  /**
+   * Opens the import modal.
+   */
+  protected onOpenImportModal(): void {
+    this.isImportModalOpen.set(true);
+  }
+
+  /**
+   * Closes the import modal.
+   */
+  protected onCloseImportModal(): void {
+    this.isImportModalOpen.set(false);
   }
 }
