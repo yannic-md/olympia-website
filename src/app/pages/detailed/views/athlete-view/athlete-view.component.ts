@@ -9,7 +9,6 @@ import {TableMedalPillsComponent} from '../../../../layout/elements/table-medal-
 import {TableActionsComponent} from '../../../../layout/elements/table-actions/table-actions.component';
 import {ModalAthleteComponent} from '../../../../layout/sections/modal/modal-athlete/modal-athlete.component';
 import {ModalCountryComponent} from '../../../../layout/sections/modal/modal-country/modal-country.component';
-import {ModalImportComponent} from '../../../../layout/sections/modal/modal-import/modal-import.component';
 import {AlertService} from '../../../../services/api/alert/alert.service';
 import {AuthService} from '../../../../services/api/auth/auth.service';
 import {AthleteService} from '../../../../services/api/athlete/athlete.service';
@@ -30,7 +29,6 @@ import {V2SportResult} from "../../../../types/Disciplines";
     TableActionsComponent,
     ModalAthleteComponent,
     ModalCountryComponent,
-    ModalImportComponent,
   ],
   templateUrl: './athlete-view.component.html',
   styleUrl: './athlete-view.component.css'
@@ -48,7 +46,6 @@ export class AthleteViewComponent {
   protected suspendedAthleteForm: WritableSignal<AthleteForm | null> = signal(null);
   protected isAthleteModalOpen: WritableSignal<boolean> = signal(false);
   protected isCountryModalOpen: WritableSignal<boolean> = signal(false);
-  protected isImportModalOpen: WritableSignal<boolean> = signal(false);
   protected editingAthlete: WritableSignal<V2Athlete | null> = signal(null);
   protected expandedAthletes: WritableSignal<Set<number>> = signal(new Set<number>());
 
@@ -211,13 +208,6 @@ export class AthleteViewComponent {
     if (this.suspendedAthleteForm() !== null) {
       this.isAthleteModalOpen.set(true);
     }
-  }
-
-  /**
-   * Handles the import modal completion and resets the state.
-   */
-  protected onImportComplete(): void {
-    this.isImportModalOpen.set(false);
   }
 
   /**

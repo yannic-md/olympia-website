@@ -8,7 +8,6 @@ import {TableCountryBadgeComponent} from '../../../../layout/elements/table-coun
 import {TableMedalPillsComponent} from '../../../../layout/elements/table-medal-pills/table-medal-pills.component';
 import {TableActionsComponent} from '../../../../layout/elements/table-actions/table-actions.component';
 import {ModalCountryComponent} from '../../../../layout/sections/modal/modal-country/modal-country.component';
-import {ModalImportComponent} from '../../../../layout/sections/modal/modal-import/modal-import.component';
 import {AlertService} from '../../../../services/api/alert/alert.service';
 import {AuthService} from '../../../../services/api/auth/auth.service';
 import {CountryService} from '../../../../services/api/country/country.service';
@@ -25,7 +24,6 @@ import {sortByMedals} from '../../utils/medal-sort.util';
     TableMedalPillsComponent,
     TableActionsComponent,
     ModalCountryComponent,
-    ModalImportComponent,
   ],
   templateUrl: './country-view.component.html',
   styleUrl: './country-view.component.css'
@@ -36,7 +34,6 @@ export class CountryViewComponent {
   searchQuery: InputSignal<string> = input.required<string>();
 
   protected isCountryModalOpen: WritableSignal<boolean> = signal(false);
-  protected isImportModalOpen: WritableSignal<boolean> = signal(false);
   protected editingCountry: WritableSignal<CountryStats | null> = signal(null);
   /** Tracks which country rows are currently expanded (by countryId). */
   protected expandedCountries: WritableSignal<Set<number>> = signal(new Set<number>());
@@ -199,20 +196,6 @@ export class CountryViewComponent {
   protected onCloseCountryModal(): void {
     this.isCountryModalOpen.set(false);
     this.editingCountry.set(null);
-  }
-
-  /**
-   * Opens the import modal.
-   */
-  protected onOpenImportModal(): void {
-    this.isImportModalOpen.set(true);
-  }
-
-  /**
-   * Closes the import modal.
-   */
-  protected onCloseImportModal(): void {
-    this.isImportModalOpen.set(false);
   }
 }
 
