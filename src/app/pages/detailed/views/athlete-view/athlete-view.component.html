@@ -7,10 +7,9 @@
   @if (authService.isLoggedIn()) {
     <div class="flex justify-center gap-x-4 mx-auto lg:mx-0">
       <button class="flex items-center gap-2 rounded bg-purple-500 px-4 py-2 text-sm font-semibold text-white
-                     transition hover:bg-purple-600 shadow-sm cursor-pointer"
-              (click)="isImportModalOpen.set(true)">
+                     transition hover:bg-purple-600 shadow-sm cursor-pointer">
         <img ngSrc="/assets/images/icons/upload.svg" width="16" height="16" alt="Upload Icon" class="invert" />
-        {{ 'BUTTON.IMPORT' | translate }}
+        {{ 'BUTTON.IMPORT' | translate }} <!-- Todo: Functionality -->
       </button>
       <button class="flex items-center gap-2 rounded bg-green-500 px-4 py-2 text-sm font-semibold text-white
                      transition hover:bg-green-600 shadow-sm cursor-pointer"
@@ -165,9 +164,4 @@
 <!-- Inline country creation modal (triggered from within the athlete modal) -->
 <app-modal-country [isOpen]="isCountryModalOpen()" [editData]="null" [existingCountries]="dataService.countriesData()"
                    (closeModal)="onCloseCountryModal()" (countryCreated)="onCountryCreated($event)" />
-
-<!-- Import modal -->
-<app-modal-import [isOpen]="isImportModalOpen()" importTitle="MODAL.IMPORT.ATHLETES" importType="athletes"
-                  (importComplete)="onImportComplete()"
-                  (closeModal)="isImportModalOpen.set(false)" />
 
