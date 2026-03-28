@@ -1155,4 +1155,22 @@ describe('AthleteViewComponent', () => {
       expect(result.lastName).toBe('');
     });
   });
+
+  describe('onImportComplete', () => {
+    it('should close the import modal', () => {
+      component['isImportModalOpen'].set(true);
+
+      component['onImportComplete']();
+
+      expect(component['isImportModalOpen']()).toBe(false);
+    });
+
+    it('should remain false when already closed', () => {
+      component['isImportModalOpen'].set(false);
+
+      component['onImportComplete']();
+
+      expect(component['isImportModalOpen']()).toBe(false);
+    });
+  });
 });

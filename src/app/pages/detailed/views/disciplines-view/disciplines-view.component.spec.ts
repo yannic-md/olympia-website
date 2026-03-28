@@ -965,6 +965,34 @@ describe('DisciplinesViewComponent', () => {
       expect(component['isAthleteModalOpen']()).toBe(false);
     });
   });
+
+  describe('onOpenImportModal', () => {
+    it('should open the import modal', () => {
+      component['isImportModalOpen'].set(false);
+
+      component['onOpenImportModal']();
+
+      expect(component['isImportModalOpen']()).toBe(true);
+    });
+  });
+
+  describe('onCloseImportModal', () => {
+    it('should close the import modal', () => {
+      component['isImportModalOpen'].set(true);
+
+      component['onCloseImportModal']();
+
+      expect(component['isImportModalOpen']()).toBe(false);
+    });
+
+    it('should remain false when already closed', () => {
+      component['isImportModalOpen'].set(false);
+
+      component['onCloseImportModal']();
+
+      expect(component['isImportModalOpen']()).toBe(false);
+    });
+  });
 });
 
 
