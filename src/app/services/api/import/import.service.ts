@@ -1,30 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_URL } from '../../../types/API';
-
-/**
- * Import response DTO from backend
- */
-export interface ImportResponse {
-  importLogId?: number;
-  status: 'COMPLETED' | 'FAILED' | 'PARTIAL';
-  importType: 'COUNTRIES' | 'ATHLETES' | 'RESULTS';
-  filename: string;
-  totalRecords: number;
-  successfulRecords: number;
-  failedRecords: number;
-  message: string;
-  errors?: ImportError[];
-}
-
-export interface ImportError {
-  rowNumber: number;
-  errorCode: string;
-  errorMessage: string;
-  fieldName?: string;
-  fieldValue?: string;
-}
+import { API_URL, ImportResponse } from '../../../types';
 
 @Injectable({
   providedIn: 'root'
