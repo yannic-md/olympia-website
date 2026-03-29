@@ -14,7 +14,7 @@ import {HttpErrorResponse} from "@angular/common/http";
 import {MiscService} from "../../../../services/misc/misc.service";
 import {AlertService} from "../../../../services/api/alert/alert.service";
 import {ImportService} from "../../../../services/api/import/import.service";
-import {ImportResponse, ImportError} from "../../../../types";
+import {ImportResponse, ImportError} from "../../../../types/Importer";
 import {DataHolderService} from "../../../../services/data-holder/data-holder.service";
 
 @Component({
@@ -34,6 +34,7 @@ export class ModalImportComponent {
   protected isLoading: WritableSignal<boolean> = signal(false);
   protected importErrors: WritableSignal<ImportError[] | null> = signal(null);
   protected isDragActive: WritableSignal<boolean> = signal(false);
+  protected isClosing: WritableSignal<boolean> = signal(false);
 
   constructor(protected miscService: MiscService, private translateService: TranslateService,
               private alertService: AlertService, private importService: ImportService,
@@ -215,10 +216,13 @@ export class ModalImportComponent {
    * Resets the form and closes the modal.
    */
   protected close(): void {
-    this.selectedFile.set(null);
-    this.isLoading.set(false);
-    this.isDragActive.set(false);
-    this.closeModal.emit();
+    this.isClosing.set(true);
+    setTimeout((): void => {
+      this.selectedFile.set(null);
+      this.isLoading.set(false);
+      this.isDragActive.set(false);
+      this.isClosing.set(false);
+      this.closeModal.emit();
+    }, 200);
   }
 }
-

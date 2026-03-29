@@ -24,15 +24,24 @@ import {DisciplineResultForm, V2Sport} from '../../../../types/Disciplines';
   styleUrl: './modal-discipline.component.css'
 })
 export class ModalDisciplineComponent {
+  /** Whether the modal is currently open (required). */
   isOpen: InputSignal<boolean> = input.required<boolean>();
+  /** List of all athletes for selection (required). */
   athletes: InputSignal<V2Athlete[]> = input.required<V2Athlete[]>();
+  /** List of all sports (required). */
   sports: InputSignal<V2Sport[]> = input.required<V2Sport[]>();
+  /** List of all country names for selection (required). */
   countries: InputSignal<string[]> = input.required<string[]>();
+  /** Suspended discipline result data to restore when returning from athlete creation. */
   resumeData: InputSignal<DisciplineResultForm | null> = input<DisciplineResultForm | null>(null);
 
+  /** Event emitted when the modal is closed. */
   closeModal: OutputEmitterRef<void> = output<void>();
+  /** Event emitted when a discipline result is successfully submitted. */
   submitResult: OutputEmitterRef<DisciplineResultForm> = output<DisciplineResultForm>();
+  /** Event emitted when the athlete modal should be opened to create a new athlete. */
   openAthleteModal: OutputEmitterRef<DisciplineResultForm> = output<DisciplineResultForm>();
+
   protected resultError: WritableSignal<string> = signal('');
   protected formData: WritableSignal<DisciplineResultForm> = signal(this.getEmptyForm());
   protected isClosing: WritableSignal<boolean> = signal(false);

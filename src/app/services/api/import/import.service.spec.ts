@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { ImportService } from './import.service';
-import { ImportResponse, ImportError } from '../../../types';
-import { API_URL } from '../../../types';
+import { ImportResponse, ImportError } from '../../../types/Importer';
+import { API_URL } from '../../../types/API';
 
 describe('ImportService', () => {
   let service: ImportService;

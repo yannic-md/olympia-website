@@ -1,7 +1,9 @@
 @if (isOpen()) {
-  <div class="modal-backdrop-enter fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+  <div [class.animation-backdropFadeIn]="!isClosing()" [class.animation-backdropFadeOut]="isClosing()"
+       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
        (click)="miscService.onBackdropClick($event, this.close.bind(this))">
-    <div class="modal-content-enter bg-neutral-100 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+    <div [class.animation-modalSlideIn]="!isClosing()" [class.animation-modalSlideOut]="isClosing()"
+         class="bg-neutral-100 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
          (click)="$event.stopPropagation()">
 
       <!-- Header of Modal -->

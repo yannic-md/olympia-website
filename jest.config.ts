@@ -11,7 +11,7 @@ const config: Config = {
     "<rootDir>/src/app/app.routes.ts",
     "<rootDir>/src/assets/"
   ],
-  coverageThreshold: { global: { branches: 99,  functions: 98,  lines: 99,  statements: 99 } },
+  coverageThreshold: { global: { branches: 100, functions: 100, lines: 100, statements: 100 } },
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coverageReporters: ['html', 'text', 'lcov'],
