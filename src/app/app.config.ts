@@ -8,7 +8,14 @@ import {authInterceptor} from "./interceptors/auth.interceptor";
 import {provideTranslateService} from "@ngx-translate/core";
 import {provideTranslateHttpLoader} from "@ngx-translate/http-loader";
 
-/** Resolves the correct locale synchronously before the app starts. */
+/**
+ * Resolves the correct locale synchronously before the app starts.
+ *
+ * Checks localStorage for a saved language preference, then falls back to the browser's language.
+ * If the browser language is not supported, defaults to German ('de').
+ *
+ * @returns {'de' | 'en' | 'fr'} The resolved language code (German, English, or French).
+ */
 function resolveInitialLang(): string {
   if (typeof localStorage !== 'undefined') {
     switch (localStorage.getItem('lang')) {

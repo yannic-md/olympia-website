@@ -174,6 +174,9 @@ export class ModalAthleteComponent {
 
   /**
    * Splits a full name and resolves the countryId from the countries data.
+   *
+   * @param {AthleteForm} form - The athlete form containing the full name and country name.
+   * @returns {{ firstName: string; lastName: string; countryId: number }} Object with split names and resolved country ID.
    */
   private _splitNameAndCountry(form: AthleteForm): { firstName: string; lastName: string; countryId: number } {
     const parts: string[] = form.name.trim().split(/\s+/);

@@ -78,7 +78,7 @@ export class HeaderComponent implements OnInit {
   /**
    * Changes the current language and closes the dropdown.
    *
-   * @param language - The language to switch to
+   * @param {string} language - The language to switch to ('English', 'Deutsch', 'French').
    */
   protected changeLanguage(language: string): void {
     this.currentLanguage = language;
@@ -120,8 +120,9 @@ export class HeaderComponent implements OnInit {
 
   /**
    * Closes the language menu when clicking outside of it.
+   * Also closes the mobile menu when clicking outside its container.
    *
-   * @param event - The click event
+   * @param {MouseEvent} event - The click event from the document.
    */
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {

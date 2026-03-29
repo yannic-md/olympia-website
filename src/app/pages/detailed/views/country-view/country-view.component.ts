@@ -94,7 +94,7 @@ export class CountryViewComponent {
    * (only when the search does not match the country name itself) and sorted by total medals descending.
    *
    * @param {number} countryId - The ID of the country.
-   * @returns {V2Athlete[]} Filtered and sorted athletes.
+   * @returns {V2Athlete[]} Filtered and sorted athletes for this country.
    */
   protected athletesForCountry(countryId: number): V2Athlete[] {
     const query: string = this.searchQuery().toLowerCase();

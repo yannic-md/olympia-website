@@ -192,7 +192,10 @@ export class ModalImportComponent {
   }
 
   /**
-   * Format success message based on import response
+   * Format success message based on import response.
+   *
+   * @param {ImportResponse} response - The import response containing success/failure counts and status.
+   * @returns {string} A localized success or partial import message with counts.
    */
   private formatSuccessMessage(response: ImportResponse): string {
     const successCount = response.successfulRecords;

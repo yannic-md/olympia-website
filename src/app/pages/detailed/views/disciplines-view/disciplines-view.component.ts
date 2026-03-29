@@ -115,6 +115,7 @@ export class DisciplinesViewComponent {
    *
    * @param {DisciplineParticipant} participant - A single sport participant.
    * @param {string}                query       - Lower-cased search string.
+   * @returns {boolean} True if the participant matches the query.
    */
   private participantMatchesQuery(participant: DisciplineParticipant, query: string): boolean {
     const fullName: string    = `${participant.firstName} ${participant.lastName}`.toLowerCase();
@@ -153,6 +154,7 @@ export class DisciplinesViewComponent {
    * @param {string}                       query            - Lower-cased, trimmed free-text query (may be empty).
    * @param {string}                       countryFilter    - The currently selected country name, or `'all'`.
    * @param {boolean}                      sportNameMatches - Whether the sport name already satisfies the query.
+   * @returns {DisciplineWinner | null} The resolved winner or null if no match.
    */
   private resolveWinner(sport: V2Sport, medal: 'GOLD' | 'SILVER' | 'BRONZE', query: string, countryFilter: string,
                         sportNameMatches: boolean): DisciplineWinner | null {

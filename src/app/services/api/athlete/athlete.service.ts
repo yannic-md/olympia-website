@@ -142,6 +142,9 @@ export class AthleteService {
   /**
    * Returns a copy of the athlete with the country name resolved to the active language
    * and safe defaults for `medals` and `results` in case the API omits them.
+   *
+   * @param {V2Athlete} api - The athlete object from the API response.
+   * @returns {V2Athlete} A normalised athlete with safe defaults and localised country name.
    */
   private _normalisedAthlete(api: V2Athlete): V2Athlete {
     return {

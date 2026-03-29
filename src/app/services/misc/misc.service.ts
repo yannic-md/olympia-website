@@ -21,6 +21,9 @@ export class MiscService {
 
   /**
    * Handles backdrop clicks to close the modal when clicking outside the modal content.
+   *
+   * @param {MouseEvent} event - The mouse click event object.
+   * @param {() => void} close - Callback function to invoke when the backdrop is clicked.
    */
   onBackdropClick(event: MouseEvent, close: () => void): void {
     if (event.target === event.currentTarget) {
@@ -30,6 +33,12 @@ export class MiscService {
 
   /**
    * Updates a specific field in a signal-based form data object.
+   *
+   * @template T - The shape of the form data object.
+   * @template K - A key that must exist on type T.
+   * @param {WritableSignal<T>} formSignal - The writable signal containing the form data.
+   * @param {K} field - The key of the field to update (must be a property of T).
+   * @param {T[K]} value - The new value to assign to the field.
    */
   updateField<T, K extends keyof T>(formSignal: WritableSignal<T>, field: K, value: T[K]): void {
     formSignal.update(current => ({ ...current, [field]: value }));

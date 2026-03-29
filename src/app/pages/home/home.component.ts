@@ -174,6 +174,9 @@ export class HomeComponent implements OnDestroy {
   /**
    * Fetches countries and sports from the V2 API.
    * Countries carry pre-aggregated medals; sports carry per-participant medal info for filtering.
+   *
+   * Updates `allCountries` and `allSports` signals and manages loading state.
+   * Prevents duplicate requests via `isLoading` guard and displays error alerts on failure.
    */
   private loadData(): void {
     if (this.isLoading()) { return; }

@@ -39,11 +39,11 @@ export class ImportService {
   }
 
   /**
-   * Upload and import results/disciplines from a file
-   * Supports Excel (.xlsx, .xls) formats
+   * Upload and import results/disciplines from a file.
+   * Supports Excel (.xlsx, .xls) formats.
    *
-   * @param file The file to import
-   * @returns Observable of the import response
+   * @param {File} file - The file to import.
+   * @returns {Observable<ImportResponse>} Observable of the import response.
    */
   importResults(file: File): Observable<ImportResponse> {
     const formData = new FormData();

@@ -275,6 +275,9 @@ export class AthleteViewComponent {
 
   /**
    * Splits a full name and resolves the countryId (+ full CountryStats) from the countries data.
+   *
+   * @param {AthleteForm} form - The athlete form containing the full name and country name.
+   * @returns {{ firstName: string; lastName: string; countryId: number }} Object with split names and resolved country ID.
    */
   private splitNameAndCountry(form: AthleteForm): { firstName: string; lastName: string; countryId: number } {
     const nameParts: string[] = form.name.trim().split(/\s+/);
