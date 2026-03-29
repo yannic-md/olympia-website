@@ -79,6 +79,7 @@
   "ALERT.LOGIN.ERROR": "Invalid login credentials. Please try again.",
   "ALERT.IMPORT.SUCCESS": "Tournament data imported successfully. [count]/[total] records imported.",
   "ALERT.IMPORT.PARTIAL": "Import partially successful: [success] succeeded, [failed] failed out of [total].",
+  "ALERT.IMPORT.PARTIAL.FAILED": "Some athletes could not be imported - check for duplicates or missing countries!",
   "ALERT.IMPORT.ERROR": "Error importing data. Please try again.",
   "ALERT.IMPORT.NETWORK_ERROR": "Network error during import. Please check your connection.",
   "ALERT.IMPORT.NO.FILE": "Please select a file.",

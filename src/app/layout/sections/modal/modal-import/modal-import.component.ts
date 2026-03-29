@@ -14,7 +14,7 @@ import {HttpErrorResponse} from "@angular/common/http";
 import {MiscService} from "../../../../services/misc/misc.service";
 import {AlertService} from "../../../../services/api/alert/alert.service";
 import {ImportService} from "../../../../services/api/import/import.service";
-import {ImportResponse, ImportError} from "../../../../types/Importer";
+import {ImportResponse} from "../../../../types/Importer";
 import {DataHolderService} from "../../../../services/data-holder/data-holder.service";
 
 @Component({
@@ -32,7 +32,6 @@ export class ModalImportComponent {
 
   protected selectedFile: WritableSignal<File | null> = signal(null);
   protected isLoading: WritableSignal<boolean> = signal(false);
-  protected importErrors: WritableSignal<ImportError[] | null> = signal(null);
   protected isDragActive: WritableSignal<boolean> = signal(false);
   protected isClosing: WritableSignal<boolean> = signal(false);
 
@@ -125,7 +124,6 @@ export class ModalImportComponent {
     }
 
     this.isLoading.set(true);
-    this.importErrors.set(null);
 
     const importType = this.importType();
     let importObservable;
@@ -154,12 +152,18 @@ export class ModalImportComponent {
           // Reload data from server
           this.dataService.load();
 
-          const message = this.formatSuccessMessage(response);
-          this.alertService.success(message);
+          // Use success for COMPLETED, warning for PARTIAL
+          if (response.status === 'COMPLETED') {
+            const successMessage = this.formatSuccessMessage(response);
+            this.alertService.success(successMessage);
+          } else {
+            // PARTIAL - use warning instead of success
+            const warningMessage = this.formatSuccessMessage(response);
+            this.alertService.warning(warningMessage);
 
-          // Store errors if any
-          if (response.errors && response.errors.length > 0) {
-            this.importErrors.set(response.errors);
+            // Show additional warning about failed records
+            const failedMessage = this.translateService.instant('ALERT.IMPORT.PARTIAL.FAILED');
+            this.alertService.warning(failedMessage);
           }
 
           // Close modal after successful import
@@ -169,9 +173,6 @@ export class ModalImportComponent {
           }, 500);
         } else {
           this.alertService.error(response.message || this.translateService.instant('ALERT.IMPORT.ERROR'));
-          if (response.errors && response.errors.length > 0) {
-            this.importErrors.set(response.errors);
-          }
         }
       },
       error: (error: HttpErrorResponse): void => {

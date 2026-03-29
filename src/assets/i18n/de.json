@@ -79,6 +79,7 @@
   "ALERT.LOGIN.ERROR": "Ungültige Anmeldedaten. Bitte versuche es erneut.",
   "ALERT.IMPORT.SUCCESS": "Turnierdaten wurden erfolgreich importiert. [count]/[total] Datensätze wurden importiert.",
   "ALERT.IMPORT.PARTIAL": "Import teilweise erfolgreich: [success] erfolgreich, [failed] fehlgeschlagen von [total].",
+  "ALERT.IMPORT.PARTIAL.FAILED": "Einige Athleten konnten nicht importiert werden - überprüfe nach Duplikaten oder fehlenden Ländern!",
   "ALERT.IMPORT.ERROR": "Fehler beim Import der Daten. Bitte versuche es erneut.",
   "ALERT.IMPORT.NETWORK_ERROR": "Netzwerkfehler beim Import. Bitte überprüfe deine Verbindung.",
   "ALERT.IMPORT.NO.FILE": "Bitte wähle eine Datei aus.",
