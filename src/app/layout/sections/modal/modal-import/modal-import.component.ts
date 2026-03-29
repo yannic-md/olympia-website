@@ -41,6 +41,8 @@ export class ModalImportComponent {
 
   /**
    * Handles file selection from the input element.
+   *
+   * @param {Event} event - The change event from the file input element
    */
   protected onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -53,6 +55,8 @@ export class ModalImportComponent {
 
   /**
    * Handles dragover on drop zone to enable dropping files.
+   *
+   * @param {DragEvent} event - The dragover event
    */
   protected onDragOver(event: DragEvent): void {
     event.preventDefault();
@@ -64,6 +68,8 @@ export class ModalImportComponent {
 
   /**
    * Resets drag state when leaving drop zone.
+   *
+   * @param {DragEvent} event - The dragleave event
    */
   protected onDragLeave(event: DragEvent): void {
     event.preventDefault();
@@ -72,6 +78,8 @@ export class ModalImportComponent {
 
   /**
    * Accepts file drops and processes first file.
+   *
+   * @param {DragEvent} event - The drop event containing files
    */
   protected onDrop(event: DragEvent): void {
     event.preventDefault();
@@ -89,6 +97,9 @@ export class ModalImportComponent {
 
   /**
    * Centralized file validation for picker and drag-and-drop.
+   *
+   * @param {File} file - The file to validate and process
+   * @returns {void}
    */
   private processSelectedFile(file: File): void {
     if (this.isValidFileType(file)) {
@@ -102,6 +113,9 @@ export class ModalImportComponent {
 
   /**
    * Validates if the selected file is of an acceptable type.
+   *
+   * @param {File} file - The file to validate
+   * @returns {boolean} True if the file type is acceptable (CSV or Excel), false otherwise
    */
   private isValidFileType(file: File): boolean {
     const validTypes = [
@@ -115,6 +129,9 @@ export class ModalImportComponent {
   /**
    * Submits the import and processes the file.
    * Sends the file to the appropriate backend endpoint based on importType.
+   * Handles success/partial/failure scenarios and displays appropriate alerts.
+   *
+   * @returns {void}
    */
   protected onSubmit(): void {
     const file = this.selectedFile();
@@ -166,18 +183,15 @@ export class ModalImportComponent {
             this.alertService.warning(failedMessage);
           }
 
-          // Close modal after successful import
-          setTimeout((): void => {
-            this.importComplete.emit();
-            this.close();
-          }, 500);
+          // Close modal immediately after import
+          this.importComplete.emit();
+          this.close();
         } else {
           this.alertService.error(response.message || this.translateService.instant('ALERT.IMPORT.ERROR'));
         }
       },
       error: (error: HttpErrorResponse): void => {
         this.isLoading.set(false);
-        console.error('Import error:', error);
 
         let errorMessage = this.translateService.instant('ALERT.IMPORT.ERROR');
 
@@ -218,6 +232,9 @@ export class ModalImportComponent {
 
   /**
    * Resets the form and closes the modal.
+   * Triggers a closing animation and emits the closeModal event after animation completes.
+   *
+   * @returns {void}
    */
   protected close(): void {
     this.isClosing.set(true);
